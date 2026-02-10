@@ -67,11 +67,10 @@ export const assignOptimal = mutation({
     }
 
     // Assign paddlers to canoes following the priority order
-    // Distribute evenly: fill seat 1 of all canoes, then seat 2, etc.
+    // Fill canoes sequentially: fill canoe 1 (seats 1-6), then canoe 2, etc.
+    // This groups high-priority paddlers together in the first canoes
     let paddlerIndex = 0;
     const totalPaddlers = paddlers.length;
-    const totalCanoes = canoes.length;
-    const totalSeats = totalCanoes * 6;
     
     // Initialize assignments for all canoes
     const canoeAssignments: { [canoeId: string]: { seat: number; paddlerId: string }[] } = {};
@@ -79,11 +78,11 @@ export const assignOptimal = mutation({
       canoeAssignments[canoe._id.toString()] = [];
     }
 
-    // Round-robin distribution: fill all seat 1s, then all seat 2s, etc.
-    for (let seat = 1; seat <= 6 && paddlerIndex < totalPaddlers; seat++) {
-      for (const canoe of canoes) {
-        if (paddlerIndex >= totalPaddlers) break;
-        
+    // Sequential distribution: fill canoe 1 completely, then canoe 2, etc.
+    for (const canoe of canoes) {
+      if (paddlerIndex >= totalPaddlers) break;
+      
+      for (let seat = 1; seat <= 6 && paddlerIndex < totalPaddlers; seat++) {
         const paddlerToAssign = paddlers[paddlerIndex++];
         canoeAssignments[canoe._id.toString()].push({ seat, paddlerId: paddlerToAssign.id });
         
