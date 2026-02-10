@@ -225,8 +225,9 @@ function App() {
   const assignOptimal = useMutation(api.canoes.assignOptimal);
   const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
   const populateCanoes = useMutation(api.canoes.populateSampleCanoes);
-  const clearPaddlers = useMutation(api.paddlers.clearAllPaddlers);
-  const clearCanoes = useMutation(api.canoes.clearAllCanoes);
+  // Unused: clearPaddlers, clearCanoes
+  // const _clearPaddlers = useMutation(api.paddlers.clearAllPaddlers);
+  // const _clearCanoes = useMutation(api.canoes.clearAllCanoes);
   const addCanoe = useMutation(api.canoes.addCanoe);
   const removeCanoe = useMutation(api.canoes.removeCanoe);
   const addPaddler = useMutation(api.paddlers.addPaddler);
@@ -279,10 +280,10 @@ function App() {
     if (!paddlers || !canoes || isReassigning) return;
     setIsReassigning(true);
     
-    const assignedPaddlers = paddlers.filter(p => p.assignedCanoe && p.assignedSeat);
-    assignedPaddlers.sort((a, b) => {
-      const canoeA = canoes.find(c => c.id === a.assignedCanoe);
-      const canoeB = canoes.find(c => c.id === b.assignedCanoe);
+    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat);
+    assignedPaddlers.sort((a: Paddler, b: Paddler) => {
+      const canoeA = canoes.find((c: Canoe) => c.id === a.assignedCanoe);
+      const canoeB = canoes.find((c: Canoe) => c.id === b.assignedCanoe);
       const canoeIdxA = canoes.indexOf(canoeA!);
       const canoeIdxB = canoes.indexOf(canoeB!);
       if (canoeIdxA !== canoeIdxB) return canoeIdxA - canoeIdxB;
@@ -386,7 +387,7 @@ function App() {
     removeCanoe({ canoeId });
   };
 
-  const handleAddCanoeAfter = (index: number) => {
+  const handleAddCanoeAfter = (_index: number) => {
     const nextNum = (canoes?.length || 0) + 1;
     addCanoe({ name: `Canoe ${nextNum}` });
   };
@@ -394,9 +395,9 @@ function App() {
   const handleUnassignAll = async () => {
     if (!paddlers) return;
     // Use Promise.all for parallel execution - much faster!
-    const assignedPaddlers = paddlers.filter(p => p.assignedCanoe && p.assignedSeat);
+    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat);
     await Promise.all(
-      assignedPaddlers.map(p => 
+      assignedPaddlers.map((p: Paddler) => 
         unassignPaddler({ paddlerId: p.id, canoeId: p.assignedCanoe!, seat: p.assignedSeat! })
       )
     );
