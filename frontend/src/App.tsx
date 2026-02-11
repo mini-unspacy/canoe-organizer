@@ -149,8 +149,8 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
           width: '14px',
           height: '14px',
           fontSize: '8px',
-          bottom: '3px',
-          left: '3px'
+          bottom: '1px',
+          left: '1px'
         }}
       >
         {paddler.ability}
