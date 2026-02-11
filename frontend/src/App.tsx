@@ -155,6 +155,25 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
       >
         {paddler.ability}
       </div>
+      
+      {/* Type badge - square at bottom right */}
+      <div 
+        className="absolute flex items-center justify-center font-bold text-white border border-white/50"
+        style={{ 
+          backgroundColor: paddler.type === 'racer' ? '#8b5cf6' : 
+                          paddler.type === 'casual' ? '#3b82f6' : '#64748b',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          width: '14px',
+          height: '14px',
+          fontSize: '7px',
+          bottom: '1px',
+          right: '1px',
+          borderRadius: '2px',
+          padding: '1px'
+        }}
+      >
+        {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
+      </div>
     </div>
   );
 };
