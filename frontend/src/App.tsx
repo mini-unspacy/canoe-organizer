@@ -125,41 +125,43 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
         className={`rounded-full flex flex-col items-center justify-center font-bold text-white 
           border-2 shadow-md bg-gradient-to-br ${abilityColor}
           ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
-          transition-all duration-150 cursor-grab active:cursor-grabbing relative overflow-hidden`}
+          transition-all duration-150 cursor-grab active:cursor-grabbing relative`}
         style={{
           width: CIRCLE_SIZE,
           height: CIRCLE_SIZE,
           borderColor: genderBorderColor
         }}
       >
-        {/* Name - smaller font to fit with badges */}
-        <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full">
+        {/* Name - centered */}
+        <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full -mt-1">
           {displayName}
         </span>
         
-        {/* Badges row inside circle at bottom */}
-        <div className="flex items-center justify-center gap-0.5 mt-0.5">
-          {/* Ability inner circle with number */}
-          <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shadow-inner"
-            style={{ backgroundColor: abilityInnerColor }}
-          >
-            {paddler.ability}
-          </div>
-          
+        {/* Ability badge - small circle in bottom left */}
+        <div 
+          className="absolute bottom-1 left-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white border border-white/40 shadow"
+          style={{ backgroundColor: abilityInnerColor }}
+        >
+          {paddler.ability}
+        </div>
+        
+        {/* Other badges - top right */}
+        <div className="absolute top-1 right-1 flex gap-0.5">
           {/* Type dot */}
-          <span className={`text-[6px] rounded px-0.5 ${
-            paddler.type === 'racer' ? 'bg-purple-500/80' : 
-            paddler.type === 'casual' ? 'bg-blue-500/80' : 'bg-slate-400/80'
+          <span className={`text-[5px] leading-none px-1 py-0.5 rounded ${
+            paddler.type === 'racer' ? 'bg-purple-500/90' : 
+            paddler.type === 'casual' ? 'bg-blue-500/90' : 'bg-slate-400/90'
           }`}>
             {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
           </span>
-          
-          {/* Seat preference dot */}
-          {seatPref && (
-            <span className="text-[6px] bg-orange-500/80 rounded px-0.5">{seatPref}</span>
-          )}
         </div>
+        
+        {/* Seat preference - bottom right */}
+        {seatPref && (
+          <div className="absolute bottom-1 right-1 flex gap-0.5">
+            <span className="text-[5px] leading-none px-1 py-0.5 bg-orange-500/90 rounded">{seatPref}</span>
+          </div>
+        )}
       </div>
     </div>
   );
