@@ -102,7 +102,6 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
       : 'from-rose-400 to-rose-600';
   
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
-  const seatPref = getPrimarySeatPreference(paddler.seatPreference);
   
   // Display name: truncated first name + last initial (e.g., "JohS" for John Smith)
   const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
