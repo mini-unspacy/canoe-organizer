@@ -111,6 +111,13 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
     ? paddler.firstName.slice(0, maxFirstNameLen) 
     : paddler.firstName;
   const displayName = `${truncatedFirst}${lastInitial}`;
+  
+  // Inner ability circle color: red (1) to green (5)
+  const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
+    paddler.ability === 4 ? '#84cc16' :
+    paddler.ability === 3 ? '#eab308' :
+    paddler.ability === 2 ? '#f97316' :
+    '#ef4444';
 
   return (
     <div className="relative">
@@ -132,8 +139,13 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
         
         {/* Badges row inside circle at bottom */}
         <div className="flex items-center justify-center gap-0.5 mt-0.5">
-          {/* Ability dot */}
-          <span className="text-[6px] bg-black/30 rounded px-0.5">{paddler.ability}</span>
+          {/* Ability inner circle with number */}
+          <div 
+            className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shadow-inner"
+            style={{ backgroundColor: abilityInnerColor }}
+          >
+            {paddler.ability}
+          </div>
           
           {/* Type dot */}
           <span className={`text-[6px] rounded px-0.5 ${
