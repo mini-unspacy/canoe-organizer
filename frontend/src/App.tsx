@@ -163,13 +163,12 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
           backgroundColor: paddler.type === 'racer' ? '#8b5cf6' : 
                           paddler.type === 'casual' ? '#3b82f6' : '#64748b',
           boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '14px',
-          height: '14px',
-          fontSize: '7px',
+          width: '12px',
+          height: '12px',
+          fontSize: '6px',
           bottom: '1px',
           right: '1px',
-          borderRadius: '2px',
-          padding: '1px'
+          borderRadius: '2px'
         }}
       >
         {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
