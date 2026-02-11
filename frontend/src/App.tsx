@@ -121,21 +121,29 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
 
   return (
     <div className="relative flex-shrink-0" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
-      {/* Main paddler circle - explicit dimensions to ensure it's a circle */}
+      {/* Main paddler circle */}
       <div
-        className={`w-full h-full rounded-full flex items-center justify-center font-bold text-white 
+        className={`w-full h-full rounded-full flex flex-col items-center justify-center font-bold text-white 
           border-2 shadow-md bg-gradient-to-br ${abilityColor}
           ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
           transition-all duration-150 cursor-grab active:cursor-grabbing relative overflow-hidden`}
         style={{ borderColor: genderBorderColor, width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
       >
-        {/* Name only */}
-        <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full z-10">
+        {/* Name - positioned higher to make room for badge */}
+        <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full -mt-1">
           {displayName}
         </span>
         
+        {/* Ability badge - SMALL CIRCLE INSIDE at bottom left */}
+        <div 
+          className="absolute bottom-2 left-2 w-3 h-3 rounded-full flex items-center justify-center text-[5px] font-bold text-white"
+          style={{ backgroundColor: abilityInnerColor }}
+        >
+          {paddler.ability}
+        </div>
+        
         {/* Type badge - inside top right */}
-        <span className={`absolute top-1 right-1 z-10 text-[5px] leading-none px-1 py-0.5 rounded ${
+        <span className={`absolute top-1.5 right-1.5 text-[5px] leading-none px-1 py-0.5 rounded ${
           paddler.type === 'racer' ? 'bg-purple-500/90' : 
           paddler.type === 'casual' ? 'bg-blue-500/90' : 'bg-slate-400/90'
         }`}>
@@ -144,18 +152,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
         
         {/* Seat preference - inside bottom right */}
         {seatPref && (
-          <span className="absolute bottom-1 right-1 z-10 text-[5px] leading-none px-1 py-0.5 bg-orange-500/90 rounded">
+          <span className="absolute bottom-1.5 right-1.5 text-[5px] leading-none px-1 py-0.5 bg-orange-500/90 rounded">
             {seatPref}
           </span>
         )}
-      </div>
-      
-      {/* Ability badge - SMALLER CIRCLE INSIDE, bottom left */}
-      <div 
-        className="absolute bottom-1 left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] font-bold text-white shadow-sm z-20 pointer-events-none"
-        style={{ backgroundColor: abilityInnerColor }}
-      >
-        {paddler.ability}
       </div>
     </div>
   );
