@@ -127,22 +127,30 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
       style={{ 
         width: CIRCLE_SIZE, 
         height: CIRCLE_SIZE, 
-        borderColor: genderBorderColor 
+        borderColor: genderBorderColor,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative'
       }}
     >
-      {/* Name - centered vertically in the upper half */}
-      <div className="absolute top-2 left-0 right-0 text-center">
-        <span className="text-[9px] leading-tight text-white font-bold px-0.5 truncate block">
-          {displayName}
-        </span>
-      </div>
+      {/* Name - in the center */}
+      <span className="text-[9px] leading-tight text-white font-bold px-1 truncate max-w-full text-center">
+        {displayName}
+      </span>
       
-      {/* Ability badge - smaller circle at bottom left INSIDE */}
+      {/* Ability badge - small circle at bottom left */}
       <div 
-        className="absolute bottom-1.5 left-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] font-bold text-white border border-white/50"
+        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
         style={{ 
           backgroundColor: abilityInnerColor,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          width: '14px',
+          height: '14px',
+          fontSize: '8px',
+          bottom: '6px',
+          left: '6px'
         }}
       >
         {paddler.ability}
