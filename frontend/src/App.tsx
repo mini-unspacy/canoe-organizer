@@ -121,8 +121,9 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
 
   return (
     <div className="relative">
+      {/* Main paddler circle */}
       <div
-        className={`rounded-full flex items-center justify-center font-bold text-white 
+        className={`rounded-full flex flex-col items-center justify-center font-bold text-white 
           border-2 shadow-md bg-gradient-to-br ${abilityColor}
           ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
           transition-all duration-150 cursor-grab active:cursor-grabbing`}
@@ -132,18 +133,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
           borderColor: genderBorderColor
         }}
       >
-        {/* Name - centered (leave space for ability badge below) */}
-        <span className="text-[10px] leading-tight text-center px-0.5 truncate max-w-full -mt-2">
+        {/* Name only */}
+        <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full">
           {displayName}
         </span>
-        
-        {/* Ability badge - small circle at bottom center */}
-        <div 
-          className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] font-bold text-white border border-white/50 shadow"
-          style={{ backgroundColor: abilityInnerColor }}
-        >
-          {paddler.ability}
-        </div>
         
         {/* Type badge - top right corner */}
         <span className={`absolute top-0.5 right-0.5 text-[5px] leading-none px-1 py-0.5 rounded ${
@@ -159,6 +152,14 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
             {seatPref}
           </span>
         )}
+      </div>
+      
+      {/* Ability badge - completely outside, bottom left */}
+      <div 
+        className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white border-2 border-white shadow-md z-10"
+        style={{ backgroundColor: abilityInnerColor }}
+      >
+        {paddler.ability}
       </div>
     </div>
   );
