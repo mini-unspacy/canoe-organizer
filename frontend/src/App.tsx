@@ -627,13 +627,17 @@ function App() {
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all
+                            className={`h-8 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all border-2
                               ${snapshot.isDraggingOver 
-                                ? 'bg-rose-500 text-white scale-110' 
-                                : 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 hover:bg-rose-200'}`}
+                                ? 'bg-rose-500 border-rose-500 text-white scale-105' 
+                                : 'bg-rose-100 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800 text-rose-500 dark:text-rose-400 hover:bg-rose-200'}`}
                             title="Drag paddlers here to delete"
+                            style={{ minWidth: '80px' }}
                           >
-                            🗑️
+                            <span className="text-sm">🗑️</span>
+                            <span className={`text-xs font-medium ${snapshot.isDraggingOver ? 'text-white' : 'text-rose-600 dark:text-rose-400'}`}>
+                              {snapshot.isDraggingOver ? 'Drop to delete' : 'Trash'}
+                            </span>
                             {provided.placeholder}
                           </div>
                         )}
