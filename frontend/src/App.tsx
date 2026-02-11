@@ -104,9 +104,13 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
   const seatPref = getPrimarySeatPreference(paddler.seatPreference);
   
-  // Display name: first name + last initial (e.g., "JohnS" for John Smith)
+  // Display name: truncated first name + last initial (e.g., "JohS" for John Smith)
   const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
-  const displayName = `${paddler.firstName}${lastInitial}`;
+  const maxFirstNameLen = 5;
+  const truncatedFirst = paddler.firstName.length > maxFirstNameLen 
+    ? paddler.firstName.slice(0, maxFirstNameLen) 
+    : paddler.firstName;
+  const displayName = `${truncatedFirst}${lastInitial}`;
 
   return (
     <div className="relative">
@@ -232,8 +236,25 @@ function App() {
   const removeCanoe = useMutation(api.canoes.removeCanoe);
   const addPaddler = useMutation(api.paddlers.addPaddler);
 
-  // Canoe sort priority (draggable)
-  const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(CANOE_SORT_OPTIONS);
+  // Canoe sort priority (draggable) - persist to localStorage
+  const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(() => {
+    const saved = localStorage.getItem('canoePriority');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Validate that all required IDs are present
+        const requiredIds = CANOE_SORT_OPTIONS.map(o => o.id);
+        const hasAllIds = requiredIds.every(id => parsed.some((p: CanoeSortItem) => p.id === id));
+        if (hasAllIds) return parsed;
+      } catch { /* fall through to default */ }
+    }
+    return CANOE_SORT_OPTIONS;
+  });
+  
+  // Persist canoePriority to localStorage
+  useEffect(() => {
+    localStorage.setItem('canoePriority', JSON.stringify(canoePriority));
+  }, [canoePriority]);
   
   // Staging view and sort
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
