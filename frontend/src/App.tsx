@@ -123,23 +123,23 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
     <div 
       className={`relative flex-shrink-0 rounded-full border-2 shadow-md bg-gradient-to-br ${abilityColor}
         ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
-        transition-all duration-150 cursor-grab active:cursor-grabbing overflow-hidden`}
+        transition-all duration-150 cursor-grab active:cursor-grabbing`}
       style={{ 
         width: CIRCLE_SIZE, 
         height: CIRCLE_SIZE, 
         borderColor: genderBorderColor 
       }}
     >
-      {/* Name - at the top of the circle, not overlapping with badge */}
-      <div className="absolute top-1.5 left-0 right-0 text-center">
-        <span className="text-[9px] leading-tight text-white font-bold px-1 truncate block">
+      {/* Name - centered vertically in the upper half */}
+      <div className="absolute top-2 left-0 right-0 text-center">
+        <span className="text-[9px] leading-tight text-white font-bold px-0.5 truncate block">
           {displayName}
         </span>
       </div>
       
       {/* Ability badge - smaller circle at bottom left INSIDE */}
       <div 
-        className="absolute bottom-1 left-1 w-3 h-3 rounded-full flex items-center justify-center text-[5px] font-bold text-white border border-white/60"
+        className="absolute bottom-1.5 left-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] font-bold text-white border border-white/50"
         style={{ 
           backgroundColor: abilityInnerColor,
           boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
