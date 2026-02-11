@@ -235,6 +235,7 @@ function App() {
   const addCanoe = useMutation(api.canoes.addCanoe);
   const removeCanoe = useMutation(api.canoes.removeCanoe);
   const addPaddler = useMutation(api.paddlers.addPaddler);
+  const deletePaddler = useMutation(api.paddlers.deletePaddler);
 
   // Canoe sort priority (draggable) - persist to localStorage
   const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(() => {
@@ -344,6 +345,24 @@ function App() {
       const [reorderedItem] = newPriority.splice(source.index, 1);
       newPriority.splice(destination.index, 0, reorderedItem);
       setCanoePriority(newPriority);
+      return;
+    }
+
+    // Handle trash can - delete paddler
+    if (destination.droppableId === "trash-can") {
+      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
+      if (draggedPaddler) {
+        // Unassign from canoe if assigned
+        if (draggedPaddler.assignedCanoe && draggedPaddler.assignedSeat) {
+          await unassignPaddler({ 
+            paddlerId: draggableId, 
+            canoeId: draggedPaddler.assignedCanoe, 
+            seat: draggedPaddler.assignedSeat 
+          });
+        }
+        // Delete the paddler
+        await deletePaddler({ paddlerId: draggableId });
+      }
       return;
     }
 
@@ -598,16 +617,34 @@ function App() {
 
               {/* RIGHT COLUMN - STAGING */}
               <div className="space-y-4" style={{ width: 380 }}>
-                {/* View By Toggle with + Paddler button */}
+                {/* View By Toggle with + Paddler button and Trash */}
                 <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">View By</h3>
-                    <button 
-                      onClick={handleAddPaddler}
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:shadow transition-shadow"
-                    >
-                      + Paddler
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Droppable droppableId="trash-can">
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all
+                              ${snapshot.isDraggingOver 
+                                ? 'bg-rose-500 text-white scale-110' 
+                                : 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 hover:bg-rose-200'}`}
+                            title="Drag paddlers here to delete"
+                          >
+                            🗑️
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                      <button 
+                        onClick={handleAddPaddler}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:shadow transition-shadow"
+                      >
+                        + Paddler
+                      </button>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     {[

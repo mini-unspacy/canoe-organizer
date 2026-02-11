@@ -164,3 +164,31 @@ export const clearAllPaddlers = mutation({
     return { message: `Deleted ${paddlers.length} paddlers.` };
   },
 });
+
+export const deletePaddler = mutation({
+  args: {
+    paddlerId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const paddlerDoc = await ctx.db.query("paddlers").withIndex("by_paddler_id", (q) => q.eq("id", args.paddlerId)).unique();
+    if (!paddlerDoc) {
+      throw new Error("Paddler not found");
+    }
+    
+    // If paddler is assigned to a canoe, unassign them first
+    if (paddlerDoc.assignedCanoe && paddlerDoc.assignedSeat) {
+      const canoeDoc = await ctx.db.query("canoes").withIndex("by_canoe_id", (q) => q.eq("id", paddlerDoc.assignedCanoe!)).unique();
+      if (canoeDoc) {
+        const updatedAssignments = canoeDoc.assignments.filter(a => !(a.seat === paddlerDoc.assignedSeat && a.paddlerId === args.paddlerId));
+        await ctx.db.patch(canoeDoc._id, {
+          assignments: updatedAssignments,
+          status: updatedAssignments.length < 6 ? "open" : canoeDoc.status,
+        });
+      }
+    }
+    
+    // Delete the paddler
+    await ctx.db.delete(paddlerDoc._id);
+    return { success: true, message: `Deleted paddler ${paddlerDoc.firstName}` };
+  },
+});
