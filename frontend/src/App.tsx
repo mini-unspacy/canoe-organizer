@@ -582,6 +582,17 @@ function App() {
                       </div>
                     );
                   })}
+                  
+                  {/* Add Canoe button when no canoes exist */}
+                  {(!canoes || canoes.length === 0) && (
+                    <button 
+                      onClick={() => addCanoe({ name: "Canoe 1" })}
+                      className="w-full py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">+</span>
+                      <span className="font-medium">Add Canoe</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
