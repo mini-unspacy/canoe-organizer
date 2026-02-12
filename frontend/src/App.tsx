@@ -655,22 +655,26 @@ function App() {
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={`rounded-full flex items-center justify-center transition-all
-                                      ${snapshot.isDraggingOver ? 'bg-emerald-200 dark:bg-emerald-800 scale-110 ring-2 ring-emerald-400' : assignedPaddler ? '' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400'}`}
-                                    style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+                                    style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
                                   >
-                                    {assignedPaddler ? (
-                                      <Draggable draggableId={assignedPaddler.id} index={0}>
-                                        {(provided, snapshot) => (
-                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, position: 'static' }}>
-                                            <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} />
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ) : (
-                                      <span className="text-slate-400 text-[10px] font-bold">{seat}</span>
-                                    )}
-                                    {provided.placeholder}
+                                    <div
+                                      className={`rounded-full flex items-center justify-center transition-all
+                                        ${snapshot.isDraggingOver ? 'bg-emerald-200 dark:bg-emerald-800 scale-110 ring-2 ring-emerald-400' : assignedPaddler ? '' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400'}`}
+                                      style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+                                    >
+                                      {assignedPaddler ? (
+                                        <Draggable draggableId={assignedPaddler.id} index={0}>
+                                          {(provided, snapshot) => (
+                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, position: 'static' }}>
+                                              <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} />
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      ) : (
+                                        <span className="text-slate-400 text-[10px] font-bold">{seat}</span>
+                                      )}
+                                    </div>
+                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
                                 )}
                               </Droppable>
