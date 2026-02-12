@@ -4,6 +4,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useAnimationTrigger } from "./useAnimationTrigger";
 
 type Paddler = Doc<"paddlers">;
 type Canoe = Doc<"canoes">;
@@ -94,23 +95,47 @@ const generateRandomPaddler = () => {
   };
 };
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ paddler, isDragging }) => {
-  const abilityColor = paddler.ability === 5 
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0 }) => {
+  const circleRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (animationKey === 0) return;
+    const el = circleRef.current;
+    if (!el) return;
+
+    const anim = el.animate(
+      [
+        { transform: 'scale(0.3)', opacity: 0 },
+        { transform: 'scale(1.08)', opacity: 1, offset: 0.7 },
+        { transform: 'scale(1)', opacity: 1 },
+      ],
+      {
+        duration: 350,
+        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        delay: animationDelay,
+        fill: 'backwards',
+      }
+    );
+
+    return () => anim.cancel();
+  }, [animationKey, animationDelay]);
+
+  const abilityColor = paddler.ability === 5
     ? 'from-emerald-400 to-emerald-600'
-    : paddler.ability >= 3 
+    : paddler.ability >= 3
       ? 'from-amber-400 to-amber-600'
       : 'from-rose-400 to-rose-600';
-  
+
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
-  
+
   // Display name: truncated first name + last initial (e.g., "JohS" for John Smith)
   const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
   const maxFirstNameLen = 5;
-  const truncatedFirst = paddler.firstName.length > maxFirstNameLen 
-    ? paddler.firstName.slice(0, maxFirstNameLen) 
+  const truncatedFirst = paddler.firstName.length > maxFirstNameLen
+    ? paddler.firstName.slice(0, maxFirstNameLen)
     : paddler.firstName;
   const displayName = `${truncatedFirst}${lastInitial}`;
-  
+
   // Inner ability circle color: red (1) to green (5)
   const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
     paddler.ability === 4 ? '#84cc16' :
@@ -119,19 +144,20 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean }> = ({ p
     '#ef4444';
 
   return (
-    <div 
+    <div
+      ref={circleRef}
       className={`relative flex-shrink-0 rounded-full border-2 shadow-md bg-gradient-to-br ${abilityColor}
         ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
         transition-all duration-150 cursor-grab active:cursor-grabbing`}
-      style={{ 
-        width: CIRCLE_SIZE, 
-        height: CIRCLE_SIZE, 
+      style={{
+        width: CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
         borderColor: genderBorderColor,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative'
+        position: 'relative',
       }}
     >
       {/* Name - in the center */}
@@ -299,6 +325,8 @@ function App() {
     seatPreference: '000000',
   });
 
+  const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
+
   // Smart canoe display - start with minimum needed, but user can add more
   useEffect(() => {
     if (!paddlers || !canoes) return;
@@ -336,6 +364,7 @@ function App() {
 
   const handleReassignCanoes = useCallback(async () => {
     if (!paddlers || !canoes || isReassigning) return;
+    triggerAnimation();
     setIsReassigning(true);
     
     const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat);
@@ -369,7 +398,7 @@ function App() {
     
     await Promise.all(updates);
     setIsReassigning(false);
-  }, [paddlers, canoes, canoeSortedPaddlers, isReassigning]);
+  }, [paddlers, canoes, canoeSortedPaddlers, isReassigning, triggerAnimation]);
 
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -480,11 +509,13 @@ function App() {
   };
 
   const handleAddPaddler = async () => {
+    triggerAnimation();
     const newPaddler = generateRandomPaddler();
     await addPaddler(newPaddler);
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
+    triggerAnimation();
     removeCanoe({ canoeId });
   };
 
@@ -525,9 +556,6 @@ function App() {
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
-  // Debug log
-  console.log('Render - isEditModalOpen:', isEditModalOpen, 'editingPaddler:', editingPaddler?.firstName);
-
   // Calculate canoe width
   const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
 
@@ -554,7 +582,7 @@ function App() {
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Canoe Crew</h2>
               <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-8">Load sample data to get started</p>
-              <button onClick={() => { populatePaddlers(); populateCanoes(); }} className="px-6 py-3 text-base font-medium rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl transition-shadow">
+              <button onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }} className="px-6 py-3 text-base font-medium rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl transition-shadow">
                 🚀 Load Sample Data
               </button>
             </div>
@@ -569,10 +597,10 @@ function App() {
                       <span>📊</span> Canoe Sort
                     </h3>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => assignOptimal({ priority: canoePriority })} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm hover:shadow transition-shadow">
+                      <button onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm hover:shadow transition-shadow">
                         ✨ Auto
                       </button>
-                      <button onClick={handleUnassignAll} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                      <button onClick={() => { triggerAnimation(); handleUnassignAll(); }} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                         ↩️ All
                       </button>
                     </div>
@@ -666,7 +694,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => (
                                             <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, position: 'static' }}>
-                                              <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} />
+                                              <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
                                             </div>
                                           )}
                                         </Draggable>
@@ -822,13 +850,13 @@ function App() {
                               {sortedPaddlers.map((paddler: Paddler, index: number) => (
                                 <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index}>
                                   {(provided, snapshot) => (
-                                    <div 
-                                      ref={provided.innerRef} 
-                                      {...provided.draggableProps} 
-                                      {...provided.dragHandleProps} 
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
                                       style={{ ...provided.draggableProps.style, position: 'static' }}
                                     >
-                                      <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} />
+                                      <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                     </div>
                                   )}
                                 </Draggable>
