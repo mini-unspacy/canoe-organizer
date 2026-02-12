@@ -21,8 +21,11 @@ interface CanoeSortItem {
 }
 
 const CIRCLE_SIZE = 44;
-const PADDING = 8;
+const TOOLBAR_SIZE = 34;
+const PADDING = 12;
 const TOTAL_CIRCLE_SPACE = CIRCLE_SIZE + PADDING;
+
+const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
 const CANOE_SORT_OPTIONS: CanoeSortItem[] = [
   { id: "ability", label: "Ability", gradient: "from-violet-500 to-purple-600", icon: "⭐" },
@@ -146,7 +149,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   return (
     <div
       ref={circleRef}
-      className={`relative flex-shrink-0 rounded-full border-2 shadow-md bg-gradient-to-br ${abilityColor}
+      className={`relative flex-shrink-0 rounded-full border-[3px] shadow-md bg-gradient-to-br ${abilityColor}
         ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
         transition-all duration-150 cursor-grab active:cursor-grabbing`}
       style={{
@@ -168,7 +171,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
       {/* Ability badge - small circle at bottom left */}
       <div 
         className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
-        style={{ 
+        style={{
           backgroundColor: abilityInnerColor,
           boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
           width: '14px',
@@ -184,8 +187,8 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
       {/* Type badge - square at bottom right */}
       <div 
         className="absolute flex items-center justify-center font-bold text-white border border-white/50"
-        style={{ 
-          backgroundColor: paddler.type === 'racer' ? '#8b5cf6' : 
+        style={{
+          backgroundColor: paddler.type === 'racer' ? '#8b5cf6' :
                           paddler.type === 'casual' ? '#3b82f6' : '#64748b',
           boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
           width: '12px',
@@ -306,12 +309,23 @@ function App() {
   useEffect(() => {
     localStorage.setItem('canoePriority', JSON.stringify(canoePriority));
   }, [canoePriority]);
-  
+
   // Staging view and sort
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
-  const [hoveredCanoe, setHoveredCanoe] = useState<string | null>(null);
   const [isReassigning, setIsReassigning] = useState(false);
+
+  // Canoe designations - persist to localStorage
+  const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('canoeDesignations');
+    if (saved) { try { return JSON.parse(saved); } catch { /* default */ } }
+    return {};
+  });
+  const [openDesignator, setOpenDesignator] = useState<string | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('canoeDesignations', JSON.stringify(canoeDesignations));
+  }, [canoeDesignations]);
   
   // Edit modal state
   const [editingPaddler, setEditingPaddler] = useState<Paddler | null>(null);
@@ -562,14 +576,26 @@ function App() {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        {/* Header - only logo and title */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
+        {/* Header */}
+        <header className="bg-white dark:bg-slate-900 sticky top-0 z-30">
           <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                 <span className="text-xl">🛶</span>
               </div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Canoe Crew</h1>
+              <h1
+                className="text-3xl"
+                style={{
+                  fontFamily: "'UnifrakturMaguntia', cursive",
+                  color: '#dc2626',
+                  WebkitTextStroke: '1.5px white',
+                  paintOrder: 'stroke fill',
+                  textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                }}
+              >
+                Lokahi
+              </h1>
             </div>
           </div>
         </header>
@@ -577,101 +603,138 @@ function App() {
         <main className="max-w-6xl mx-auto px-6 py-8">
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center mb-6">
-                <span className="text-4xl">🛶</span>
+              <div
+                onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
+                className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
+                style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
+              >
+                🛶
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Canoe Crew</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-8">Load sample data to get started</p>
-              <button onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }} className="px-6 py-3 text-base font-medium rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl transition-shadow">
-                🚀 Load Sample Data
-              </button>
+              <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '80px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', alignItems: 'flex-start' }}>
               {/* LEFT COLUMN - CANOES */}
               <div style={{ width: canoeWidth }}>
-                {/* Canoe Sort Widget with Auto/Return buttons */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                      <span>📊</span> Canoe Sort
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm hover:shadow transition-shadow">
-                        ✨ Auto
-                      </button>
-                      <button onClick={() => { triggerAnimation(); handleUnassignAll(); }} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        ↩️ All
-                      </button>
+                {/* Sort Widget */}
+                <div className="flex items-center gap-2 px-1 py-1 sticky z-20 bg-slate-50 dark:bg-slate-950" style={{ top: '72px' }}>
+                    <Droppable droppableId="canoe-priority" direction="horizontal">
+                      {(provided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-2 flex-1">
+                          {canoePriority.map((item, index) => (
+                            <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="rounded-full border-[3px] flex items-center justify-center cursor-grab active:cursor-grabbing transition-all"
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    position: 'static',
+                                    width: TOOLBAR_SIZE,
+                                    height: TOOLBAR_SIZE,
+                                    backgroundColor: '#000',
+                                    borderColor: snapshot.isDragging ? '#fff' : '#9ca3af',
+                                    boxShadow: snapshot.isDragging ? '0 0 0 2px #3b82f6' : 'none',
+                                  }}
+                                >
+                                  <span style={{ fontSize: '20px', color: item.id === 'gender' ? '#fff' : undefined }}>{item.icon}</span>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                    <div
+                      onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }}
+                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80 shrink-0"
+                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '13px', fontWeight: 700 }}
+                    >
+                      A
                     </div>
-                  </div>
-                  <Droppable droppableId="canoe-priority" direction="horizontal">
-                    {(provided) => (
-                      <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-3">
-                        {canoePriority.map((item, index) => (
-                          <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={{ ...provided.draggableProps.style, position: 'static' }}
-                                className={`px-4 py-2.5 rounded-lg text-white text-xs font-medium shadow-md cursor-grab active:cursor-grabbing transition-all bg-gradient-to-r ${item.gradient} border-2 border-white/30
-                                  ${snapshot.isDragging ? 'scale-105 shadow-xl ring-2 ring-white/50' : 'hover:shadow-lg hover:border-white/50'}`}
-                              >
-                                <span className="mr-2">{item.icon}</span>
-                                <span className="font-semibold">{item.label}</span>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                  <p className="text-xs text-slate-400 mt-2">Drag to reorder • Auto-sorts canoes</p>
+                    <div
+                      onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80 shrink-0"
+                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '18px' }}
+                    >
+                      ↩
+                    </div>
                 </div>
 
                 {/* All Canoes - MORE SPACING */}
                 <div style={{ marginTop: '24px' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const isFull = canoe.status === 'full';
-                    const isHovered = hoveredCanoe === canoe.id;
                     return (
-                      <div 
-                        key={canoe._id.toString()} 
+                      <div
+                        key={canoe._id.toString()}
                         className={`bg-white dark:bg-slate-900 rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-200 dark:border-slate-800'} shadow-sm flex items-center gap-4`}
-                        style={{ padding: '10px 16px', marginBottom: '12px' }}
-                        onMouseEnter={() => setHoveredCanoe(canoe.id)}
-                        onMouseLeave={() => setHoveredCanoe(null)}
+                        style={{ padding: '10px 16px', marginBottom: '4px' }}
                       >
-                        {/* Name and hover controls on the left */}
-                        <div className="flex items-center gap-2 w-28 shrink-0 relative">
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm truncate">{canoe.name}</span>
-                          
-                          {/* Hover controls - shows on hover */}
-                          {isHovered && (
-                            <div className="absolute left-0 top-full mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1 flex gap-1 z-10">
-                              <button 
-                                onClick={() => handleRemoveCanoe(canoe.id)}
-                                className="w-6 h-6 rounded bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-200 flex items-center justify-center text-xs font-bold"
-                                title="Remove canoe"
-                              >
-                                −
-                              </button>
-                              <button 
-                                onClick={() => handleAddCanoeAfter(index)}
-                                className="w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 flex items-center justify-center text-xs font-bold"
-                                title="Add canoe after"
-                              >
-                                +
-                              </button>
-                            </div>
+                        {/* Canoe designation + controls */}
+                        <div className="flex flex-col items-center shrink-0 relative self-start">
+                          {/* Designation circle */}
+                          <div
+                            className="rounded-full border-[3px] border-black dark:border-white bg-white dark:bg-slate-900 flex items-center justify-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-slate-800 transition-colors"
+                            style={{ width: 36, height: 36 }}
+                            onClick={() => setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                          >
+                            <span className="text-[11px] font-black text-black dark:text-white leading-none">{canoeDesignations[canoe.id] || '???'}</span>
+                          </div>
+                          {/* -/+ buttons side by side under designator */}
+                          <div className="flex items-center gap-0.5 mt-0.5">
+                            <button
+                              onClick={() => handleRemoveCanoe(canoe.id)}
+                              className="w-3 h-3 flex items-center justify-center text-[7px] leading-none font-bold text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                              title="Remove canoe"
+                            >
+                              −
+                            </button>
+                            <button
+                              onClick={() => handleAddCanoeAfter(index)}
+                              className="w-3 h-3 flex items-center justify-center text-[7px] leading-none font-bold text-slate-300 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                              title="Add canoe"
+                            >
+                              +
+                            </button>
+                          </div>
+                          {/* Designation selector dropdown */}
+                          {openDesignator === canoe.id && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setOpenDesignator(null)} />
+                              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px' }}>
+                                {CANOE_DESIGNATIONS.map(d => (
+                                  <button
+                                    key={d}
+                                    onClick={(e) => { e.stopPropagation(); setCanoeDesignations(prev => ({ ...prev, [canoe.id]: d })); setOpenDesignator(null); }}
+                                    className="px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-center transition-colors"
+                                  >
+                                    {d}
+                                  </button>
+                                ))}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const custom = prompt('Enter canoe number:');
+                                    if (custom && custom.trim()) {
+                                      setCanoeDesignations(prev => ({ ...prev, [canoe.id]: custom.trim() }));
+                                    }
+                                    setOpenDesignator(null);
+                                  }}
+                                  className="px-2 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded text-center transition-colors"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </>
                           )}
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center" style={{ gap: PADDING }}>
+                        <div className="flex items-center ml-auto" style={{ gap: PADDING }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
@@ -687,7 +750,7 @@ function App() {
                                   >
                                     <div
                                       className={`rounded-full flex items-center justify-center transition-all
-                                        ${snapshot.isDraggingOver ? 'bg-emerald-200 dark:bg-emerald-800 scale-110 ring-2 ring-emerald-400' : assignedPaddler ? '' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400'}`}
+                                        ${snapshot.isDraggingOver ? 'bg-slate-300 dark:bg-slate-600 scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
                                       style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
                                     >
                                       {assignedPaddler ? (
@@ -698,9 +761,7 @@ function App() {
                                             </div>
                                           )}
                                         </Draggable>
-                                      ) : (
-                                        <span className="text-slate-400 text-[10px] font-bold">{seat}</span>
-                                      )}
+                                      ) : null}
                                     </div>
                                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
@@ -727,79 +788,85 @@ function App() {
               </div>
 
               {/* RIGHT COLUMN - STAGING */}
-              <div className="space-y-4" style={{ width: 380 }}>
+              <div style={{ width: 380 }}>
                 {/* View By Toggle with + Paddler button and Trash */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">View By</h3>
-                    <div className="flex items-center gap-2">
-                      <Droppable droppableId="edit-area">
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={`h-8 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all border-2
-                              ${snapshot.isDraggingOver
-                                ? 'bg-amber-500 border-amber-500 text-white scale-105'
-                                : 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-200'}`}
-                            title="Drag paddlers here to edit"
-                            style={{ minWidth: '70px' }}
-                          >
-                            <span className="text-sm">✏️</span>
-                            <span className={`text-xs font-medium ${snapshot.isDraggingOver ? 'text-white' : 'text-amber-700 dark:text-amber-400'}`}>
-                              {snapshot.isDraggingOver ? 'Drop to edit' : 'Edit'}
-                            </span>
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                      <Droppable droppableId="trash-can">
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={`h-8 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all border-2
-                              ${snapshot.isDraggingOver
-                                ? 'bg-rose-500 border-rose-500 text-white scale-105'
-                                : 'bg-rose-100 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800 text-rose-500 dark:text-rose-400 hover:bg-rose-200'}`}
-                            title="Drag paddlers here to delete"
-                            style={{ minWidth: '80px' }}
-                          >
-                            <span className="text-sm">🗑️</span>
-                            <span className={`text-xs font-medium ${snapshot.isDraggingOver ? 'text-white' : 'text-rose-600 dark:text-rose-400'}`}>
-                              {snapshot.isDraggingOver ? 'Drop to delete' : 'Trash'}
-                            </span>
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                      <button
-                        onClick={handleAddPaddler}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:shadow transition-shadow"
-                      >
-                        + Paddler
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
+                <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-50 dark:bg-slate-950" style={{ top: '72px' }}>
+                  {/* View filter icons - left aligned */}
+                  <div className="flex items-center gap-2">
                     {[
-                      { id: "ability", label: "Ability", icon: "⭐" },
-                      { id: "gender", label: "Gender", icon: "⚥" },
-                      { id: "type", label: "Racer?", icon: "🏁" },
-                      { id: "seatPreference", label: "Seat", icon: "💺" },
+                      { id: "ability", icon: "⭐" },
+                      { id: "gender", icon: "⚥" },
+                      { id: "type", icon: "🏁" },
+                      { id: "seatPreference", icon: "💺" },
                     ].map((option) => (
-                      <button
+                      <div
                         key={option.id}
                         onClick={() => setViewBy(option.id as ViewBy)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1
-                          ${viewBy === option.id 
-                            ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-800 shadow-md' 
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                        className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all"
+                        style={{
+                          width: TOOLBAR_SIZE,
+                          height: TOOLBAR_SIZE,
+                          backgroundColor: viewBy === option.id ? '#374151' : '#000',
+                          borderColor: viewBy === option.id ? '#fff' : '#9ca3af',
+                          boxShadow: viewBy === option.id ? '0 0 0 2px #3b82f6' : 'none',
+                          fontSize: '20px',
+                          lineHeight: 1,
+                          color: option.id === 'gender' ? '#fff' : undefined,
+                        }}
                       >
-                        <span>{option.icon}</span>
-                        {option.label}
-                      </button>
+                        {option.icon}
+                      </div>
                     ))}
+                  </div>
+                  {/* Edit/Trash/+ icons - right aligned */}
+                  <div className="flex items-center gap-2">
+                    <Droppable droppableId="edit-area">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="rounded-full border-[3px] flex items-center justify-center transition-all"
+                          style={{
+                            width: TOOLBAR_SIZE,
+                            height: TOOLBAR_SIZE,
+                            backgroundColor: snapshot.isDraggingOver ? '#facc15' : '#000',
+                            borderColor: snapshot.isDraggingOver ? '#fde047' : '#9ca3af',
+                            transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
+                          }}
+                          title="Drag paddlers here to edit"
+                        >
+                          <span style={{ fontSize: '16px' }}>✏️</span>
+                          <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                        </div>
+                      )}
+                    </Droppable>
+                    <Droppable droppableId="trash-can">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="rounded-full border-[3px] flex items-center justify-center transition-all"
+                          style={{
+                            width: TOOLBAR_SIZE,
+                            height: TOOLBAR_SIZE,
+                            backgroundColor: snapshot.isDraggingOver ? '#f87171' : '#000',
+                            borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#9ca3af',
+                            transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
+                          }}
+                          title="Drag paddlers here to delete"
+                        >
+                          <span style={{ fontSize: '16px' }}>🗑️</span>
+                          <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                        </div>
+                      )}
+                    </Droppable>
+                    <div
+                      onClick={handleAddPaddler}
+                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
+                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff' }}
+                    >
+                      +
+                    </div>
                   </div>
                 </div>
 
