@@ -259,6 +259,7 @@ function App() {
   const removeCanoe = useMutation(api.canoes.removeCanoe);
   const addPaddler = useMutation(api.paddlers.addPaddler);
   const deletePaddler = useMutation(api.paddlers.deletePaddler);
+  const updatePaddler = useMutation(api.paddlers.updatePaddler);
 
   // Canoe sort priority (draggable) - persist to localStorage
   const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(() => {
@@ -285,6 +286,18 @@ function App() {
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [hoveredCanoe, setHoveredCanoe] = useState<string | null>(null);
   const [isReassigning, setIsReassigning] = useState(false);
+  
+  // Edit modal state
+  const [editingPaddler, setEditingPaddler] = useState<Paddler | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    gender: 'kane' as 'kane' | 'wahine',
+    type: 'casual' as 'racer' | 'casual' | 'very-casual',
+    ability: 3,
+    seatPreference: '000000',
+  });
 
   // Smart canoe display - start with minimum needed, but user can add more
   useEffect(() => {
@@ -360,6 +373,7 @@ function App() {
 
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
+    console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
     // Handle canoe priority reordering
@@ -377,14 +391,38 @@ function App() {
       if (draggedPaddler) {
         // Unassign from canoe if assigned
         if (draggedPaddler.assignedCanoe && draggedPaddler.assignedSeat) {
-          await unassignPaddler({ 
-            paddlerId: draggableId, 
-            canoeId: draggedPaddler.assignedCanoe, 
-            seat: draggedPaddler.assignedSeat 
+          await unassignPaddler({
+            paddlerId: draggableId,
+            canoeId: draggedPaddler.assignedCanoe,
+            seat: draggedPaddler.assignedSeat
           });
         }
         // Delete the paddler
         await deletePaddler({ paddlerId: draggableId });
+      }
+      return;
+    }
+
+    // Handle edit area - open edit modal
+    if (destination.droppableId === "edit-area") {
+      console.log('Edit area drop detected, looking for paddler:', draggableId);
+      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
+      console.log('Found paddler:', draggedPaddler);
+      if (draggedPaddler) {
+        console.log('Setting editing state...');
+        setEditingPaddler(draggedPaddler);
+        setEditForm({
+          firstName: draggedPaddler.firstName,
+          lastName: draggedPaddler.lastName || '',
+          gender: draggedPaddler.gender,
+          type: draggedPaddler.type,
+          ability: draggedPaddler.ability,
+          seatPreference: draggedPaddler.seatPreference || '000000',
+        });
+        setIsEditModalOpen(true);
+        console.log('Modal should be open now, isEditModalOpen:', true);
+      } else {
+        console.log('Paddler not found!');
       }
       return;
     }
@@ -470,7 +508,25 @@ function App() {
     setSectionSorts(prev => ({ ...prev, [sectionId]: sortBy }));
   };
 
+  const handleSaveEdit = async () => {
+    if (!editingPaddler) return;
+    await updatePaddler({
+      paddlerId: editingPaddler.id,
+      ...editForm,
+    });
+    setIsEditModalOpen(false);
+    setEditingPaddler(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingPaddler(null);
+  };
+
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
+
+  // Debug log
+  console.log('Render - isEditModalOpen:', isEditModalOpen, 'editingPaddler:', editingPaddler?.firstName);
 
   // Calculate canoe width
   const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
@@ -645,14 +701,34 @@ function App() {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">View By</h3>
                     <div className="flex items-center gap-2">
+                      <Droppable droppableId="edit-area">
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`h-8 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all border-2
+                              ${snapshot.isDraggingOver
+                                ? 'bg-amber-500 border-amber-500 text-white scale-105'
+                                : 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-200'}`}
+                            title="Drag paddlers here to edit"
+                            style={{ minWidth: '70px' }}
+                          >
+                            <span className="text-sm">✏️</span>
+                            <span className={`text-xs font-medium ${snapshot.isDraggingOver ? 'text-white' : 'text-amber-700 dark:text-amber-400'}`}>
+                              {snapshot.isDraggingOver ? 'Drop to edit' : 'Edit'}
+                            </span>
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
                       <Droppable droppableId="trash-can">
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className={`h-8 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all border-2
-                              ${snapshot.isDraggingOver 
-                                ? 'bg-rose-500 border-rose-500 text-white scale-105' 
+                              ${snapshot.isDraggingOver
+                                ? 'bg-rose-500 border-rose-500 text-white scale-105'
                                 : 'bg-rose-100 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800 text-rose-500 dark:text-rose-400 hover:bg-rose-200'}`}
                             title="Drag paddlers here to delete"
                             style={{ minWidth: '80px' }}
@@ -665,7 +741,7 @@ function App() {
                           </div>
                         )}
                       </Droppable>
-                      <button 
+                      <button
                         onClick={handleAddPaddler}
                         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:shadow transition-shadow"
                       >
@@ -780,6 +856,204 @@ function App() {
             </div>
           )}
         </main>
+
+        {/* Edit Paddler Modal */}
+        {isEditModalOpen && editingPaddler && (
+          <div className="fixed flex" style={{ 
+            top: '80px', 
+            right: '20px', 
+            zIndex: 9999,
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            borderRadius: '16px',
+            padding: '8px'
+          }} onClick={handleCloseEditModal}>
+            <div
+              className="rounded-2xl shadow-2xl p-6 w-full max-w-md"
+              style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', minWidth: '380px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: '#1e293b' }}>
+                  <span>✏️</span> Edit Paddler
+                </h2>
+                <button
+                  onClick={handleCloseEditModal}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                  style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Name fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>First Name</label>
+                    <input
+                      type="text"
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
+                      placeholder="First name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>Last Name</label>
+                    <input
+                      type="text"
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+
+                {/* Gender */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Gender</label>
+                  <div className="flex gap-2">
+                    {[
+                      { id: 'kane', label: 'Kane', icon: '♂️', color: 'blue' },
+                      { id: 'wahine', label: 'Wahine', icon: '♀️', color: 'pink' },
+                    ].map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => setEditForm(prev => ({ ...prev, gender: option.id as 'kane' | 'wahine' }))}
+                        className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all flex items-center justify-center gap-1.5
+                          ${editForm.gender === option.id
+                            ? option.color === 'blue'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                      >
+                        <span>{option.icon}</span>
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Type */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Type</label>
+                  <div className="flex gap-2">
+                    {[
+                      { id: 'racer', label: 'Racer', color: 'violet' },
+                      { id: 'casual', label: 'Casual', color: 'blue' },
+                      { id: 'very-casual', label: 'Very Casual', color: 'slate' },
+                    ].map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => setEditForm(prev => ({ ...prev, type: option.id as 'racer' | 'casual' | 'very-casual' }))}
+                        className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all
+                          ${editForm.type === option.id
+                            ? option.color === 'violet'
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                              : option.color === 'blue'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                : 'border-slate-500 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ability */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                    Ability <span className="text-slate-400">(1-5)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setEditForm(prev => ({ ...prev, ability: level }))}
+                        className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all
+                          ${editForm.ability === level
+                            ? level >= 4
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                              : level >= 3
+                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                : 'border-rose-500 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seat Preference */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                    Seat Preference <span className="text-slate-400">(click seats in priority order)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((seat) => {
+                      const prefs = editForm.seatPreference.split('').map(Number).filter(n => n > 0);
+                      const isSelected = prefs.includes(seat);
+                      const priority = prefs.indexOf(seat) + 1;
+                      return (
+                        <button
+                          key={seat}
+                          onClick={() => {
+                            const currentPrefs = editForm.seatPreference.split('').map(Number).filter(n => n > 0);
+                            let newPrefs;
+                            if (currentPrefs.includes(seat)) {
+                              newPrefs = currentPrefs.filter(s => s !== seat);
+                            } else {
+                              newPrefs = [...currentPrefs, seat];
+                            }
+                            const prefString = [...newPrefs, ...Array(6 - newPrefs.length).fill(0)].join('').slice(0, 6);
+                            setEditForm(prev => ({ ...prev, seatPreference: prefString }));
+                          }}
+                          className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all relative
+                            ${isSelected
+                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                        >
+                          {seat}
+                          {isSelected && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[8px] rounded-full flex items-center justify-center">
+                              {priority}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Selected: {editForm.seatPreference.split('').map(Number).filter(n => n > 0).join(' > ') || 'None'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleCloseEditModal}
+                  className="flex-1 px-4 py-2.5 rounded-lg border font-medium transition-colors"
+                  style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex-1 px-4 py-2.5 rounded-lg text-white font-medium shadow-lg"
+                  style={{ background: 'linear-gradient(to right, #3b82f6, #4f46e5)' }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DragDropContext>
   );

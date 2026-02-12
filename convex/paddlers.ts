@@ -192,3 +192,35 @@ export const deletePaddler = mutation({
     return { success: true, message: `Deleted paddler ${paddlerDoc.firstName}` };
   },
 });
+
+export const updatePaddler = mutation({
+  args: {
+    paddlerId: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    gender: v.optional(v.union(v.literal("kane"), v.literal("wahine"))),
+    type: v.optional(v.union(v.literal("racer"), v.literal("casual"), v.literal("very-casual"))),
+    ability: v.optional(v.number()),
+    seatPreference: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const paddlerDoc = await ctx.db.query("paddlers").withIndex("by_paddler_id", (q) => q.eq("id", args.paddlerId)).unique();
+    if (!paddlerDoc) {
+      throw new Error("Paddler not found");
+    }
+    
+    const updates: Record<string, unknown> = {};
+    if (args.firstName !== undefined) updates.firstName = args.firstName;
+    if (args.lastName !== undefined) {
+      updates.lastName = args.lastName;
+      updates.lastInitial = args.lastName[0] || "A";
+    }
+    if (args.gender !== undefined) updates.gender = args.gender;
+    if (args.type !== undefined) updates.type = args.type;
+    if (args.ability !== undefined) updates.ability = args.ability;
+    if (args.seatPreference !== undefined) updates.seatPreference = args.seatPreference;
+    
+    await ctx.db.patch(paddlerDoc._id, updates);
+    return { success: true, message: `Updated paddler ${args.firstName || paddlerDoc.firstName}` };
+  },
+});
