@@ -316,6 +316,7 @@ function App() {
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const canoeContainerRef = useRef<HTMLDivElement>(null);
   const [canoeScale, setCanoeScale] = useState(1);
 
@@ -894,7 +895,7 @@ function App() {
                       <span
                         key={option.id}
                         onClick={() => setViewBy(option.id as ViewBy)}
-                        className={`w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer transition-colors rounded-full`}
+                        className={`w-11 h-11 flex items-center justify-center text-[15px] font-bold cursor-pointer transition-colors rounded-full`}
                         style={{
                           borderWidth: '3px',
                           borderStyle: 'solid',
@@ -966,7 +967,7 @@ function App() {
                 {/* Staging Sections - always visible with at least one droppable area */}
                 <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
-                    const sectionSort = sectionSorts[section.id] || "ability";
+                    const sectionSort = sectionSorts[section.id] || "gender";
                     const sortedPaddlers = sortPaddlers(section.paddlers, sectionSort);
                     
                     return (
@@ -976,27 +977,62 @@ function App() {
                             {section.label} ({section.paddlers.length})
                           </span>
                           
-                          {/* Section sort priority */}
-                          <div className="flex gap-2">
-                            {[
-                              { id: "gender", letter: "G" },
-                              { id: "type", letter: "R" },
-                              { id: "seatPreference", letter: "S" },
-                              { id: "ability", letter: "A" },
-                            ].map((sort) => (
-                              <button
-                                key={sort.id}
-                                onClick={() => handleSectionSort(section.id, sort.id as SortBy)}
-                                className={`w-9 h-9 text-[13px] font-bold transition-colors
-                                  ${sectionSort === sort.id
-                                    ? 'bg-slate-600 dark:bg-slate-400 text-white border-slate-700 dark:border-slate-300'
-                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-600 hover:bg-slate-200'}`}
-                                style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
-                                title={`Sort by ${sort.id}`}
+                          {/* Section sort dropdown */}
+                          <div style={{ position: 'relative' }}>
+                            <span
+                              onClick={() => setOpenSortMenu(openSortMenu === section.id ? null : section.id)}
+                              className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
+                              style={{
+                                backgroundColor: '#475569',
+                                color: '#fff',
+                                borderWidth: '3px',
+                                borderStyle: 'solid',
+                                borderColor: '#334155',
+                              }}
+                            >
+                              {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[sectionSort]}
+                            </span>
+                            {openSortMenu === section.id && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  right: 0,
+                                  marginTop: '4px',
+                                  backgroundColor: '#fff',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  zIndex: 50,
+                                  overflow: 'hidden',
+                                  minWidth: '100px',
+                                }}
                               >
-                                {sort.letter}
-                              </button>
-                            ))}
+                                {[
+                                  { id: "gender", label: "Gender" },
+                                  { id: "type", label: "Racer" },
+                                  { id: "seatPreference", label: "Seat" },
+                                  { id: "ability", label: "Ability" },
+                                ].map((sort) => (
+                                  <div
+                                    key={sort.id}
+                                    onClick={() => {
+                                      handleSectionSort(section.id, sort.id as SortBy);
+                                      setOpenSortMenu(null);
+                                    }}
+                                    style={{
+                                      padding: '8px 12px',
+                                      fontSize: '13px',
+                                      fontWeight: sectionSort === sort.id ? 700 : 500,
+                                      color: sectionSort === sort.id ? '#1e293b' : '#64748b',
+                                      backgroundColor: sectionSort === sort.id ? '#f1f5f9' : '#fff',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    {sort.label}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                         
