@@ -4,7 +4,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult, DragStart, DragUpdate } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { createPortal } from "react-dom";
+
 import { useAnimationTrigger } from "./useAnimationTrigger";
 
 type Paddler = Doc<"paddlers">;
@@ -814,7 +814,7 @@ function App() {
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} />
                                               </div>
                                             );
-                                            return snapshot.isDragging ? createPortal(node, document.body) : node;
+                                            return node;
                                           }}
                                         </Draggable>
                                       ) : null}
@@ -1059,7 +1059,7 @@ function App() {
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                       </div>
                                     );
-                                    return snapshot.isDragging ? createPortal(node, document.body) : node;
+                                    return node;
                                   }}
                                 </Draggable>
                               ))}
