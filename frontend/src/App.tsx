@@ -908,55 +908,60 @@ function App() {
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toolbar row - sticky */}
-                <div className="flex items-center flex-wrap gap-1 px-1 py-1" style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent' }}>
-                  {/* Toggle button - pill shape */}
-                  <span
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    style={{
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: 800,
-                      color: '#475569',
-                      userSelect: 'none',
-                      padding: '2px 8px',
-                      backgroundColor: '#e2e8f0',
-                      borderRadius: '999px',
-                    }}
-                  >
-                    {sidebarOpen ? '›››' : '‹'}
-                  </span>
+                {/* Toolbar - sticky */}
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent', padding: '4px 4px 0 4px' }}>
+                  {/* Top row: toggle + A button */}
+                  <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
+                    <span
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        color: '#475569',
+                        userSelect: 'none',
+                        padding: '2px 8px',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '999px',
+                      }}
+                    >
+                      {sidebarOpen ? '›››' : '‹'}
+                    </span>
+
+                  {sidebarOpen && (
+                    <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                      <span
+                        onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
+                        className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
+                        style={{ backgroundColor: '#475569', color: '#fff', borderWidth: '3px', borderStyle: 'solid', borderColor: '#334155' }}
+                      >
+                        {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[viewBy]}
+                      </span>
+                      {openSortMenu === 'viewby' && (
+                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
+                          {[
+                            { id: "gender", label: "Gender" },
+                            { id: "type", label: "Racer" },
+                            { id: "seatPreference", label: "Seat" },
+                            { id: "ability", label: "Ability" },
+                          ].map((opt) => (
+                            <div
+                              key={opt.id}
+                              onClick={() => { setViewBy(opt.id as ViewBy); setOpenSortMenu(null); }}
+                              style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#1e293b' : '#64748b', backgroundColor: viewBy === opt.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
+                            >
+                              {opt.label}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  </div>
 
                 {sidebarOpen && (
                 <>
-                  <div style={{ position: 'relative', marginLeft: 'auto' }}>
-                    <span
-                      onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
-                      className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
-                      style={{ backgroundColor: '#475569', color: '#fff', borderWidth: '3px', borderStyle: 'solid', borderColor: '#334155' }}
-                    >
-                      {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[viewBy]}
-                    </span>
-                    {openSortMenu === 'viewby' && (
-                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
-                        {[
-                          { id: "gender", label: "Gender" },
-                          { id: "type", label: "Racer" },
-                          { id: "seatPreference", label: "Seat" },
-                          { id: "ability", label: "Ability" },
-                        ].map((opt) => (
-                          <div
-                            key={opt.id}
-                            onClick={() => { setViewBy(opt.id as ViewBy); setOpenSortMenu(null); }}
-                            style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#1e293b' : '#64748b', backgroundColor: viewBy === opt.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
-                          >
-                            {opt.label}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {/* Edit/Trash/+ icons */}
+                  {/* Second row: Edit/Trash/+ icons */}
                   <div className="flex items-center gap-1">
                     <Droppable droppableId="edit-area">
                       {(provided, snapshot) => (
