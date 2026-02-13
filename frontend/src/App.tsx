@@ -319,9 +319,13 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
+  const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    };
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
     return () => {
@@ -601,6 +605,10 @@ function App() {
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
   const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
   const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6)));
+  // Canoe row height: fit 6 rows in viewport minus sticky sort bar (~32px)
+  const sortBarHeight = 32;
+  const canoeMargin = 4;
+  const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 6);
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -694,7 +702,7 @@ function App() {
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '16px 8px 16px 16px', marginBottom: '4px' }}
+                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
                       >
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '28px', marginRight: '4px' }}>
