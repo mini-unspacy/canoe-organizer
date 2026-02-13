@@ -629,22 +629,7 @@ function App() {
       <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
-        <header className="sticky top-0 z-30 px-4 py-1 text-center">
-          <span
-            style={{
-              fontFamily: "'UnifrakturMaguntia', cursive",
-              color: '#dc2626',
-              WebkitTextStroke: '1.5px white',
-              paintOrder: 'stroke fill',
-              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-              fontSize: '28px',
-            }}
-          >
-            Lokahi Outrigger Canoe Club
-          </span>
-        </header>
-
-        <main className="max-w-6xl mx-auto px-6" style={{ height: 'calc(100vh - 38px)' }}>
+        <main className="max-w-6xl mx-auto px-6" style={{ height: '100vh' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
@@ -660,6 +645,21 @@ function App() {
             <div style={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
               {/* LEFT COLUMN - CANOES */}
               <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
+                {/* Header */}
+                <div className="py-1">
+                  <span
+                    style={{
+                      fontFamily: "'UnifrakturMaguntia', cursive",
+                      color: '#dc2626',
+                      WebkitTextStroke: '1.5px white',
+                      paintOrder: 'stroke fill',
+                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                      fontSize: '28px',
+                    }}
+                  >
+                    Lokahi Outrigger Canoe Club
+                  </span>
+                </div>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -839,46 +839,35 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 196 : 16,
+                  width: sidebarOpen ? 196 : 24,
                   height: '100%',
                   flexShrink: 0,
-                  position: 'relative',
                   overflowY: sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: '#cbd5e1',
+                  backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   transition: 'width 0.3s ease',
-                  padding: sidebarOpen ? '4px 4px 0 4px' : '0',
+                  padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toggle button - overlaps left edge */}
-                <div
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  style={{
-                    position: 'absolute',
-                    left: sidebarOpen ? -16 : 0,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: 16,
-                    height: 32,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: '#cbd5e1',
-                    border: '1px solid #94a3b8',
-                    borderRight: 'none',
-                    borderRadius: '4px 0 0 4px',
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    color: '#64748b',
-                    userSelect: 'none',
-                    zIndex: 10,
-                  }}
-                >
-                  {sidebarOpen ? '›' : '‹'}
-                </div>
-                {/* View By Toggle with + Paddler button and Trash */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
+                {/* Toggle button + View By row */}
+                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent' }}>
+                  {/* Toggle button - top left */}
+                  <div
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    style={{
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#64748b',
+                      userSelect: 'none',
+                      padding: '2px 4px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {sidebarOpen ? '›››' : '‹'}
+                  </div>
+                  {sidebarOpen && <>
+                  {/* View filter buttons */}
                   {/* View filter text - left aligned */}
                   <div className="flex items-center flex-wrap gap-1">
                     {[
@@ -953,8 +942,10 @@ function App() {
                       +
                     </div>
                   </div>
+                  </>}
                 </div>
 
+                {sidebarOpen && <>
                 {/* Staging Sections - always visible with at least one droppable area */}
                 <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
@@ -1042,6 +1033,7 @@ function App() {
                     </Droppable>
                   )}
                 </div>
+                </>}
               </div>
             </div>
           )}
