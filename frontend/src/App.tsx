@@ -315,9 +315,7 @@ function App() {
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
-  const SIDEBAR_OPEN_WIDTH = 160;
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_OPEN_WIDTH);
-  const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Canoe designations - persist to localStorage
   const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
@@ -606,26 +604,6 @@ function App() {
     setSectionSorts(prev => ({ ...prev, [sectionId]: sortBy }));
   };
 
-  // Sidebar drag resize
-  const handleSidebarDragStart = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    sidebarDragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [sidebarWidth]);
-
-  const handleSidebarDragMove = useCallback((e: React.PointerEvent) => {
-    if (!sidebarDragRef.current) return;
-    const delta = sidebarDragRef.current.startX - e.clientX;
-    const newWidth = Math.max(0, Math.min(SIDEBAR_OPEN_WIDTH + 40, sidebarDragRef.current.startWidth + delta));
-    setSidebarWidth(newWidth);
-  }, []);
-
-  const handleSidebarDragEnd = useCallback(() => {
-    if (!sidebarDragRef.current) return;
-    sidebarDragRef.current = null;
-    setSidebarWidth(prev => prev > 60 ? SIDEBAR_OPEN_WIDTH : 0);
-  }, []);
-
   const handleSaveEdit = async () => {
     if (!editingPaddler) return;
     await updatePaddler({
@@ -857,42 +835,42 @@ function App() {
                 </div>
               </div>
 
-              {/* Drag bar */}
-              <div
-                onPointerDown={handleSidebarDragStart}
-                onPointerMove={handleSidebarDragMove}
-                onPointerUp={handleSidebarDragEnd}
-                onPointerCancel={handleSidebarDragEnd}
-                style={{
-                  width: 10,
-                  cursor: 'col-resize',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: sidebarDragRef.current ? '#94a3b8' : '#cbd5e1',
-                  borderLeft: '1px solid #94a3b8',
-                  borderRight: '1px solid #94a3b8',
-                  transition: sidebarDragRef.current ? 'none' : 'background-color 0.2s',
-                  userSelect: 'none',
-                  touchAction: 'none',
-                }}
-              >
-                <div style={{ width: 3, height: 40, borderRadius: 2, backgroundColor: '#94a3b8' }} />
+              {/* Sidebar toggle button */}
+              <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <div
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    border: '2px solid #94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: '#e2e8f0',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: '#64748b',
+                    userSelect: 'none',
+                  }}
+                >
+                  {sidebarOpen ? '›' : '‹'}
+                </div>
               </div>
 
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarWidth,
+                  width: sidebarOpen ? 160 : 0,
                   height: '100%',
                   overflowY: 'auto',
                   overflowX: 'hidden',
                   flexShrink: 0,
                   backgroundColor: '#cbd5e1',
-                  transition: sidebarDragRef.current ? 'none' : 'width 0.3s ease',
-                  padding: sidebarWidth > 0 ? '4px 6px 0 6px' : '0',
+                  transition: 'width 0.3s ease',
+                  padding: sidebarOpen ? '4px 6px 0 6px' : '0',
                 }}
               >
                 {/* View By Toggle with + Paddler button and Trash */}
