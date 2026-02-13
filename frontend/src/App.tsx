@@ -764,7 +764,7 @@ function App() {
 
               {/* MIDDLE COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Header */}
                 <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                   <span
@@ -1044,6 +1044,7 @@ function App() {
                   touchAction: isDragging ? 'none' : 'auto',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                  paddingBottom: 'env(safe-area-inset-bottom)',
                 }}
               >
                 {/* Toolbar - sticky */}
