@@ -627,30 +627,23 @@ function App() {
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
       <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-        {/* Header */}
-        <header className="bg-white dark:bg-slate-900 sticky top-0 z-30">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                <span className="text-xl">🛶</span>
-              </div>
-              <h1
-                className="text-3xl"
-                style={{
-                  fontFamily: "'UnifrakturMaguntia', cursive",
-                  color: '#dc2626',
-                  WebkitTextStroke: '1.5px white',
-                  paintOrder: 'stroke fill',
-                  textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                }}
-              >
-                Lokahi
-              </h1>
-            </div>
-          </div>
+        {/* Header - compact */}
+        <header className="sticky top-0 z-30 px-4 py-1">
+          <span
+            style={{
+              fontFamily: "'UnifrakturMaguntia', cursive",
+              color: '#dc2626',
+              WebkitTextStroke: '1.5px white',
+              paintOrder: 'stroke fill',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+              fontSize: '28px',
+            }}
+          >
+            L
+          </span>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6" style={{ height: 'calc(100vh - 72px)' }}>
+        <main className="max-w-6xl mx-auto px-6" style={{ height: 'calc(100vh - 38px)' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
@@ -667,7 +660,7 @@ function App() {
               {/* LEFT COLUMN - CANOES */}
               <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
+                <div className="flex items-center px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
@@ -844,7 +837,7 @@ function App() {
               {/* RIGHT COLUMN - STAGING */}
               <div className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
-                <div className="flex items-center justify-between px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
+                <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                   {/* View filter text - left aligned */}
                   <div className="flex items-center flex-wrap">
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>view by:</span>
