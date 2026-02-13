@@ -620,16 +620,40 @@ function App() {
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
+  // Collapse header when either column scrolls
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const rightColRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const leftTop = leftColRef.current?.scrollTop || 0;
+      const rightTop = rightColRef.current?.scrollTop || 0;
+      setHeaderCollapsed(leftTop > 0 || rightTop > 0);
+    };
+    const left = leftColRef.current;
+    const right = rightColRef.current;
+    if (left) left.addEventListener('scroll', onScroll, { passive: true });
+    if (right) right.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (left) left.removeEventListener('scroll', onScroll);
+      if (right) right.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
   // Calculate canoe width
   const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="min-h-screen overflow-auto bg-slate-200 dark:bg-slate-950 scrollbar-hidden">
+      <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950 flex flex-col">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-        {/* Header - scrolls away */}
-        <header className="max-w-6xl mx-auto px-6 py-3">
-          <div className="flex items-center gap-3">
+        {/* Header - collapses when columns scroll */}
+        <header
+          className="max-w-6xl mx-auto px-6 overflow-hidden transition-all duration-200 w-full shrink-0"
+          style={{ height: headerCollapsed ? 0 : 52, opacity: headerCollapsed ? 0 : 1 }}
+        >
+          <div className="flex items-center gap-3 py-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <span className="text-xl">🛶</span>
             </div>
@@ -648,7 +672,7 @@ function App() {
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6">
+        <main className="flex-1 min-h-0 max-w-6xl mx-auto px-6 w-full">
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
@@ -661,9 +685,9 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', height: '100%' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div style={{ width: canoeWidth }}>
+              <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -840,7 +864,7 @@ function App() {
               </div>
 
               {/* RIGHT COLUMN - STAGING */}
-              <div style={{ width: 380 }}>
+              <div ref={rightColRef} className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                   {/* View filter text - left aligned */}
