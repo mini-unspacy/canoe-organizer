@@ -360,16 +360,20 @@ function App() {
   longPressRef.current = longPress;
   const lpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lpStartRef = useRef({ x: 0, y: 0 });
+  const lpActiveRef = useRef(false);
   const paddlersRef = useRef(paddlers);
   paddlersRef.current = paddlers;
 
   const cancelLongPress = useCallback(() => {
     if (lpTimerRef.current) { clearTimeout(lpTimerRef.current); lpTimerRef.current = null; }
+    lpActiveRef.current = false;
     setLongPress(null);
   }, []);
 
-  const handlePaddlerPointerDown = useCallback((e: React.PointerEvent, paddlerId: string) => {
-    if (e.button !== 0) return;
+  const handlePaddlerPointerDown = useCallback((e: React.PointerEvent | React.MouseEvent, paddlerId: string) => {
+    if (lpActiveRef.current) return; // Prevent double-fire from pointer+mouse
+    lpActiveRef.current = true;
+    console.log('[LP] press fired for', paddlerId);
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     lpStartRef.current = { x: e.clientX, y: e.clientY };
     setLongPress({
@@ -379,7 +383,9 @@ function App() {
       y: rect.top + rect.height / 2,
       selected: 'none',
     });
+    if (lpTimerRef.current) clearTimeout(lpTimerRef.current);
     lpTimerRef.current = setTimeout(() => {
+      console.log('[LP] timer fired → menu');
       setLongPress(prev => prev ? { ...prev, phase: 'menu' } : null);
     }, LONG_PRESS_MS);
   }, []);
@@ -389,11 +395,14 @@ function App() {
   useEffect(() => {
     if (!isLongPressing) return;
 
-    const onMove = (e: PointerEvent) => {
+    const onMove = (e: PointerEvent | MouseEvent) => {
       const lp = longPressRef.current;
       if (!lp) return;
       if (lp.phase === 'charging') {
-        if (Math.abs(e.clientX - lpStartRef.current.x) > 8 || Math.abs(e.clientY - lpStartRef.current.y) > 8) {
+        const dx = Math.abs(e.clientX - lpStartRef.current.x);
+        const dy = Math.abs(e.clientY - lpStartRef.current.y);
+        if (dx > 20 || dy > 20) {
+          console.log('[LP] cancelled: movement', dx, dy);
           cancelLongPress();
         }
       } else {
@@ -410,6 +419,7 @@ function App() {
 
     const onUp = () => {
       const lp = longPressRef.current;
+      console.log('[LP] pointer/mouse up, phase:', lp?.phase, 'selected:', lp?.selected);
       if (lp?.phase === 'menu' && lp.selected !== 'none') {
         const p = paddlersRef.current?.find((p: Paddler) => p.id === lp.paddlerId);
         if (p) {
@@ -439,7 +449,14 @@ function App() {
 
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('mousemove', onMove as EventListener);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('mousemove', onMove as EventListener);
+      window.removeEventListener('mouseup', onUp);
+    };
   }, [isLongPressing, cancelLongPress]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDragStart = useCallback((start: DragStart) => {
@@ -898,7 +915,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onPointerDown={(e) => handlePaddlerPointerDown(e, assignedPaddler.id)} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onPointerDown={(e) => handlePaddlerPointerDown(e, assignedPaddler.id)} onMouseDown={(e) => handlePaddlerPointerDown(e, assignedPaddler.id)} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
                                               </div>
                                             );
@@ -1100,6 +1117,7 @@ function App() {
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
                                         onPointerDown={(e) => handlePaddlerPointerDown(e, paddler.id)}
+                                        onMouseDown={(e) => handlePaddlerPointerDown(e, paddler.id)}
                                         style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}
                                       >
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
