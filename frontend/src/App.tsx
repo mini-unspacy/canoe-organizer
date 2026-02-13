@@ -837,32 +837,38 @@ function App() {
 
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
               <div
+                className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 180 : 20,
+                  width: sidebarOpen ? 196 : 16,
                   height: '100%',
                   flexShrink: 0,
                   position: 'relative',
+                  overflowY: sidebarOpen ? 'auto' : 'hidden',
+                  overflowX: 'hidden',
+                  backgroundColor: '#cbd5e1',
                   transition: 'width 0.3s ease',
+                  padding: sidebarOpen ? '4px 4px 0 4px' : '0',
                 }}
               >
-                {/* Toggle button - absolute, vertically centered */}
+                {/* Toggle button - overlaps left edge */}
                 <div
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   style={{
                     position: 'absolute',
-                    left: 0,
+                    left: sidebarOpen ? -16 : 0,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: 18,
+                    width: 16,
                     height: 32,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    backgroundColor: '#e2e8f0',
+                    backgroundColor: '#cbd5e1',
                     border: '1px solid #94a3b8',
+                    borderRight: 'none',
                     borderRadius: '4px 0 0 4px',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: 'bold',
                     color: '#64748b',
                     userSelect: 'none',
@@ -871,20 +877,6 @@ function App() {
                 >
                   {sidebarOpen ? '›' : '‹'}
                 </div>
-                {/* Sidebar content */}
-                <div
-                  className="scrollbar-hidden"
-                  style={{
-                    marginLeft: 18,
-                    height: '100%',
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
-                    backgroundColor: '#cbd5e1',
-                    padding: sidebarOpen ? '4px 4px 0 4px' : '0',
-                    opacity: sidebarOpen ? 1 : 0,
-                    transition: 'opacity 0.2s ease',
-                  }}
-                >
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
                   {/* View filter text - left aligned */}
@@ -1049,7 +1041,6 @@ function App() {
                       )}
                     </Droppable>
                   )}
-                </div>
                 </div>
               </div>
             </div>
