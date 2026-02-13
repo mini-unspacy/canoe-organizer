@@ -151,8 +151,8 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
     <div
       ref={circleRef}
       className={`relative flex-shrink-0 rounded-full border-[3px] shadow-md bg-gradient-to-br ${abilityColor}
-        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
-        transition-all duration-150 cursor-grab active:cursor-grabbing`}
+        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : ''}
+        cursor-grab active:cursor-grabbing`}
       style={{
         width: sizeW || CIRCLE_SIZE,
         height: CIRCLE_SIZE,
@@ -364,19 +364,15 @@ function App() {
   const handleDragStart = useCallback((_start: DragStart) => { setIsDragging(true); }, []);
   const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
 
-  // Intercept touchstart on drag handles BEFORE the browser can claim the touch.
-  // The library's touch sensor waits ~120ms (long press), during which the browser
-  // grabs the event for focus/scroll/activation. By calling preventDefault immediately
-  // with passive:false, we block the browser and let the library handle it.
+  // On any touchstart, blur focused elements to prevent iOS focus interference.
+  // Do NOT call preventDefault — the library ignores events where defaultPrevented is true.
   useEffect(() => {
-    const handler = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      const dragHandle = target.closest('[data-rfd-drag-handle-draggable-id]');
-      if (dragHandle) {
-        e.preventDefault();
+    const handler = () => {
+      if (document.activeElement && document.activeElement !== document.body) {
+        (document.activeElement as HTMLElement).blur();
       }
     };
-    document.addEventListener('touchstart', handler, { passive: false });
+    document.addEventListener('touchstart', handler, { passive: true });
     return () => document.removeEventListener('touchstart', handler);
   }, []);
 
@@ -682,7 +678,7 @@ function App() {
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1" style={{ fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>
                           {canoePriority.map((item, index) => (
-                            <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index}>
+                            <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
@@ -811,7 +807,7 @@ function App() {
                                       style={{ ...(!assignedPaddler && !snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : {}), width: dynamicCircleW, height: CIRCLE_SIZE }}
                                     >
                                       {assignedPaddler ? (
-                                        <Draggable draggableId={assignedPaddler.id} index={0}>
+                                        <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
                                           {(provided, snapshot) => {
                                             const node = (
                                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}>
@@ -1048,7 +1044,7 @@ function App() {
                               style={{ padding: '4px', gap: '4px' }}
                             >
                               {sortedPaddlers.map((paddler: Paddler, index: number) => (
-                                <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index}>
+                                <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
                                   {(provided, snapshot) => {
                                     const node = (
                                       <div
