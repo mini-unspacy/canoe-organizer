@@ -162,6 +162,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        touchAction: 'none',
       }}
     >
       {/* Name - in the center */}
