@@ -849,7 +849,7 @@ function App() {
                               )}
                             </Droppable>
                             <div
-                              onClick={() => { if (tempPriority.map(p => p.id).join(',') !== canoePriority.map(p => p.id).join(',')) { setCanoePriority(tempPriority); } setSortPillOpen(false); }}
+                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); }}
                               style={{
                                 marginTop: '8px',
                                 padding: '6px 12px',
