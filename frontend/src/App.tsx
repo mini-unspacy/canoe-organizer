@@ -854,18 +854,18 @@ function App() {
 
         {/* RIGHT COLUMN - STAGING SIDEBAR */}
         <div
-          className="fixed top-0 right-0 h-screen bg-slate-200 dark:bg-slate-950 shadow-xl scrollbar-hidden"
+          className="fixed top-0 right-0 scrollbar-hidden border-l border-slate-300 dark:border-slate-700"
           style={{
             width: 396,
+            height: '100vh',
             overflowY: 'auto',
             transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
             transition: 'transform 0.3s ease',
             zIndex: 40,
-            padding: '0 8px',
+            padding: '38px 8px 0 8px',
+            backgroundColor: '#e2e8f0',
           }}
         >
-          <div style={{ height: 38 }} /> {/* spacer for header */}
-          <div className="scrollbar-hidden" style={{ overflowY: 'auto', height: 'calc(100vh - 38px)' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                   {/* View filter text - left aligned */}
@@ -1030,7 +1030,6 @@ function App() {
                     </Droppable>
                   )}
                 </div>
-          </div>
         </div>
 
         {/* Edit Paddler Modal */}
