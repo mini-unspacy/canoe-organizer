@@ -622,8 +622,8 @@ function App() {
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div style={{ width: containerWidth, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', overflowY: 'auto', height: '100%' }}>
+              <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
                 {/* Header */}
                 <div className="py-1">
                   <span
@@ -640,11 +640,11 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', fontSize: containerWidth < 280 ? '11px' : containerWidth < 350 ? '13px' : containerWidth < 450 ? '16px' : '22px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1">
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1" style={{ fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>
                           {canoePriority.map((item, index) => (
                             <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index}>
                               {(provided, snapshot) => (
