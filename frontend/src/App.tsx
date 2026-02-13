@@ -323,7 +323,11 @@ function App() {
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   // Canoe designations - persist to localStorage
@@ -679,8 +683,8 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
-                    <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', fontSize: containerWidth < 350 ? '14px' : containerWidth < 500 ? '18px' : '22px' }}>
+                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1">
@@ -694,9 +698,9 @@ function App() {
                                   className="flex items-center"
                                   style={{ ...provided.draggableProps.style, touchAction: 'none', position: 'static' }}
                                 >
-                                  {index > 0 && <span className="text-[22px] text-slate-300 dark:text-slate-600 mx-2">/</span>}
+                                  {index > 0 && <span className="text-slate-300 dark:text-slate-600 mx-1">/</span>}
                                   <span
-                                    className={`text-[22px] font-medium cursor-grab active:cursor-grabbing transition-colors
+                                    className={`font-medium cursor-grab active:cursor-grabbing transition-colors
                                       ${snapshot.isDragging ? 'text-blue-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'}`}
                                   >
                                     {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
@@ -712,13 +716,13 @@ function App() {
                     <div className="flex flex-col items-end shrink-0 ml-3 gap-1">
                       <span
                         onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }}
-                        className="text-[22px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                        className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
                       >
                         assign
                       </span>
                       <span
                         onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                        className="text-[22px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                        className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
                       >
                         return
                       </span>
