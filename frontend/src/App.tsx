@@ -622,7 +622,7 @@ function App() {
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
   // Calculate canoe width
-  const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
+  const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 80;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -779,7 +779,7 @@ function App() {
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center ml-auto" style={{ gap: PADDING }}>
+                        <div className="flex items-center" style={{ gap: PADDING }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
