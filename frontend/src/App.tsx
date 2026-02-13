@@ -317,6 +317,7 @@ function App() {
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
@@ -668,9 +669,10 @@ function App() {
 
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = sidebarOpen ? 176 : 24;
+  const leftSidebarW = leftSidebarOpen ? 176 : 24;
   const mainPad = 16;
   const flexGap = 8;
-  const containerWidth = windowWidth - sidebarW - flexGap - mainPad;
+  const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * 2 - mainPad;
   const leftControlWidth = 36;
   const canoePadding = 16;
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
@@ -700,7 +702,58 @@ function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
-              {/* LEFT COLUMN - CANOES */}
+              {/* LEFT SIDEBAR - NAVIGATION */}
+              <div
+                className="scrollbar-hidden"
+                style={{
+                  width: leftSidebarOpen ? 176 : 24,
+                  height: '100%',
+                  flexShrink: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflowY: leftSidebarOpen ? 'auto' : 'hidden',
+                  overflowX: 'hidden',
+                  backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent',
+                  padding: leftSidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                }}
+              >
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '4px 4px 0 4px' }}>
+                  <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0 }}>
+                    <span
+                      onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        color: '#475569',
+                        userSelect: 'none',
+                        padding: '2px 8px',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '999px',
+                      }}
+                    >
+                      {leftSidebarOpen ? '‹‹‹' : '›'}
+                    </span>
+                  </div>
+                </div>
+                {leftSidebarOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px' }}>
+                    {['roster', 'planner', 'attendance'].map((item) => (
+                      <span
+                        key={item}
+                        className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
+                        style={{ fontSize: '15px', padding: '6px 8px', borderRadius: '8px' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* MIDDLE COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
                 {/* Header */}
