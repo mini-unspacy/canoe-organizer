@@ -640,7 +640,7 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', fontSize: containerWidth < 350 ? '14px' : containerWidth < 500 ? '18px' : '22px' }}>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', fontSize: containerWidth < 280 ? '11px' : containerWidth < 350 ? '13px' : containerWidth < 450 ? '16px' : '22px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                     <span className="shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
