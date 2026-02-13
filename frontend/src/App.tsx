@@ -839,13 +839,16 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
+                  position: 'fixed',
+                  right: 0,
+                  top: 0,
                   width: sidebarOpen ? 176 : 24,
-                  height: '100%',
-                  flexShrink: 0,
+                  height: '100vh',
                   overflowY: sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                  zIndex: 30,
                 }}
               >
                 {/* Toolbar row - sticky */}
