@@ -880,15 +880,13 @@ function App() {
                     <div style={{ flex: 1 }} />
                     <span
                       onClick={handleAssign}
-                      className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
-                      style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
+                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
                       ←assign
                     </span>
                     <span
                       onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                      className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
-                      style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
+                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
                       return→
                     </span>
