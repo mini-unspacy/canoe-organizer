@@ -620,75 +620,54 @@ function App() {
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
-  // Collapse header when either column scrolls
-  const [headerCollapsed, setHeaderCollapsed] = useState(false);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const leftTop = leftColRef.current?.scrollTop || 0;
-      const rightTop = rightColRef.current?.scrollTop || 0;
-      setHeaderCollapsed(leftTop > 0 || rightTop > 0);
-    };
-    const left = leftColRef.current;
-    const right = rightColRef.current;
-    if (left) left.addEventListener('scroll', onScroll, { passive: true });
-    if (right) right.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      if (left) left.removeEventListener('scroll', onScroll);
-      if (right) right.removeEventListener('scroll', onScroll);
-    };
-  }, []);
-
   // Calculate canoe width
   const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950 flex flex-col">
+      <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-        {/* Header - collapses when columns scroll */}
-        <div
-          className="overflow-hidden transition-all duration-200 shrink-0 px-6"
-          style={{ height: headerCollapsed ? 0 : 52, opacity: headerCollapsed ? 0 : 1 }}
-        >
-          <div className="flex items-center gap-3 py-3 max-w-6xl mx-auto">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <span className="text-xl">🛶</span>
+        {/* Header */}
+        <header className="bg-white dark:bg-slate-900 sticky top-0 z-30">
+          <div className="max-w-6xl mx-auto px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <span className="text-xl">🛶</span>
+              </div>
+              <h1
+                className="text-3xl"
+                style={{
+                  fontFamily: "'UnifrakturMaguntia', cursive",
+                  color: '#dc2626',
+                  WebkitTextStroke: '1.5px white',
+                  paintOrder: 'stroke fill',
+                  textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                }}
+              >
+                Lokahi
+              </h1>
             </div>
-            <h1
-              className="text-3xl"
-              style={{
-                fontFamily: "'UnifrakturMaguntia', cursive",
-                color: '#dc2626',
-                WebkitTextStroke: '1.5px white',
-                paintOrder: 'stroke fill',
-                textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-              }}
-            >
-              Lokahi
-            </h1>
           </div>
-        </div>
+        </header>
 
-        {hasNoData ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div
-              onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
-              className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
-              style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
-            >
-              🛶
+        <main className="max-w-6xl mx-auto px-6" style={{ height: 'calc(100vh - 72px)' }}>
+          {hasNoData ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div
+                onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
+                className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
+                style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
+              >
+                🛶
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
-          </div>
-        ) : (
-          <div style={{ height: `calc(100vh - ${headerCollapsed ? 0 : 52}px)`, display: 'flex', justifyContent: 'center', gap: '24px', padding: '0 24px', transition: 'height 0.2s' }}>
-            {/* LEFT COLUMN - CANOES */}
-            <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', height: '100%' }}>
+              {/* LEFT COLUMN - CANOES */}
+              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
+                <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
@@ -863,9 +842,9 @@ function App() {
               </div>
 
               {/* RIGHT COLUMN - STAGING */}
-              <div ref={rightColRef} className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
+              <div className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
+                <div className="flex items-center justify-between px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
                   {/* View filter text - left aligned */}
                   <div className="flex items-center flex-wrap">
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>view by:</span>
@@ -1028,9 +1007,10 @@ function App() {
                     </Droppable>
                   )}
                 </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </main>
 
         {/* Edit Paddler Modal */}
         {isEditModalOpen && editingPaddler && (
