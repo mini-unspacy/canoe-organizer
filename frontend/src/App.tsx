@@ -315,6 +315,7 @@ function App() {
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Canoe designations - persist to localStorage
   const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
@@ -656,9 +657,9 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', height: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
+              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%', paddingRight: sidebarOpen ? 16 : 0, transition: 'padding-right 0.3s ease' }}>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -833,9 +834,38 @@ function App() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+        </main>
 
-              {/* RIGHT COLUMN - STAGING */}
-              <div className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
+        {/* Sidebar toggle tab */}
+        <div
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-1/2 -translate-y-1/2 cursor-pointer z-50 flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg transition-all"
+          style={{
+            right: sidebarOpen ? 396 : 0,
+            width: 24,
+            height: 48,
+            transition: 'right 0.3s ease',
+          }}
+        >
+          <span style={{ fontSize: '14px' }}>{sidebarOpen ? '›' : '‹'}</span>
+        </div>
+
+        {/* RIGHT COLUMN - STAGING SIDEBAR */}
+        <div
+          className="fixed top-0 right-0 h-screen bg-slate-200 dark:bg-slate-950 shadow-xl scrollbar-hidden"
+          style={{
+            width: 396,
+            overflowY: 'auto',
+            transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 0.3s ease',
+            zIndex: 40,
+            padding: '0 8px',
+          }}
+        >
+          <div style={{ height: 38 }} /> {/* spacer for header */}
+          <div className="scrollbar-hidden" style={{ overflowY: 'auto', height: 'calc(100vh - 38px)' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                   {/* View filter text - left aligned */}
@@ -1000,10 +1030,8 @@ function App() {
                     </Droppable>
                   )}
                 </div>
-              </div>
-            </div>
-          )}
-        </main>
+          </div>
+        </div>
 
         {/* Edit Paddler Modal */}
         {isEditModalOpen && editingPaddler && (
