@@ -361,8 +361,50 @@ function App() {
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
   const [isDragging, setIsDragging] = useState(false);
-  const handleDragStart = useCallback((_start: DragStart) => { setIsDragging(true); }, []);
-  const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
+
+  // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
+  const dragSourceIdRef = useRef<string | null>(null);
+  const swapStyleRef = useRef<HTMLStyleElement | null>(null);
+
+  const handleDragStart = useCallback((start: DragStart) => {
+    setIsDragging(true);
+    dragSourceIdRef.current = start.source.droppableId;
+  }, []);
+
+  const handleDragUpdate = useCallback((update: DragUpdate) => {
+    const destId = update.destination?.droppableId || null;
+
+    // Always clean up previous swap preview
+    if (swapStyleRef.current) {
+      swapStyleRef.current.remove();
+      swapStyleRef.current = null;
+    }
+
+    // Only inject swap preview for canoe seat targets with an existing paddler
+    if (!destId || !dragSourceIdRef.current || destId === dragSourceIdRef.current || !destId.includes('-seat-')) {
+      return;
+    }
+
+    const targetDroppable = document.querySelector(`[data-rfd-droppable-id="${destId}"]`);
+    const sourceDroppable = document.querySelector(`[data-rfd-droppable-id="${dragSourceIdRef.current}"]`);
+    if (!targetDroppable || !sourceDroppable) return;
+
+    const targetDraggable = targetDroppable.querySelector('[data-rfd-draggable-id]');
+    if (!targetDraggable) return;
+
+    const draggableId = targetDraggable.getAttribute('data-rfd-draggable-id');
+    if (!draggableId) return;
+
+    const sr = sourceDroppable.getBoundingClientRect();
+    const tr = targetDroppable.getBoundingClientRect();
+    const dx = sr.left - tr.left;
+    const dy = sr.top - tr.top;
+
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `[data-rfd-draggable-id="${draggableId}"] { transform: translate(${dx}px, ${dy}px) !important; transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important; z-index: 100 !important; position: relative !important; }`;
+    document.head.appendChild(styleEl);
+    swapStyleRef.current = styleEl;
+  }, []);
 
   // On any touchstart, blur focused elements to prevent iOS focus interference.
   // Do NOT call preventDefault — the library ignores events where defaultPrevented is true.
@@ -451,6 +493,12 @@ function App() {
 
   const onDragEnd = async (result: DropResult) => {
     setIsDragging(false);
+    // Clean up swap preview
+    if (swapStyleRef.current) {
+      swapStyleRef.current.remove();
+      swapStyleRef.current = null;
+    }
+    dragSourceIdRef.current = null;
     const { source, destination, draggableId } = result;
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
