@@ -99,7 +99,7 @@ const generateRandomPaddler = () => {
   };
 };
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW }) => {
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact }) => {
   const circleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,13 +132,19 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
 
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
 
-  // Display name: truncated first name + last initial (e.g., "JohS" for John Smith)
+  // Display name: compact = initials only, otherwise truncated first + last initial
+  const firstInitial = paddler.firstName?.[0] || '?';
   const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
-  const maxFirstNameLen = 5;
-  const truncatedFirst = paddler.firstName.length > maxFirstNameLen
-    ? paddler.firstName.slice(0, maxFirstNameLen)
-    : paddler.firstName;
-  const displayName = `${truncatedFirst}${lastInitial}`;
+  let displayName: string;
+  if (compact) {
+    displayName = `${firstInitial}${lastInitial}`;
+  } else {
+    const maxFirstNameLen = 5;
+    const truncatedFirst = paddler.firstName.length > maxFirstNameLen
+      ? paddler.firstName.slice(0, maxFirstNameLen)
+      : paddler.firstName;
+    displayName = `${truncatedFirst}${lastInitial}`;
+  }
 
   // Inner ability circle color: red (1) to green (5)
   const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
@@ -1249,7 +1255,7 @@ function App() {
                                     aria-roledescription=""
                                     style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
                                   >
-                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
+                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} compact />
                                   </div>
                                 )}
                               </Draggable>
