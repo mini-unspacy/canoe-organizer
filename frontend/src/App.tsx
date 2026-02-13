@@ -854,16 +854,19 @@ function App() {
 
         {/* RIGHT COLUMN - STAGING SIDEBAR */}
         <div
-          className="fixed top-0 right-0 scrollbar-hidden border-l border-slate-300 dark:border-slate-700"
+          className="scrollbar-hidden"
           style={{
+            position: 'fixed',
+            top: 0,
+            right: sidebarOpen ? 0 : -396,
             width: 396,
             height: '100vh',
             overflowY: 'auto',
-            transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
-            transition: 'transform 0.3s ease',
+            transition: 'right 0.3s ease',
             zIndex: 40,
             padding: '38px 8px 0 8px',
-            backgroundColor: '#e2e8f0',
+            backgroundColor: '#cbd5e1',
+            borderLeft: '2px solid #94a3b8',
           }}
         >
                 {/* View By Toggle with + Paddler button and Trash */}
