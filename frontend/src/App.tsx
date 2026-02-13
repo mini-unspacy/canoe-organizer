@@ -643,9 +643,6 @@ function App() {
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto px-2" style={{ height: '100vh', overflow: 'hidden' }}>
-          <div style={{ fontSize: '10px', background: '#fef3c7', padding: '2px 4px' }}>
-            w:{windowWidth} cw:{containerWidth} sx:{canoeScaleX.toFixed(2)}
-          </div>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
