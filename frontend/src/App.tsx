@@ -516,15 +516,6 @@ function App() {
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
-    // Handle canoe priority reordering (in sort menu)
-    if (source.droppableId === "canoe-priority") {
-      const newPriority = Array.from(tempPriority);
-      const [reorderedItem] = newPriority.splice(source.index, 1);
-      newPriority.splice(destination.index, 0, reorderedItem);
-      setTempPriority(newPriority);
-      return;
-    }
-
     // Handle trash can - delete paddler
     if (destination.droppableId === "trash-can") {
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
@@ -812,6 +803,13 @@ function App() {
                         <>
                           <div className="fixed inset-0 z-30" onClick={() => setSortPillOpen(false)} />
                           <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
+                            <DragDropContext onDragEnd={(result) => {
+                              if (!result.destination) return;
+                              const newPriority = Array.from(tempPriority);
+                              const [reorderedItem] = newPriority.splice(result.source.index, 1);
+                              newPriority.splice(result.destination.index, 0, reorderedItem);
+                              setTempPriority(newPriority);
+                            }}>
                             <Droppable droppableId="canoe-priority" direction="vertical">
                               {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -848,6 +846,7 @@ function App() {
                                 </div>
                               )}
                             </Droppable>
+                            </DragDropContext>
                             <div
                               onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
                               style={{
