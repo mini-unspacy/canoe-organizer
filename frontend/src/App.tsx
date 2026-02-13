@@ -319,6 +319,8 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
+  const [sortPillOpen, setSortPillOpen] = useState(false);
+  const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
 
@@ -504,12 +506,12 @@ function App() {
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
-    // Handle canoe priority reordering
+    // Handle canoe priority reordering (in sort menu)
     if (source.droppableId === "canoe-priority") {
-      const newPriority = Array.from(canoePriority);
+      const newPriority = Array.from(tempPriority);
       const [reorderedItem] = newPriority.splice(source.index, 1);
       newPriority.splice(destination.index, 0, reorderedItem);
-      setCanoePriority(newPriority);
+      setTempPriority(newPriority);
       return;
     }
 
@@ -772,50 +774,99 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 200 ? '11px' : '20px' }}>sort by:</span>
-                    <Droppable droppableId="canoe-priority" direction="horizontal">
-                      {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1" style={{ fontSize: containerWidth < 200 ? '11px' : '20px' }}>
-                          {canoePriority.map((item, index) => (
-                            <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="flex items-center"
-                                  style={{ ...provided.draggableProps.style, touchAction: 'none', position: 'static' }}
-                                >
-                                  {index > 0 && <span className="text-slate-300 dark:text-slate-600 mx-1">/</span>}
-                                  <span
-                                    className={`font-medium cursor-grab active:cursor-grabbing transition-colors
-                                      ${snapshot.isDragging ? 'text-blue-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'}`}
-                                  >
-                                    {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
-                                  </span>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
+                    <div style={{ position: 'relative' }}>
+                      <span
+                        onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
+                        style={{
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          color: '#475569',
+                          userSelect: 'none',
+                          padding: '2px 8px',
+                          backgroundColor: '#e2e8f0',
+                          borderRadius: '999px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        sort by:
+                      </span>
+                      {sortPillOpen && (
+                        <>
+                          <div className="fixed inset-0 z-30" onClick={() => setSortPillOpen(false)} />
+                          <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
+                            <Droppable droppableId="canoe-priority" direction="vertical">
+                              {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {tempPriority.map((item, index) => (
+                                    <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          style={{
+                                            ...provided.draggableProps.style,
+                                            touchAction: 'none',
+                                            padding: '8px 12px',
+                                            backgroundColor: snapshot.isDragging ? '#dbeafe' : '#f1f5f9',
+                                            borderRadius: '6px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            color: '#334155',
+                                            cursor: 'grab',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                          }}
+                                        >
+                                          <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
+                                          {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
+                                          <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '12px' }}>⠿</span>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
                                 </div>
                               )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
+                            </Droppable>
+                            <div
+                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); }}
+                              style={{
+                                marginTop: '8px',
+                                padding: '6px 12px',
+                                backgroundColor: '#3b82f6',
+                                color: '#fff',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              apply
+                            </div>
+                          </div>
+                        </>
                       )}
-                    </Droppable>
-                    <div className="flex flex-col items-end shrink-0 ml-3 gap-1">
-                      <span
-                        onClick={handleAssign}
-                        className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
-                      >
-                        ←assign
-                      </span>
-                      <span
-                        onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                        className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
-                      >
-                        return→
-                      </span>
                     </div>
+                    <div style={{ flex: 1 }} />
+                    <span
+                      onClick={handleAssign}
+                      className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                      style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                      ←assign
+                    </span>
+                    <span
+                      onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+                      className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                      style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                      return→
+                    </span>
                 </div>
 
                 {/* All Canoes */}
