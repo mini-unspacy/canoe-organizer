@@ -732,13 +732,13 @@ function App() {
                   flexDirection: 'column',
                   overflowY: leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent',
+                  backgroundColor: leftSidebarOpen ? '#374151' : 'transparent',
                   padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   borderRight: '1px solid #94a3b8',
                   borderLeft: '1px solid #94a3b8',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#374151' : 'transparent', padding: '12px 4px 0 4px' }}>
                   <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0, justifyContent: leftSidebarOpen ? 'flex-end' : 'flex-start' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
@@ -1052,7 +1052,7 @@ function App() {
                   overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   touchAction: isDragging ? 'none' : 'auto',
-                  backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
+                  backgroundColor: sidebarOpen ? '#374151' : 'transparent',
                   padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                   borderLeft: '1px solid #94a3b8',
@@ -1060,7 +1060,7 @@ function App() {
                 }}
               >
                 {/* Toolbar - sticky */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#374151' : 'transparent', padding: '12px 4px 0 4px' }}>
                   {/* Top row: toggle + A button */}
                   <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
                     <span
