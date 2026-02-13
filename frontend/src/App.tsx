@@ -655,7 +655,7 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', height: '100%', gap: '8px' }}>
+            <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
               <div ref={canoeContainerRef} style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: canoeScale < 1 ? `${100 / canoeScale}%` : '100%', transform: canoeScale < 1 ? `scale(${canoeScale})` : undefined, transformOrigin: 'top left' }}>
@@ -884,7 +884,7 @@ function App() {
 
                 {sidebarOpen && (
                 <>
-                  <div className="flex items-center flex-wrap gap-1" style={{ marginLeft: 'auto' }}>
+                  <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
                     {[
                       { id: "gender", label: "G" },
                       { id: "type", label: "R" },
@@ -894,9 +894,9 @@ function App() {
                       <span
                         key={option.id}
                         onClick={() => setViewBy(option.id as ViewBy)}
-                        className={`w-7 h-7 flex items-center justify-center text-[12px] font-bold cursor-pointer transition-colors rounded-full`}
+                        className={`w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer transition-colors rounded-full`}
                         style={{
-                          borderWidth: '2px',
+                          borderWidth: '3px',
                           borderStyle: 'solid',
                           ...(viewBy === option.id
                             ? { backgroundColor: '#475569', color: '#fff', borderColor: '#334155' }
