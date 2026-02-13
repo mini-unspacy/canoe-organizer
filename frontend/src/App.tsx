@@ -977,7 +977,7 @@ function App() {
                           </span>
                           
                           {/* Section sort priority */}
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             {[
                               { id: "gender", letter: "G" },
                               { id: "type", letter: "R" },
