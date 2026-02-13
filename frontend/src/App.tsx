@@ -781,6 +781,7 @@ function App() {
                           {/* Designation - top left */}
                           <span
                             className="text-[15px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
+                            style={{ WebkitTextStroke: '0.5px' }}
                             onClick={() => setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
