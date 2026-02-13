@@ -1044,7 +1044,7 @@ function App() {
                   touchAction: isDragging ? 'none' : 'auto',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
-                  paddingBottom: 'calc(env(safe-area-inset-bottom) + 60px)',
+                  paddingBottom: 0,
                 }}
               >
                 {/* Toolbar - sticky */}
@@ -1292,6 +1292,8 @@ function App() {
                 </div>
                 </div>
                 )}
+                {/* Bottom spacer to keep content above iOS browser bar */}
+                <div style={{ flexShrink: 0, height: 80, minHeight: 80 }} />
               </div>
             </div>
           )}
