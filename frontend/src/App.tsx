@@ -849,7 +849,7 @@ function App() {
                               )}
                             </Droppable>
                             <div
-                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); }}
+                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
                               style={{
                                 marginTop: '8px',
                                 padding: '6px 12px',
