@@ -692,7 +692,7 @@ function App() {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   className="flex items-center"
-                                  style={{ ...provided.draggableProps.style, position: 'static' }}
+                                  style={{ ...provided.draggableProps.style, touchAction: 'none', position: 'static' }}
                                 >
                                   {index > 0 && <span className="text-[22px] text-slate-300 dark:text-slate-600 mx-2">/</span>}
                                   <span
@@ -794,7 +794,7 @@ function App() {
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center" style={{ gap: dynamicGap }}>
+                        <div className="flex items-center justify-evenly" style={{ flex: 1 }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
@@ -817,7 +817,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, touchAction: 'none', ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} />
                                               </div>
                                             );
@@ -1053,7 +1053,7 @@ function App() {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}
+                                        style={{ ...provided.draggableProps.style, touchAction: 'none', ...(snapshot.isDragging ? {} : { position: 'static' }) }}
                                       >
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                       </div>
