@@ -642,7 +642,7 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', height: '100%', gap: '8px' }}>
               {/* LEFT COLUMN - CANOES */}
               <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Header */}
@@ -839,7 +839,7 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 196 : 24,
+                  width: sidebarOpen ? 210 : 24,
                   height: '100%',
                   flexShrink: 0,
                   overflowY: sidebarOpen ? 'auto' : 'hidden',
