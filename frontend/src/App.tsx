@@ -678,7 +678,7 @@ function App() {
   const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6)));
   // Canoe row height: fit 6 rows in viewport minus sticky sort bar (~32px)
   const sortBarHeight = 32;
-  const canoeMargin = 4;
+  const canoeMargin = 12;
   const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 6);
 
   return (
