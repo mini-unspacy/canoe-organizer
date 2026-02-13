@@ -694,10 +694,10 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
-        <main className="max-w-6xl mx-auto px-2" style={{ height: '100vh', overflow: 'hidden' }}>
+        <main className="max-w-6xl mx-auto px-2" style={{ height: '100%', overflow: 'hidden' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
