@@ -714,7 +714,7 @@ function App() {
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`bg-white dark:bg-slate-900 rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-200 dark:border-slate-800'} shadow-sm flex items-center gap-4`}
+                        className={`bg-white dark:bg-slate-900 rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-200 dark:border-slate-800'} shadow-sm flex items-center gap-1`}
                         style={{ padding: '10px 16px', marginBottom: '4px' }}
                       >
                         {/* Canoe designation + controls */}
