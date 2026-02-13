@@ -869,7 +869,7 @@ function App() {
 
                 {sidebarOpen && (
                 <>
-                  <div className="flex items-center flex-wrap gap-1">
+                  <div className="flex items-center flex-wrap gap-1" style={{ marginLeft: 'auto' }}>
                     {[
                       { id: "gender", label: "G" },
                       { id: "type", label: "R" },
@@ -964,10 +964,10 @@ function App() {
                           {/* Section sort priority */}
                           <div className="flex gap-1">
                             {[
-                              { id: "ability", letter: "A" },
                               { id: "gender", letter: "G" },
                               { id: "type", letter: "R" },
                               { id: "seatPreference", letter: "S" },
+                              { id: "ability", letter: "A" },
                             ].map((sort) => (
                               <button
                                 key={sort.id}
