@@ -899,6 +899,8 @@ function App() {
                   width: sidebarOpen ? 176 : 24,
                   height: '100%',
                   flexShrink: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
                   overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   touchAction: isDragging ? 'none' : 'auto',
@@ -1009,9 +1011,9 @@ function App() {
                 </div>
 
                 {sidebarOpen && (
-                <div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {/* Staging Sections - always visible with at least one droppable area */}
-                <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
+                <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
                     const sectionSort = sectionSorts[section.id] || "gender";
                     const sortedPaddlers = sortPaddlers(section.paddlers, sectionSort);
@@ -1124,11 +1126,11 @@ function App() {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`rounded-lg transition-colors flex flex-wrap min-h-[100px] items-center justify-center
+                          className={`rounded-lg transition-colors flex flex-wrap items-start justify-center content-start
                             ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-200 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
-                          style={{ padding: '4px', gap: '4px' }}
+                          style={{ padding: '4px', gap: '4px', flex: 1, minHeight: '100px' }}
                         >
-                          <span className="text-slate-400 text-sm">Drag paddlers here to unassign</span>
+                          <span className="text-slate-400 text-sm w-full text-center mt-4">Drag paddlers here to unassign</span>
                           {provided.placeholder}
                         </div>
                       )}
