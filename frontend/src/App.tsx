@@ -316,7 +316,7 @@ function App() {
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
@@ -363,6 +363,22 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const handleDragStart = useCallback((_start: DragStart) => { setIsDragging(true); }, []);
   const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
+
+  // Intercept touchstart on drag handles BEFORE the browser can claim the touch.
+  // The library's touch sensor waits ~120ms (long press), during which the browser
+  // grabs the event for focus/scroll/activation. By calling preventDefault immediately
+  // with passive:false, we block the browser and let the library handle it.
+  useEffect(() => {
+    const handler = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const dragHandle = target.closest('[data-rfd-drag-handle-draggable-id]');
+      if (dragHandle) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('touchstart', handler, { passive: false });
+    return () => document.removeEventListener('touchstart', handler);
+  }, []);
 
   // Block native touchmove on the whole page during drag to prevent scroll interference
   useEffect(() => {
