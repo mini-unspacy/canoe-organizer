@@ -628,7 +628,7 @@ function App() {
       <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
-        <header className="sticky top-0 z-30 px-4 py-1">
+        <header className="sticky top-0 z-30 px-4 py-1 text-center">
           <span
             style={{
               fontFamily: "'UnifrakturMaguntia', cursive",
@@ -639,7 +639,7 @@ function App() {
               fontSize: '28px',
             }}
           >
-            Lokahi
+            Lokahi Outrigger Canoe Club
           </span>
         </header>
 
