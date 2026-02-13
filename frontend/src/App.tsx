@@ -628,24 +628,26 @@ function App() {
       <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950 flex">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
 
-        {/* Vertical Lokahi label - left edge */}
-        <div className="flex flex-col items-center justify-start shrink-0 py-4 px-1">
-          <h1
+        {/* Vertical Lokahi label - left edge, letters upright flowing down */}
+        <div className="flex flex-col items-center justify-start shrink-0 pt-2 px-1">
+          <div
             style={{
               fontFamily: "'UnifrakturMaguntia', cursive",
               color: '#dc2626',
               WebkitTextStroke: '1.5px white',
               paintOrder: 'stroke fill',
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              fontSize: '28px',
-              letterSpacing: '2px',
-              margin: 0,
+              fontSize: '70px',
+              lineHeight: '0.85',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
-            Lokahi
-          </h1>
+            {'Lokahi'.split('').map((letter, i) => (
+              <span key={i}>{letter}</span>
+            ))}
+          </div>
         </div>
 
         <main className="flex-1 min-w-0 px-2" style={{ height: '100vh' }}>
