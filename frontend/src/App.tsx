@@ -360,7 +360,8 @@ function App() {
 
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
-  const handleDragStart = useCallback((_start: DragStart) => {}, []);
+  const [isDragging, setIsDragging] = useState(false);
+  const handleDragStart = useCallback((_start: DragStart) => { setIsDragging(true); }, []);
   const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
 
   // No auto canoe creation - assign button handles this
@@ -427,6 +428,7 @@ function App() {
   }, [paddlers, canoes, canoeSortedPaddlers, isReassigning, triggerAnimation]);
 
   const onDragEnd = async (result: DropResult) => {
+    setIsDragging(false);
     const { source, destination, draggableId } = result;
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
@@ -612,7 +614,7 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151' }}>
+      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto px-2" style={{ height: '100vh', overflow: 'hidden' }}>
@@ -631,7 +633,7 @@ function App() {
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
                 {/* Header */}
                 <div className="py-1">
                   <span
@@ -827,8 +829,9 @@ function App() {
                   width: sidebarOpen ? 176 : 24,
                   height: '100%',
                   flexShrink: 0,
-                  overflowY: sidebarOpen ? 'auto' : 'hidden',
+                  overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
+                  touchAction: isDragging ? 'none' : 'auto',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
