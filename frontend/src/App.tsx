@@ -702,9 +702,9 @@ function App() {
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
                 {/* Header */}
-                <div className="py-1" style={{ width: '100%', maxWidth: '600px' }}>
+                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                   <span
                     style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
@@ -719,7 +719,7 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', maxWidth: '600px' }}>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                     <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
@@ -766,7 +766,7 @@ function App() {
                 </div>
 
                 {/* All Canoes */}
-                <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px' }}>
+                <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const isFull = canoe.status === 'full';
                     return (
