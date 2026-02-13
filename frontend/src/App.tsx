@@ -896,28 +896,24 @@ function App() {
                         style={{ backgroundColor: '#d1d5db', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
                       >
                         {/* Lock button - top right */}
-                        <span
+                        <svg
                           onClick={() => setLockedCanoes(prev => {
                             const next = new Set(prev);
                             if (next.has(canoe.id)) next.delete(canoe.id);
                             else next.add(canoe.id);
                             return next;
                           })}
-                          style={{
-                            position: 'absolute',
-                            top: '2px',
-                            right: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            lineHeight: 1,
-                            color: lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8',
-                            userSelect: 'none',
-                            zIndex: 5,
-                          }}
-                          title={lockedCanoes.has(canoe.id) ? 'Unlock canoe' : 'Lock canoe'}
+                          width="14" height="14" viewBox="0 0 24 24"
+                          fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
+                          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ position: 'absolute', top: '3px', right: '4px', cursor: 'pointer', zIndex: 5 }}
                         >
-                          {lockedCanoes.has(canoe.id) ? '🔒' : '🔓'}
-                        </span>
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          {lockedCanoes.has(canoe.id)
+                            ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                          }
+                        </svg>
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '30px', marginRight: '0px' }}>
                           {/* Designation - top left */}
