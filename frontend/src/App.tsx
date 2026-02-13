@@ -1165,131 +1165,100 @@ function App() {
 
                 {sidebarOpen && (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                {/* Staging Sections - always visible with at least one droppable area */}
-                <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  {viewSections.length > 0 ? viewSections.map((section) => {
-                    const sectionSort = sectionSorts[section.id] || "gender";
-                    const sortedPaddlers = sortPaddlers(section.paddlers, sectionSort);
-                    
+                {/* Staging - single drop zone */}
+                <Droppable droppableId="staging-all" direction="horizontal">
+                  {(provided, snapshot) => {
+                    // Flatten all sections into one ordered list for draggable indices
+                    const allPaddlers: Paddler[] = [];
+                    const sectionBreaks: { index: number; label: string; id: string }[] = [];
+                    if (viewSections.length > 0) {
+                      viewSections.forEach((section) => {
+                        const sectionSort = sectionSorts[section.id] || "gender";
+                        const sorted = sortPaddlers(section.paddlers, sectionSort);
+                        sectionBreaks.push({ index: allPaddlers.length, label: section.label, id: section.id });
+                        allPaddlers.push(...sorted);
+                      });
+                    }
+
                     return (
-                      <div key={section.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 pb-4 last:pb-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
-                            {section.label} ({section.paddlers.length})
-                          </span>
-                          
-                          {/* Section sort dropdown */}
-                          <div style={{ position: 'relative' }}>
-                            <span
-                              onClick={() => setOpenSortMenu(openSortMenu === section.id ? null : section.id)}
-                              className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
-                              style={{
-                                backgroundColor: '#475569',
-                                color: '#fff',
-                                borderWidth: '3px',
-                                borderStyle: 'solid',
-                                borderColor: '#334155',
-                              }}
-                            >
-                              {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[sectionSort]}
-                            </span>
-                            {openSortMenu === section.id && (
-                              <div
-                                style={{
-                                  position: 'absolute',
-                                  top: '100%',
-                                  right: 0,
-                                  marginTop: '4px',
-                                  backgroundColor: '#fff',
-                                  borderRadius: '8px',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                  zIndex: 50,
-                                  overflow: 'hidden',
-                                  minWidth: '100px',
-                                }}
-                              >
-                                {[
-                                  { id: "gender", label: "Gender" },
-                                  { id: "type", label: "Racer" },
-                                  { id: "seatPreference", label: "Seat" },
-                                  { id: "ability", label: "Ability" },
-                                ].map((sort) => (
-                                  <div
-                                    key={sort.id}
-                                    onClick={() => {
-                                      handleSectionSort(section.id, sort.id as SortBy);
-                                      setOpenSortMenu(null);
-                                    }}
-                                    style={{
-                                      padding: '8px 12px',
-                                      fontSize: '13px',
-                                      fontWeight: sectionSort === sort.id ? 700 : 500,
-                                      color: sectionSort === sort.id ? '#1e293b' : '#64748b',
-                                      backgroundColor: sectionSort === sort.id ? '#f1f5f9' : '#fff',
-                                      cursor: 'pointer',
-                                    }}
-                                  >
-                                    {sort.label}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <Droppable droppableId={`staging-${section.id}`} direction="horizontal">
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className={`rounded-lg transition-colors flex flex-wrap min-h-[60px]
-                                ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-200 dark:bg-slate-800/50'}`}
-                              style={{ padding: '4px', gap: '4px' }}
-                            >
-                              {sortedPaddlers.map((paddler: Paddler, index: number) => (
-                                <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
-                                  {(provided, snapshot) => {
-                                    const node = (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        tabIndex={-1}
-                                        role="none"
-                                        aria-roledescription=""
-                                        style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
-                                      >
-                                        <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`rounded-lg transition-colors flex flex-wrap content-start
+                          ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : ''}`}
+                        style={{ padding: '4px', gap: '4px', marginTop: '8px', flex: 1, minHeight: '100px' }}
+                      >
+                        {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
+                          const sectionBreak = sectionBreaks.find(b => b.index === index);
+                          return (
+                            <React.Fragment key={paddler._id.toString()}>
+                              {sectionBreak && (
+                                <div className="flex items-center justify-between w-full" style={{ padding: '4px 0 2px' }}>
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+                                    {sectionBreak.label} ({viewSections.find(s => s.id === sectionBreak.id)?.paddlers.length})
+                                  </span>
+                                  <div style={{ position: 'relative' }}>
+                                    <span
+                                      onClick={() => setOpenSortMenu(openSortMenu === sectionBreak.id ? null : sectionBreak.id)}
+                                      style={{
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: 800,
+                                        color: '#475569',
+                                        userSelect: 'none',
+                                        padding: '2px 8px',
+                                        backgroundColor: '#e2e8f0',
+                                        borderRadius: '999px',
+                                      }}
+                                    >
+                                      {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[sectionSorts[sectionBreak.id] || 'gender']}
+                                    </span>
+                                    {openSortMenu === sectionBreak.id && (
+                                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
+                                        {[
+                                          { id: "gender", label: "gender" },
+                                          { id: "type", label: "racer" },
+                                          { id: "seatPreference", label: "seat" },
+                                          { id: "ability", label: "ability" },
+                                        ].map((sort) => (
+                                          <div
+                                            key={sort.id}
+                                            onClick={() => { handleSectionSort(sectionBreak.id, sort.id as SortBy); setOpenSortMenu(null); }}
+                                            style={{ padding: '8px 12px', fontSize: '13px', fontWeight: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? 700 : 500, color: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#1e293b' : '#64748b', backgroundColor: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
+                                          >
+                                            {sort.label}
+                                          </div>
+                                        ))}
                                       </div>
-                                    );
-                                    return node;
-                                  }}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              <Draggable draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    tabIndex={-1}
+                                    role="none"
+                                    aria-roledescription=""
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                  >
+                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
+                                  </div>
+                                )}
+                              </Draggable>
+                            </React.Fragment>
+                          );
+                        }) : (
+                          <span className="text-slate-400 text-sm w-full text-center mt-4">Drag paddlers here to unassign</span>
+                        )}
+                        {provided.placeholder}
                       </div>
                     );
-                  }) : (
-                    // Always show a staging area even when all paddlers are assigned
-                    <Droppable droppableId="staging-unassigned" direction="horizontal">
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`rounded-lg transition-colors flex flex-wrap items-start justify-center content-start
-                            ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-200 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
-                          style={{ padding: '4px', gap: '4px', flex: 1, minHeight: '100px' }}
-                        >
-                          <span className="text-slate-400 text-sm w-full text-center mt-4">Drag paddlers here to unassign</span>
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  )}
-                </div>
+                  }}
+                </Droppable>
                 </div>
                 )}
                 {/* Bottom spacer to keep content above iOS browser bar */}
