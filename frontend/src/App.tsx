@@ -643,7 +643,7 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
+      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto px-2" style={{ height: '100vh', overflow: 'hidden' }}>
@@ -732,8 +732,8 @@ function App() {
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`bg-white dark:bg-slate-900 rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-200 dark:border-slate-800'} shadow-sm flex items-center gap-0`}
-                        style={{ padding: '10px 8px', marginBottom: '4px' }}
+                        className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
+                        style={{ backgroundColor: '#d1d5db', padding: '10px 8px', marginBottom: '4px' }}
                       >
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '28px', marginRight: '4px' }}>
@@ -810,8 +810,8 @@ function App() {
                                   >
                                     <div
                                       className={`rounded-full flex items-center justify-center transition-all
-                                        ${snapshot.isDraggingOver ? 'bg-slate-300 dark:bg-slate-600 scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'bg-slate-200 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
-                                      style={{ width: dynamicCircleW, height: CIRCLE_SIZE }}
+                                        ${snapshot.isDraggingOver ? 'scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'border-2 border-dashed border-slate-400'}`}
+                                      style={{ ...(!assignedPaddler && !snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : {}), width: dynamicCircleW, height: CIRCLE_SIZE }}
                                     >
                                       {assignedPaddler ? (
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
