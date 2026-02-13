@@ -24,7 +24,7 @@ interface CanoeSortItem {
 const CIRCLE_SIZE = 44;
 const TOOLBAR_SIZE = 34;
 const PADDING = 12;
-const TOTAL_CIRCLE_SPACE = CIRCLE_SIZE + PADDING;
+// Circle + padding space: (CIRCLE_SIZE + PADDING)
 
 const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
@@ -639,7 +639,6 @@ function App() {
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
   const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
   const dynamicCircle = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6)));
-  const canoeWidth = containerWidth;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
