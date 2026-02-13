@@ -766,14 +766,14 @@ function App() {
                 </div>
 
                 {/* All Canoes */}
-                <div style={{ marginTop: '8px' }}>
+                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const isFull = canoe.status === 'full';
                     return (
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
+                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', width: '100%', maxWidth: '600px' }}
                       >
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '56px', marginRight: '2px', marginLeft: '-8px' }}>
