@@ -848,32 +848,27 @@ function App() {
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toggle button - sticky, pill shape */}
-                <div
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  style={{
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 800,
-                    color: '#475569',
-                    userSelect: 'none',
-                    padding: '2px 10px',
-                    backgroundColor: '#e2e8f0',
-                    borderRadius: '999px',
-                    display: 'inline-block',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 20,
-                    marginBottom: '4px',
-                  }}
-                >
-                  {sidebarOpen ? '›››' : '‹'}
-                </div>
+                {/* Toolbar row - sticky */}
+                <div className="flex items-center flex-wrap gap-1 px-1 py-1" style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent' }}>
+                  {/* Toggle button - pill shape */}
+                  <span
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    style={{
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: '#475569',
+                      userSelect: 'none',
+                      padding: '2px 8px',
+                      backgroundColor: '#e2e8f0',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    {sidebarOpen ? '›››' : '‹'}
+                  </span>
 
                 {sidebarOpen && (
-                <div>
-                {/* View By + icons row */}
-                <div className="flex items-center flex-wrap gap-1 px-1 py-1">
+                <>
                   <div className="flex items-center flex-wrap gap-1">
                     {[
                       { id: "gender", label: "G" },
@@ -947,8 +942,12 @@ function App() {
                       +
                     </div>
                   </div>
+                </>
+                )}
                 </div>
 
+                {sidebarOpen && (
+                <div>
                 {/* Staging Sections - always visible with at least one droppable area */}
                 <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
