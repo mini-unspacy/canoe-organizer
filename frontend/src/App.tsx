@@ -835,36 +835,36 @@ function App() {
                 </div>
               </div>
 
+              {/* Toggle button */}
+              <div
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  color: '#64748b',
+                  userSelect: 'none',
+                  padding: '4px',
+                  flexShrink: 0,
+                }}
+              >
+                {sidebarOpen ? '›››' : '‹'}
+              </div>
+
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
+              {sidebarOpen && (
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 210 : 24,
+                  width: 210,
                   height: '100%',
                   flexShrink: 0,
-                  overflowY: sidebarOpen ? 'auto' : 'hidden',
+                  overflowY: 'auto',
                   overflowX: 'hidden',
-                  backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
-                  transition: 'width 0.3s ease',
-                  padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                  backgroundColor: '#cbd5e1',
+                  padding: '4px 4px 0 4px',
                 }}
               >
-                {/* Toggle button - own row */}
-                <div
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  style={{
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#64748b',
-                    userSelect: 'none',
-                    padding: '4px',
-                  }}
-                >
-                  {sidebarOpen ? '›››' : '‹'}
-                </div>
-
-                {sidebarOpen && (
                 <div>
                 {/* View By + icons row */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
@@ -1031,8 +1031,8 @@ function App() {
                   )}
                 </div>
                 </div>
-                )}
               </div>
+              )}
             </div>
           )}
         </main>
