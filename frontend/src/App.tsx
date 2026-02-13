@@ -1,9 +1,10 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import type { DropResult } from "@hello-pangea/dnd";
+import type { DropResult, DragStart, DragUpdate } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAnimationTrigger } from "./useAnimationTrigger";
 
 type Paddler = Doc<"paddlers">;
@@ -341,6 +342,49 @@ function App() {
 
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
+  // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
+  const dragSourceIdRef = useRef<string | null>(null);
+  const swapStyleRef = useRef<HTMLStyleElement | null>(null);
+
+  const handleDragStart = useCallback((start: DragStart) => {
+    dragSourceIdRef.current = start.source.droppableId;
+  }, []);
+
+  const handleDragUpdate = useCallback((update: DragUpdate) => {
+    const destId = update.destination?.droppableId || null;
+
+    // Always clean up previous swap preview
+    if (swapStyleRef.current) {
+      swapStyleRef.current.remove();
+      swapStyleRef.current = null;
+    }
+
+    // Only inject swap preview for canoe seat targets with an existing paddler
+    if (!destId || !dragSourceIdRef.current || destId === dragSourceIdRef.current || !destId.includes('-seat-')) {
+      return;
+    }
+
+    const targetDroppable = document.querySelector(`[data-rfd-droppable-id="${destId}"]`);
+    const sourceDroppable = document.querySelector(`[data-rfd-droppable-id="${dragSourceIdRef.current}"]`);
+    if (!targetDroppable || !sourceDroppable) return;
+
+    const targetDraggable = targetDroppable.querySelector('[data-rfd-draggable-id]');
+    if (!targetDraggable) return;
+
+    const draggableId = targetDraggable.getAttribute('data-rfd-draggable-id');
+    if (!draggableId) return;
+
+    const sr = sourceDroppable.getBoundingClientRect();
+    const tr = targetDroppable.getBoundingClientRect();
+    const dx = sr.left - tr.left;
+    const dy = sr.top - tr.top;
+
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `[data-rfd-draggable-id="${draggableId}"] { transform: translate(${dx}px, ${dy}px) !important; transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important; z-index: 100 !important; position: relative !important; }`;
+    document.head.appendChild(styleEl);
+    swapStyleRef.current = styleEl;
+  }, []);
+
   // Smart canoe display - start with minimum needed, but user can add more
   useEffect(() => {
     if (!paddlers || !canoes) return;
@@ -415,6 +459,12 @@ function App() {
   }, [paddlers, canoes, canoeSortedPaddlers, isReassigning, triggerAnimation]);
 
   const onDragEnd = async (result: DropResult) => {
+    // Clean up swap preview
+    if (swapStyleRef.current) {
+      swapStyleRef.current.remove();
+      swapStyleRef.current = null;
+    }
+    dragSourceIdRef.current = null;
     const { source, destination, draggableId } = result;
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
@@ -574,8 +624,8 @@ function App() {
   const canoeWidth = (TOTAL_CIRCLE_SPACE * 6) + 140;
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
+      <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header */}
         <header className="bg-white dark:bg-slate-900 sticky top-0 z-30">
@@ -600,7 +650,7 @@ function App() {
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6 py-8">
+        <main className="max-w-6xl mx-auto px-6" style={{ height: 'calc(100vh - 72px)' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
@@ -613,14 +663,15 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', height: '100%' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div style={{ width: canoeWidth }}>
+              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
-                <div className="flex items-center gap-2 px-1 py-1 sticky z-20 bg-slate-50 dark:bg-slate-950" style={{ top: '72px' }}>
+                <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
+                    <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-2 flex-1">
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1">
                           {canoePriority.map((item, index) => (
                             <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index}>
                               {(provided, snapshot) => (
@@ -628,18 +679,16 @@ function App() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className="rounded-full border-[3px] flex items-center justify-center cursor-grab active:cursor-grabbing transition-all"
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    position: 'static',
-                                    width: TOOLBAR_SIZE,
-                                    height: TOOLBAR_SIZE,
-                                    backgroundColor: '#000',
-                                    borderColor: snapshot.isDragging ? '#fff' : '#9ca3af',
-                                    boxShadow: snapshot.isDragging ? '0 0 0 2px #3b82f6' : 'none',
-                                  }}
+                                  className="flex items-center"
+                                  style={{ ...provided.draggableProps.style, position: 'static' }}
                                 >
-                                  <span style={{ fontSize: '20px', color: item.id === 'gender' ? '#fff' : undefined }}>{item.icon}</span>
+                                  {index > 0 && <span className="text-[22px] text-slate-300 dark:text-slate-600 mx-2">/</span>}
+                                  <span
+                                    className={`text-[22px] font-medium cursor-grab active:cursor-grabbing transition-colors
+                                      ${snapshot.isDragging ? 'text-blue-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'}`}
+                                  >
+                                    {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
+                                  </span>
                                 </div>
                               )}
                             </Draggable>
@@ -648,24 +697,24 @@ function App() {
                         </div>
                       )}
                     </Droppable>
-                    <div
-                      onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }}
-                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80 shrink-0"
-                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '13px', fontWeight: 700 }}
-                    >
-                      A
-                    </div>
-                    <div
-                      onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80 shrink-0"
-                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '18px' }}
-                    >
-                      ↩
+                    <div className="flex flex-col items-end shrink-0 ml-3 gap-1">
+                      <span
+                        onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }}
+                        className="text-[22px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                      >
+                        assign
+                      </span>
+                      <span
+                        onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+                        className="text-[22px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+                      >
+                        return
+                      </span>
                     </div>
                 </div>
 
-                {/* All Canoes - MORE SPACING */}
-                <div style={{ marginTop: '24px' }}>
+                {/* All Canoes */}
+                <div style={{ marginTop: '8px' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const isFull = canoe.status === 'full';
                     return (
@@ -688,14 +737,16 @@ function App() {
                           <div className="flex items-center gap-0.5 mt-0.5">
                             <button
                               onClick={() => handleRemoveCanoe(canoe.id)}
-                              className="w-3 h-3 flex items-center justify-center text-[7px] leading-none font-bold text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                              className="w-7 h-7 flex items-center justify-center text-[12px] leading-none font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors border-slate-300 dark:border-slate-600"
+                              style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
                               title="Remove canoe"
                             >
                               −
                             </button>
                             <button
                               onClick={() => handleAddCanoeAfter(index)}
-                              className="w-3 h-3 flex items-center justify-center text-[7px] leading-none font-bold text-slate-300 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                              className="w-7 h-7 flex items-center justify-center text-[12px] leading-none font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border-slate-300 dark:border-slate-600"
+                              style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
                               title="Add canoe"
                             >
                               +
@@ -710,7 +761,7 @@ function App() {
                                   <button
                                     key={d}
                                     onClick={(e) => { e.stopPropagation(); setCanoeDesignations(prev => ({ ...prev, [canoe.id]: d })); setOpenDesignator(null); }}
-                                    className="px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-center transition-colors"
+                                    className="px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-center transition-colors"
                                   >
                                     {d}
                                   </button>
@@ -750,16 +801,19 @@ function App() {
                                   >
                                     <div
                                       className={`rounded-full flex items-center justify-center transition-all
-                                        ${snapshot.isDraggingOver ? 'bg-slate-300 dark:bg-slate-600 scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
+                                        ${snapshot.isDraggingOver ? 'bg-slate-300 dark:bg-slate-600 scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'bg-slate-200 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
                                       style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
                                     >
                                       {assignedPaddler ? (
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
-                                          {(provided, snapshot) => (
-                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, position: 'static' }}>
-                                              <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
-                                            </div>
-                                          )}
+                                          {(provided, snapshot) => {
+                                            const node = (
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
+                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
+                                              </div>
+                                            );
+                                            return snapshot.isDragging ? createPortal(node, document.body) : node;
+                                          }}
                                         </Draggable>
                                       ) : null}
                                     </div>
@@ -788,38 +842,34 @@ function App() {
               </div>
 
               {/* RIGHT COLUMN - STAGING */}
-              <div style={{ width: 380 }}>
+              <div className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-50 dark:bg-slate-950" style={{ top: '72px' }}>
-                  {/* View filter icons - left aligned */}
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0, minHeight: '72px' }}>
+                  {/* View filter text - left aligned */}
+                  <div className="flex items-center flex-wrap">
+                    <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>view by:</span>
                     {[
-                      { id: "ability", icon: "⭐" },
-                      { id: "gender", icon: "⚥" },
-                      { id: "type", icon: "🏁" },
-                      { id: "seatPreference", icon: "💺" },
-                    ].map((option) => (
-                      <div
-                        key={option.id}
-                        onClick={() => setViewBy(option.id as ViewBy)}
-                        className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all"
-                        style={{
-                          width: TOOLBAR_SIZE,
-                          height: TOOLBAR_SIZE,
-                          backgroundColor: viewBy === option.id ? '#374151' : '#000',
-                          borderColor: viewBy === option.id ? '#fff' : '#9ca3af',
-                          boxShadow: viewBy === option.id ? '0 0 0 2px #3b82f6' : 'none',
-                          fontSize: '20px',
-                          lineHeight: 1,
-                          color: option.id === 'gender' ? '#fff' : undefined,
-                        }}
-                      >
-                        {option.icon}
-                      </div>
+                      { id: "gender", label: "gender" },
+                      { id: "type", label: "racer?" },
+                      { id: "seatPreference", label: "preferred seat" },
+                      { id: "ability", label: "ability" },
+                    ].map((option, index) => (
+                      <span key={option.id} className="flex items-center">
+                        {index > 0 && <span className="text-[22px] text-slate-300 dark:text-slate-600 mx-2">/</span>}
+                        <span
+                          onClick={() => setViewBy(option.id as ViewBy)}
+                          className={`text-[22px] font-medium cursor-pointer transition-colors
+                            ${viewBy === option.id
+                              ? 'text-blue-500 dark:text-blue-400'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'}`}
+                        >
+                          {option.label}
+                        </span>
+                      </span>
                     ))}
                   </div>
                   {/* Edit/Trash/+ icons - right aligned */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <Droppable droppableId="edit-area">
                       {(provided, snapshot) => (
                         <div
@@ -871,7 +921,7 @@ function App() {
                 </div>
 
                 {/* Staging Sections - always visible with at least one droppable area */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-4" style={{ marginTop: '24px' }}>
+                <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
                     const sectionSort = sectionSorts[section.id] || "ability";
                     const sortedPaddlers = sortPaddlers(section.paddlers, sectionSort);
@@ -894,10 +944,11 @@ function App() {
                               <button
                                 key={sort.id}
                                 onClick={() => handleSectionSort(section.id, sort.id as SortBy)}
-                                className={`w-5 h-5 rounded text-[10px] font-bold transition-colors
-                                  ${sectionSort === sort.id 
-                                    ? 'bg-slate-600 dark:bg-slate-400 text-white' 
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200'}`}
+                                className={`w-9 h-9 text-[13px] font-bold transition-colors
+                                  ${sectionSort === sort.id
+                                    ? 'bg-slate-600 dark:bg-slate-400 text-white border-slate-700 dark:border-slate-300'
+                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-600 hover:bg-slate-200'}`}
+                                style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
                                 title={`Sort by ${sort.id}`}
                               >
                                 {sort.letter}
@@ -911,21 +962,25 @@ function App() {
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`rounded-lg p-2 transition-colors flex flex-wrap gap-2 min-h-[60px]
-                                ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-50 dark:bg-slate-800/50'}`}
+                              className={`rounded-lg transition-colors flex flex-wrap min-h-[60px]
+                                ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-200 dark:bg-slate-800/50'}`}
+                              style={{ padding: '4px', gap: '4px' }}
                             >
                               {sortedPaddlers.map((paddler: Paddler, index: number) => (
                                 <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index}>
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      style={{ ...provided.draggableProps.style, position: 'static' }}
-                                    >
-                                      <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
-                                    </div>
-                                  )}
+                                  {(provided, snapshot) => {
+                                    const node = (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}
+                                      >
+                                        <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
+                                      </div>
+                                    );
+                                    return snapshot.isDragging ? createPortal(node, document.body) : node;
+                                  }}
                                 </Draggable>
                               ))}
                               {provided.placeholder}
@@ -941,8 +996,9 @@ function App() {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`rounded-lg p-2 transition-colors flex flex-wrap gap-2 min-h-[100px] items-center justify-center
-                            ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-50 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
+                          className={`rounded-lg transition-colors flex flex-wrap min-h-[100px] items-center justify-center
+                            ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : 'bg-slate-200 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
+                          style={{ padding: '4px', gap: '4px' }}
                         >
                           <span className="text-slate-400 text-sm">Drag paddlers here to unassign</span>
                           {provided.placeholder}
@@ -1054,7 +1110,7 @@ function App() {
                               ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
                               : option.color === 'blue'
                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                : 'border-slate-500 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                : 'border-slate-500 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                             : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
                       >
                         {option.label}
