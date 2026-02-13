@@ -315,7 +315,9 @@ function App() {
   const [viewBy, setViewBy] = useState<ViewBy>("ability");
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const SIDEBAR_OPEN_WIDTH = 160;
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_OPEN_WIDTH);
+  const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   // Canoe designations - persist to localStorage
   const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
@@ -604,6 +606,26 @@ function App() {
     setSectionSorts(prev => ({ ...prev, [sectionId]: sortBy }));
   };
 
+  // Sidebar drag resize
+  const handleSidebarDragStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    sidebarDragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [sidebarWidth]);
+
+  const handleSidebarDragMove = useCallback((e: React.PointerEvent) => {
+    if (!sidebarDragRef.current) return;
+    const delta = sidebarDragRef.current.startX - e.clientX;
+    const newWidth = Math.max(0, Math.min(SIDEBAR_OPEN_WIDTH + 40, sidebarDragRef.current.startWidth + delta));
+    setSidebarWidth(newWidth);
+  }, []);
+
+  const handleSidebarDragEnd = useCallback(() => {
+    if (!sidebarDragRef.current) return;
+    sidebarDragRef.current = null;
+    setSidebarWidth(prev => prev > 60 ? SIDEBAR_OPEN_WIDTH : 0);
+  }, []);
+
   const handleSaveEdit = async () => {
     if (!editingPaddler) return;
     await updatePaddler({
@@ -659,7 +681,7 @@ function App() {
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%', paddingRight: sidebarOpen ? 16 : 0, transition: 'padding-right 0.3s ease' }}>
+              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -834,43 +856,45 @@ function App() {
                   )}
                 </div>
               </div>
-            </div>
-          )}
-        </main>
 
-        {/* Sidebar toggle tab */}
-        <div
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-1/2 -translate-y-1/2 cursor-pointer z-50 flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg transition-all"
-          style={{
-            right: sidebarOpen ? 240 : 0,
-            width: 32,
-            height: 64,
-            transition: 'right 0.3s ease',
-            fontSize: '16px',
-            fontWeight: 'bold',
-          }}
-        >
-          {sidebarOpen ? '›››' : '‹‹‹'}
-        </div>
+              {/* Drag bar */}
+              <div
+                onPointerDown={handleSidebarDragStart}
+                onPointerMove={handleSidebarDragMove}
+                onPointerUp={handleSidebarDragEnd}
+                onPointerCancel={handleSidebarDragEnd}
+                style={{
+                  width: 10,
+                  cursor: 'col-resize',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: sidebarDragRef.current ? '#94a3b8' : '#cbd5e1',
+                  borderLeft: '1px solid #94a3b8',
+                  borderRight: '1px solid #94a3b8',
+                  transition: sidebarDragRef.current ? 'none' : 'background-color 0.2s',
+                  userSelect: 'none',
+                  touchAction: 'none',
+                }}
+              >
+                <div style={{ width: 3, height: 40, borderRadius: 2, backgroundColor: '#94a3b8' }} />
+              </div>
 
-        {/* RIGHT COLUMN - STAGING SIDEBAR */}
-        <div
-          className="scrollbar-hidden"
-          style={{
-            position: 'fixed',
-            top: 0,
-            right: sidebarOpen ? 0 : -240,
-            width: 240,
-            height: '100vh',
-            overflowY: 'auto',
-            transition: 'right 0.3s ease',
-            zIndex: 40,
-            padding: '38px 8px 0 8px',
-            backgroundColor: '#cbd5e1',
-            borderLeft: '2px solid #94a3b8',
-          }}
-        >
+              {/* RIGHT COLUMN - STAGING SIDEBAR */}
+              <div
+                className="scrollbar-hidden"
+                style={{
+                  width: sidebarWidth,
+                  height: '100%',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  flexShrink: 0,
+                  backgroundColor: '#cbd5e1',
+                  transition: sidebarDragRef.current ? 'none' : 'width 0.3s ease',
+                  padding: sidebarWidth > 0 ? '4px 6px 0 6px' : '0',
+                }}
+              >
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
                   {/* View filter text - left aligned */}
@@ -1036,7 +1060,10 @@ function App() {
                     </Droppable>
                   )}
                 </div>
-        </div>
+              </div>
+            </div>
+          )}
+        </main>
 
         {/* Edit Paddler Modal */}
         {isEditModalOpen && editingPaddler && (
