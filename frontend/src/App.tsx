@@ -786,7 +786,7 @@ function App() {
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* -/+ buttons - bottom left */}
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-6">
                             <span
                               onClick={() => handleRemoveCanoe(canoe.id)}
                               className="text-[18px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors leading-none"
