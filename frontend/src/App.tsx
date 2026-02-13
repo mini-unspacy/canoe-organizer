@@ -688,7 +688,7 @@ function App() {
 
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = sidebarOpen ? 176 : 24;
-  const leftSidebarW = leftSidebarOpen ? 176 : 24;
+  const leftSidebarW = leftSidebarOpen ? 110 : 24;
   const mainPad = 16;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * 2 - mainPad;
@@ -725,7 +725,7 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: leftSidebarOpen ? 176 : 24,
+                  width: leftSidebarOpen ? 110 : 24,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
