@@ -777,7 +777,7 @@ function App() {
                         style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
                       >
                         {/* Canoe designation + controls */}
-                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '28px', marginRight: '4px' }}>
+                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '32px', marginRight: '2px', marginLeft: '-4px' }}>
                           {/* Designation - top left */}
                           <span
                             className="text-[11px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
@@ -786,17 +786,17 @@ function App() {
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* -/+ buttons - bottom left */}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-3">
                             <span
                               onClick={() => handleRemoveCanoe(canoe.id)}
-                              className="text-[14px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors leading-none"
+                              className="text-[18px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors leading-none"
                               title="Remove canoe"
                             >
                               −
                             </span>
                             <span
                               onClick={() => handleAddCanoeAfter(index)}
-                              className="text-[14px] font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors leading-none"
+                              className="text-[18px] font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors leading-none"
                               title="Add canoe"
                             >
                               +
