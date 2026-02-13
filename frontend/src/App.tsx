@@ -737,7 +737,7 @@ function App() {
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
-                  <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0 }}>
+                  <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0, justifyContent: leftSidebarOpen ? 'flex-end' : 'flex-start' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
                       style={{
