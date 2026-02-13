@@ -378,8 +378,11 @@ function App() {
   const dragSourceIdRef = useRef<string | null>(null);
   const swapStyleRef = useRef<HTMLStyleElement | null>(null);
 
+  const [dragFromStaging, setDragFromStaging] = useState(false);
+
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
+    setDragFromStaging(start.source.droppableId.startsWith('staging-'));
     dragSourceIdRef.current = start.source.droppableId;
   }, []);
 
@@ -506,6 +509,7 @@ function App() {
 
   const onDragEnd = async (result: DropResult) => {
     setIsDragging(false);
+    setDragFromStaging(false);
     // Clean up swap preview
     if (swapStyleRef.current) {
       swapStyleRef.current.remove();
@@ -1166,7 +1170,7 @@ function App() {
                 {sidebarOpen && (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {/* Staging - single drop zone */}
-                <Droppable droppableId="staging-all" direction="horizontal">
+                <Droppable droppableId="staging-all" direction="horizontal" isDropDisabled={dragFromStaging}>
                   {(provided, snapshot) => {
                     // Flatten all sections into one ordered list for draggable indices
                     const allPaddlers: Paddler[] = [];
