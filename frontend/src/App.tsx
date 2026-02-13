@@ -612,10 +612,10 @@ function App() {
     await addPaddler(newPaddler);
   };
 
-  const handleRemoveCanoe = (canoeId: string) => {
+  const handleRemoveCanoe = async (canoeId: string) => {
     if (!canoes || canoes.length <= 1) return; // keep at least 1
     triggerAnimation();
-    removeCanoe({ canoeId });
+    await removeCanoe({ canoeId });
   };
 
   const handleAddCanoeAfter = (_index: number) => {
