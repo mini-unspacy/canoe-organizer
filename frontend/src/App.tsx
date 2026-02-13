@@ -1070,18 +1070,27 @@ function App() {
                     <div style={{ position: 'relative', marginLeft: 'auto' }}>
                       <span
                         onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
-                        className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
-                        style={{ backgroundColor: '#475569', color: '#fff', borderWidth: '3px', borderStyle: 'solid', borderColor: '#334155' }}
+                        style={{
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          color: '#475569',
+                          userSelect: 'none',
+                          padding: '2px 8px',
+                          backgroundColor: '#e2e8f0',
+                          borderRadius: '999px',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[viewBy]}
+                        {{ gender: 'gender', type: 'racer', seatPreference: 'seat', ability: 'ability' }[viewBy]}
                       </span>
                       {openSortMenu === 'viewby' && (
                         <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
                           {[
-                            { id: "gender", label: "Gender" },
-                            { id: "type", label: "Racer" },
-                            { id: "seatPreference", label: "Seat" },
-                            { id: "ability", label: "Ability" },
+                            { id: "gender", label: "gender" },
+                            { id: "type", label: "racer" },
+                            { id: "seatPreference", label: "seat" },
+                            { id: "ability", label: "ability" },
                           ].map((opt) => (
                             <div
                               key={opt.id}
