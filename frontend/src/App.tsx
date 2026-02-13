@@ -99,7 +99,7 @@ const generateRandomPaddler = () => {
   };
 };
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0 }) => {
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW }) => {
   const circleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -154,7 +154,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : 'hover:scale-105'}
         transition-all duration-150 cursor-grab active:cursor-grabbing`}
       style={{
-        width: CIRCLE_SIZE,
+        width: sizeW || CIRCLE_SIZE,
         height: CIRCLE_SIZE,
         borderColor: genderBorderColor,
         display: 'flex',
@@ -630,13 +630,16 @@ function App() {
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
-  // Calculate canoe horizontal scale
+  // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = sidebarOpen ? 176 : 24;
   const mainPad = 16;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - flexGap - mainPad;
-  const canoeFullWidth = (CIRCLE_SIZE + PADDING) * 6 + 60;
-  const canoeScaleX = Math.min(1, containerWidth / canoeFullWidth);
+  const leftControlWidth = 36;
+  const canoePadding = 16;
+  const availableForSeats = containerWidth - leftControlWidth - canoePadding;
+  const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
+  const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6)));
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -659,7 +662,7 @@ function App() {
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
               <div style={{ width: containerWidth, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: canoeFullWidth, overflowY: 'auto', height: '100%', transform: canoeScaleX < 1 ? `scaleX(${canoeScaleX})` : undefined, transformOrigin: 'top left' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', overflowY: 'auto', height: '100%' }}>
                 {/* Header */}
                 <div className="py-1">
                   <span
@@ -791,7 +794,7 @@ function App() {
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center" style={{ gap: PADDING }}>
+                        <div className="flex items-center" style={{ gap: dynamicGap }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
@@ -803,19 +806,19 @@ function App() {
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
+                                    style={{ width: dynamicCircleW, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
                                   >
                                     <div
                                       className={`rounded-full flex items-center justify-center transition-all
                                         ${snapshot.isDraggingOver ? 'bg-slate-300 dark:bg-slate-600 scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'bg-slate-200 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'}`}
-                                      style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+                                      style={{ width: dynamicCircleW, height: CIRCLE_SIZE }}
                                     >
                                       {assignedPaddler ? (
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
                                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
-                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
+                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} />
                                               </div>
                                             );
                                             return snapshot.isDragging ? createPortal(node, document.body) : node;
