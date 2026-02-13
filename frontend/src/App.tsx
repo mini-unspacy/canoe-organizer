@@ -839,7 +839,7 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 210 : 24,
+                  width: sidebarOpen ? 176 : 24,
                   height: '100%',
                   flexShrink: 0,
                   overflowY: sidebarOpen ? 'auto' : 'hidden',
@@ -848,16 +848,23 @@ function App() {
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toggle button - own row inside sidebar */}
+                {/* Toggle button - sticky, pill shape */}
                 <div
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   style={{
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#64748b',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: '#475569',
                     userSelect: 'none',
-                    padding: '4px',
+                    padding: '2px 10px',
+                    backgroundColor: '#e2e8f0',
+                    borderRadius: '999px',
+                    display: 'inline-block',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 20,
+                    marginBottom: '4px',
                   }}
                 >
                   {sidebarOpen ? '›››' : '‹'}
@@ -866,7 +873,7 @@ function App() {
                 {sidebarOpen && (
                 <div>
                 {/* View By + icons row */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
+                <div className="flex items-center flex-wrap gap-1 px-1 py-1">
                   <div className="flex items-center flex-wrap gap-1">
                     {[
                       { id: "gender", label: "G" },
@@ -890,8 +897,8 @@ function App() {
                       </span>
                     ))}
                   </div>
-                  {/* Edit/Trash/+ icons - right aligned */}
-                  <div className="flex items-center gap-3">
+                  {/* Edit/Trash/+ icons */}
+                  <div className="flex items-center gap-1">
                     <Droppable droppableId="edit-area">
                       {(provided, snapshot) => (
                         <div
