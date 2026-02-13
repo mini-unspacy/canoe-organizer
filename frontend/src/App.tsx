@@ -835,36 +835,35 @@ function App() {
                 </div>
               </div>
 
-              {/* Toggle button */}
-              <div
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: '#64748b',
-                  userSelect: 'none',
-                  padding: '4px',
-                  flexShrink: 0,
-                }}
-              >
-                {sidebarOpen ? '›››' : '‹'}
-              </div>
-
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
-              {sidebarOpen && (
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: 210,
+                  width: sidebarOpen ? 210 : 24,
                   height: '100%',
                   flexShrink: 0,
-                  overflowY: 'auto',
+                  overflowY: sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: '#cbd5e1',
-                  padding: '4px 4px 0 4px',
+                  backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
+                  padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
+                {/* Toggle button - own row inside sidebar */}
+                <div
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: '#64748b',
+                    userSelect: 'none',
+                    padding: '4px',
+                  }}
+                >
+                  {sidebarOpen ? '›››' : '‹'}
+                </div>
+
+                {sidebarOpen && (
                 <div>
                 {/* View By + icons row */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
@@ -1031,8 +1030,8 @@ function App() {
                   )}
                 </div>
                 </div>
+                )}
               </div>
-              )}
             </div>
           )}
         </main>
