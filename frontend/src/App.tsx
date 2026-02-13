@@ -347,9 +347,105 @@ function App() {
   const dragSourceIdRef = useRef<string | null>(null);
   const swapStyleRef = useRef<HTMLStyleElement | null>(null);
 
+  // Long press
+  const LONG_PRESS_MS = 600;
+  const [longPress, setLongPress] = useState<{
+    paddlerId: string;
+    phase: 'charging' | 'menu';
+    x: number;
+    y: number;
+    selected: 'edit' | 'none' | 'delete';
+  } | null>(null);
+  const longPressRef = useRef(longPress);
+  longPressRef.current = longPress;
+  const lpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lpStartRef = useRef({ x: 0, y: 0 });
+  const paddlersRef = useRef(paddlers);
+  paddlersRef.current = paddlers;
+
+  const cancelLongPress = useCallback(() => {
+    if (lpTimerRef.current) { clearTimeout(lpTimerRef.current); lpTimerRef.current = null; }
+    setLongPress(null);
+  }, []);
+
+  const handlePaddlerPointerDown = useCallback((e: React.PointerEvent, paddlerId: string) => {
+    if (e.button !== 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    lpStartRef.current = { x: e.clientX, y: e.clientY };
+    setLongPress({
+      paddlerId,
+      phase: 'charging',
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      selected: 'none',
+    });
+    lpTimerRef.current = setTimeout(() => {
+      setLongPress(prev => prev ? { ...prev, phase: 'menu' } : null);
+    }, LONG_PRESS_MS);
+  }, []);
+
+  // Global pointer listeners for long press
+  const isLongPressing = !!longPress;
+  useEffect(() => {
+    if (!isLongPressing) return;
+
+    const onMove = (e: PointerEvent) => {
+      const lp = longPressRef.current;
+      if (!lp) return;
+      if (lp.phase === 'charging') {
+        if (Math.abs(e.clientX - lpStartRef.current.x) > 8 || Math.abs(e.clientY - lpStartRef.current.y) > 8) {
+          cancelLongPress();
+        }
+      } else {
+        const dx = e.clientX - lp.x;
+        const dy = e.clientY - lp.y;
+        let sel: 'edit' | 'none' | 'delete' = 'none';
+        if (dy < -15) {
+          if (dx < -25) sel = 'edit';
+          else if (dx > 25) sel = 'delete';
+        }
+        if (sel !== lp.selected) setLongPress(prev => prev ? { ...prev, selected: sel } : null);
+      }
+    };
+
+    const onUp = () => {
+      const lp = longPressRef.current;
+      if (lp?.phase === 'menu' && lp.selected !== 'none') {
+        const p = paddlersRef.current?.find((p: Paddler) => p.id === lp.paddlerId);
+        if (p) {
+          if (lp.selected === 'edit') {
+            setEditingPaddler(p);
+            setEditForm({
+              firstName: p.firstName,
+              lastName: p.lastName || '',
+              gender: p.gender,
+              type: p.type,
+              ability: p.ability,
+              seatPreference: p.seatPreference || '000000',
+            });
+            setIsEditModalOpen(true);
+          } else if (lp.selected === 'delete') {
+            (async () => {
+              if (p.assignedCanoe && p.assignedSeat) {
+                await unassignPaddler({ paddlerId: p.id, canoeId: p.assignedCanoe, seat: p.assignedSeat });
+              }
+              await deletePaddler({ paddlerId: p.id });
+            })();
+          }
+        }
+      }
+      cancelLongPress();
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+  }, [isLongPressing, cancelLongPress]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleDragStart = useCallback((start: DragStart) => {
     dragSourceIdRef.current = start.source.droppableId;
-  }, []);
+    cancelLongPress();
+  }, [cancelLongPress]);
 
   const handleDragUpdate = useCallback((update: DragUpdate) => {
     const destId = update.destination?.droppableId || null;
@@ -802,7 +898,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onPointerDown={(e) => handlePaddlerPointerDown(e, assignedPaddler.id)} style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} />
                                               </div>
                                             );
@@ -1003,6 +1099,7 @@ function App() {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
+                                        onPointerDown={(e) => handlePaddlerPointerDown(e, paddler.id)}
                                         style={{ ...provided.draggableProps.style, ...(snapshot.isDragging ? {} : { position: 'static' }) }}
                                       >
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
@@ -1037,6 +1134,80 @@ function App() {
                   )}
                 </div>
         </div>
+
+        {/* Long Press Overlay */}
+        {longPress && createPortal(
+          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: longPress.phase === 'menu' ? 'auto' : 'none' }}>
+            {/* Watch dial SVG */}
+            <svg style={{ position: 'fixed', left: longPress.x - 28, top: longPress.y - 28, width: 56, height: 56, pointerEvents: 'none' }}>
+              {longPress.phase === 'charging' ? (
+                <circle
+                  cx="28" cy="28" r="25"
+                  fill="none"
+                  stroke="rgba(59,130,246,0.9)"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray="157.08"
+                  strokeDashoffset="157.08"
+                  style={{
+                    animation: `watchdial-fill ${LONG_PRESS_MS}ms linear forwards`,
+                    transform: 'rotate(-90deg)',
+                    transformOrigin: '50% 50%',
+                  }}
+                />
+              ) : (
+                <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(59,130,246,0.5)" strokeWidth="3" />
+              )}
+            </svg>
+
+            {/* Menu */}
+            {longPress.phase === 'menu' && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.08)' }} />
+                <div style={{
+                  position: 'fixed',
+                  left: longPress.x,
+                  top: longPress.y - 60,
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: '6px',
+                  background: '#fff',
+                  borderRadius: '24px',
+                  padding: '5px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+                  animation: 'lp-menu-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                  pointerEvents: 'none',
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: longPress.selected === 'edit' ? '#3b82f6' : '#f1f5f9',
+                    fontSize: '16px',
+                    transition: 'all 0.15s ease',
+                    transform: longPress.selected === 'edit' ? 'scale(1.2)' : 'scale(1)',
+                  }}>✏️</div>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: longPress.selected === 'none' ? '#94a3b8' : '#f1f5f9',
+                    color: longPress.selected === 'none' ? '#fff' : '#cbd5e1',
+                    fontSize: '20px', fontWeight: 'bold',
+                    transition: 'all 0.15s ease',
+                  }}>—</div>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: longPress.selected === 'delete' ? '#ef4444' : '#f1f5f9',
+                    fontSize: '16px',
+                    transition: 'all 0.15s ease',
+                    transform: longPress.selected === 'delete' ? 'scale(1.2)' : 'scale(1)',
+                  }}>🗑️</div>
+                </div>
+              </>
+            )}
+          </div>,
+          document.body
+        )}
 
         {/* Edit Paddler Modal */}
         {isEditModalOpen && editingPaddler && (
