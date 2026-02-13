@@ -756,8 +756,8 @@ function App() {
                   </div>
                 </div>
                 {leftSidebarOpen && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
-                    {['today', 'schedule', 'roster', 'attendance'].map((item) => (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px' }}>
+                    {['today', 'schedule', 'roster', 'attendance', 'crews'].map((item) => (
                       <span
                         key={item}
                         className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
@@ -768,15 +768,6 @@ function App() {
                         {item}
                       </span>
                     ))}
-                    <div style={{ flex: 1 }} />
-                    <span
-                      className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
-                      style={{ fontSize: '15px', padding: '6px 8px', borderRadius: '8px' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                    >
-                      crews
-                    </span>
                   </div>
                 )}
               </div>
