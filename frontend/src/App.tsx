@@ -683,7 +683,7 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto' }}>
+      <div className="h-screen overflow-hidden" style={{ backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto px-2" style={{ height: '100vh', overflow: 'hidden' }}>
@@ -720,10 +720,10 @@ function App() {
                 </div>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>sort by:</span>
+                    <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 200 ? '11px' : '20px' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1" style={{ fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="flex items-center flex-1" style={{ fontSize: containerWidth < 200 ? '11px' : '20px' }}>
                           {canoePriority.map((item, index) => (
                             <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
                               {(provided, snapshot) => (
