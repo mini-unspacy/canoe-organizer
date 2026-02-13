@@ -172,7 +172,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
       }}
     >
       {/* Name - in the center */}
-      <span className="text-[9px] leading-tight text-white font-bold px-1 truncate max-w-full text-center">
+      <span className="text-[9px] leading-tight font-bold px-1 truncate max-w-full text-center" style={{ color: '#c0c0c0' }}>
         {displayName}
       </span>
       
@@ -1264,7 +1264,7 @@ function App() {
                             </Fragment>
                           );
                         }) : (
-                          <span className="text-slate-400 text-sm w-full text-center mt-4">Drag paddlers here to unassign</span>
+                          <span className="text-sm w-full text-center mt-4" style={{ color: '#c0c0c0' }}>drag paddlers here to unassign</span>
                         )}
                         {provided.placeholder}
                       </div>
