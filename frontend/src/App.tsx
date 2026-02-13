@@ -738,7 +738,7 @@ function App() {
                 </div>
                 {leftSidebarOpen && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px' }}>
-                    {['roster', 'planner', 'attendance'].map((item) => (
+                    {['today', 'roster', 'planner', 'attendance'].map((item) => (
                       <span
                         key={item}
                         className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
