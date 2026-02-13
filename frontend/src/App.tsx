@@ -1044,7 +1044,7 @@ function App() {
                   touchAction: isDragging ? 'none' : 'auto',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
-                  paddingBottom: 'env(safe-area-inset-bottom)',
+                  paddingBottom: 'calc(env(safe-area-inset-bottom) + 60px)',
                 }}
               >
                 {/* Toolbar - sticky */}
