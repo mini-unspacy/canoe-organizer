@@ -29,10 +29,10 @@ const PADDING = 12;
 const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
 const CANOE_SORT_OPTIONS: CanoeSortItem[] = [
-  { id: "ability", label: "Ability", gradient: "from-violet-500 to-purple-600", icon: "⭐" },
-  { id: "gender", label: "Gender", gradient: "from-pink-500 to-rose-500", icon: "⚥" },
-  { id: "type", label: "Racer?", gradient: "from-cyan-500 to-blue-500", icon: "🏁" },
-  { id: "seatPreference", label: "Seat", gradient: "from-orange-500 to-amber-500", icon: "💺" },
+  { id: "ability", label: "ability", gradient: "from-violet-500 to-purple-600", icon: "⭐" },
+  { id: "gender", label: "gender", gradient: "from-pink-500 to-rose-500", icon: "⚥" },
+  { id: "type", label: "racer?", gradient: "from-cyan-500 to-blue-500", icon: "🏁" },
+  { id: "seatPreference", label: "seat", gradient: "from-orange-500 to-amber-500", icon: "💺" },
 ];
 
 // Get primary seat preference
@@ -221,7 +221,7 @@ const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; lab
       for (let i = 5; i >= 1; i--) {
         const sectionPaddlers = paddlers.filter(p => p.ability === i);
         if (sectionPaddlers.length > 0) {
-          sections.push({ id: `ability-${i}`, label: `Level ${i}`, paddlers: sectionPaddlers });
+          sections.push({ id: `ability-${i}`, label: `level ${i}`, paddlers: sectionPaddlers });
         }
       }
       return sections;
@@ -230,8 +230,8 @@ const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; lab
       const kane = paddlers.filter(p => p.gender === "kane");
       const wahine = paddlers.filter(p => p.gender === "wahine");
       const sections = [];
-      if (kane.length > 0) sections.push({ id: "gender-kane", label: "Kane", paddlers: kane });
-      if (wahine.length > 0) sections.push({ id: "gender-wahine", label: "Wahine", paddlers: wahine });
+      if (kane.length > 0) sections.push({ id: "gender-kane", label: "kane", paddlers: kane });
+      if (wahine.length > 0) sections.push({ id: "gender-wahine", label: "wahine", paddlers: wahine });
       return sections;
     }
     case "type": {
@@ -239,9 +239,9 @@ const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; lab
       const casual = paddlers.filter(p => p.type === "casual");
       const veryCasual = paddlers.filter(p => p.type === "very-casual");
       const sections = [];
-      if (racer.length > 0) sections.push({ id: "type-racer", label: "Racer", paddlers: racer });
-      if (casual.length > 0) sections.push({ id: "type-casual", label: "Casual", paddlers: casual });
-      if (veryCasual.length > 0) sections.push({ id: "type-very-casual", label: "Very Casual", paddlers: veryCasual });
+      if (racer.length > 0) sections.push({ id: "type-racer", label: "racer", paddlers: racer });
+      if (casual.length > 0) sections.push({ id: "type-casual", label: "casual", paddlers: casual });
+      if (veryCasual.length > 0) sections.push({ id: "type-very-casual", label: "very casual", paddlers: veryCasual });
       return sections;
     }
     case "seatPreference": {
@@ -249,12 +249,12 @@ const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; lab
       for (let seat = 1; seat <= 6; seat++) {
         const sectionPaddlers = paddlers.filter(p => getPrimarySeatPreference(p.seatPreference) === seat);
         if (sectionPaddlers.length > 0) {
-          sections.push({ id: `seat-${seat}`, label: `Seat ${seat}`, paddlers: sectionPaddlers });
+          sections.push({ id: `seat-${seat}`, label: `seat ${seat}`, paddlers: sectionPaddlers });
         }
       }
       const noPref = paddlers.filter(p => !p.seatPreference || p.seatPreference === "000000");
       if (noPref.length > 0) {
-        sections.push({ id: "seat-none", label: "No Pref", paddlers: noPref });
+        sections.push({ id: "seat-none", label: "no pref", paddlers: noPref });
       }
       return sections;
     }
@@ -1297,7 +1297,7 @@ function App() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: '#1e293b' }}>
-                  <span>✏️</span> Edit Paddler
+                  <span>✏️</span> edit paddler
                 </h2>
                 <button
                   onClick={handleCloseEditModal}
@@ -1312,7 +1312,7 @@ function App() {
                 {/* Name fields */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>First Name</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>first name</label>
                     <input
                       type="text"
                       value={editForm.firstName}
@@ -1323,7 +1323,7 @@ function App() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>Last Name</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>last name</label>
                     <input
                       type="text"
                       value={editForm.lastName}
@@ -1337,11 +1337,11 @@ function App() {
 
                 {/* Gender */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Gender</label>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">gender</label>
                   <div className="flex gap-2">
                     {[
-                      { id: 'kane', label: 'Kane', icon: '♂️', color: 'blue' },
-                      { id: 'wahine', label: 'Wahine', icon: '♀️', color: 'pink' },
+                      { id: 'kane', label: 'kane', icon: '♂️', color: 'blue' },
+                      { id: 'wahine', label: 'wahine', icon: '♀️', color: 'pink' },
                     ].map((option) => (
                       <button
                         key={option.id}
@@ -1365,9 +1365,9 @@ function App() {
                   <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Type</label>
                   <div className="flex gap-2">
                     {[
-                      { id: 'racer', label: 'Racer', color: 'violet' },
-                      { id: 'casual', label: 'Casual', color: 'blue' },
-                      { id: 'very-casual', label: 'Very Casual', color: 'slate' },
+                      { id: 'racer', label: 'racer', color: 'violet' },
+                      { id: 'casual', label: 'casual', color: 'blue' },
+                      { id: 'very-casual', label: 'very casual', color: 'slate' },
                     ].map((option) => (
                       <button
                         key={option.id}
