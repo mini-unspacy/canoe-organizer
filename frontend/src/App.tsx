@@ -780,7 +780,7 @@ function App() {
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '56px', marginRight: '2px', marginLeft: '-8px' }}>
                           {/* Designation - top left */}
                           <span
-                            className="text-[11px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
+                            className="text-[15px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
                             onClick={() => setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
