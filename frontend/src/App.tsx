@@ -849,7 +849,7 @@ function App() {
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toggle button - above GRSA */}
+                {/* Toggle button - own row */}
                 <div
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   style={{
@@ -858,13 +858,14 @@ function App() {
                     fontWeight: 'bold',
                     color: '#64748b',
                     userSelect: 'none',
-                    padding: '2px 4px',
-                    whiteSpace: 'nowrap',
+                    padding: '4px',
                   }}
                 >
                   {sidebarOpen ? '›››' : '‹'}
                 </div>
-                {sidebarOpen && <>
+
+                {sidebarOpen && (
+                <div>
                 {/* View By + icons row */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
                   <div className="flex items-center flex-wrap gap-1">
@@ -1029,7 +1030,8 @@ function App() {
                     </Droppable>
                   )}
                 </div>
-                </>}
+                </div>
+                )}
               </div>
             </div>
           )}
