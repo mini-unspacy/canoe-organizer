@@ -639,7 +639,7 @@ function App() {
               fontSize: '28px',
             }}
           >
-            L
+            Lokahi
           </span>
         </header>
 
