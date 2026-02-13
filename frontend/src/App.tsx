@@ -649,11 +649,11 @@ function App() {
       <div className="h-screen overflow-hidden bg-slate-200 dark:bg-slate-950 flex flex-col">
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - collapses when columns scroll */}
-        <header
-          className="max-w-6xl mx-auto px-6 overflow-hidden transition-all duration-200 w-full shrink-0"
+        <div
+          className="overflow-hidden transition-all duration-200 shrink-0 px-6"
           style={{ height: headerCollapsed ? 0 : 52, opacity: headerCollapsed ? 0 : 1 }}
         >
-          <div className="flex items-center gap-3 py-3">
+          <div className="flex items-center gap-3 py-3 max-w-6xl mx-auto">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <span className="text-xl">🛶</span>
             </div>
@@ -670,24 +670,23 @@ function App() {
               Lokahi
             </h1>
           </div>
-        </header>
+        </div>
 
-        <main className="flex-1 min-h-0 max-w-6xl mx-auto px-6 w-full flex flex-col">
-          {hasNoData ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div
-                onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
-                className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
-                style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
-              >
-                🛶
-              </div>
-              <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
+        {hasNoData ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div
+              onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
+              className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
+              style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
+            >
+              🛶
             </div>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flex: 1, minHeight: 0 }}>
-              {/* LEFT COLUMN - CANOES */}
-              <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto' }}>
+            <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 flex justify-center gap-6 px-6">
+            {/* LEFT COLUMN - CANOES */}
+            <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto' }}>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -1029,10 +1028,9 @@ function App() {
                     </Droppable>
                   )}
                 </div>
-              </div>
             </div>
-          )}
-        </main>
+          </div>
+        )}
 
         {/* Edit Paddler Modal */}
         {isEditModalOpen && editingPaddler && (
