@@ -227,13 +227,14 @@ button:focus-visible {
   }
 }
 
-/* Prevent touch scrolling from intercepting drag on mobile */
+/* Allow scrolling over drag handles; drag is blocked at container level during active drag */
 [data-rfd-drag-handle-draggable-id] {
-  touch-action: none !important;
+  touch-action: manipulation;
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
   -webkit-tap-highlight-color: transparent !important;
+  cursor: grab;
 }
 
 /* Prevent focus-on-first-tap from stealing touch events on iOS */
@@ -241,12 +242,6 @@ button:focus-visible {
 [data-rfd-drag-handle-draggable-id]:active {
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
-}
-
-/* Remove button activation delay on iOS for drag handles */
-[data-rfd-drag-handle-draggable-id] {
-  cursor: grab;
-  touch-action: none !important;
 }
 
 /* Hide scrollbars but keep scrolling */
