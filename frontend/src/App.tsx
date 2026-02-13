@@ -733,33 +733,30 @@ function App() {
                         style={{ padding: '10px 8px', marginBottom: '4px' }}
                       >
                         {/* Canoe designation + controls */}
-                        <div className="flex flex-col items-center shrink-0 relative self-start">
-                          {/* Designation circle */}
-                          <div
-                            className="rounded-full border-[3px] border-black dark:border-white bg-white dark:bg-slate-900 flex items-center justify-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-slate-800 transition-colors"
-                            style={{ width: 36, height: 36 }}
+                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '28px', marginRight: '4px' }}>
+                          {/* Designation - top left */}
+                          <span
+                            className="text-[11px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
                             onClick={() => setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
-                            <span className="text-[11px] font-black text-black dark:text-white leading-none">{canoeDesignations[canoe.id] || '???'}</span>
-                          </div>
-                          {/* -/+ buttons side by side under designator */}
-                          <div className="flex items-center gap-0.5 mt-0.5">
-                            <button
+                            {canoeDesignations[canoe.id] || '???'}
+                          </span>
+                          {/* -/+ buttons - bottom left */}
+                          <div className="flex items-center gap-1">
+                            <span
                               onClick={() => handleRemoveCanoe(canoe.id)}
-                              className="w-7 h-7 flex items-center justify-center text-[12px] leading-none font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors border-slate-300 dark:border-slate-600"
-                              style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
+                              className="text-[14px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors leading-none"
                               title="Remove canoe"
                             >
                               −
-                            </button>
-                            <button
+                            </span>
+                            <span
                               onClick={() => handleAddCanoeAfter(index)}
-                              className="w-7 h-7 flex items-center justify-center text-[12px] leading-none font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border-slate-300 dark:border-slate-600"
-                              style={{ borderRadius: '50%', padding: 0, borderWidth: '3px', borderStyle: 'solid' }}
+                              className="text-[14px] font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors leading-none"
                               title="Add canoe"
                             >
                               +
-                            </button>
+                            </span>
                           </div>
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
