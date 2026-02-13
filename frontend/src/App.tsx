@@ -798,7 +798,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, touchAction: 'none' }}>
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} style={{ ...provided.draggableProps.style, touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}>
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} />
                                               </div>
                                             );
@@ -1039,7 +1039,8 @@ function App() {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        style={{ ...provided.draggableProps.style, touchAction: 'none' }}
+                                        tabIndex={-1}
+                                        style={{ ...provided.draggableProps.style, touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
                                       >
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                       </div>
