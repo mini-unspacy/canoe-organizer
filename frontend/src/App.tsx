@@ -773,10 +773,10 @@ function App() {
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
+                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 6px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
                       >
                         {/* Canoe designation + controls */}
-                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '56px', marginRight: '2px', marginLeft: '-8px' }}>
+                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '48px', marginRight: '0px' }}>
                           {/* Designation - top left */}
                           <span
                             className="text-[15px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
@@ -835,7 +835,7 @@ function App() {
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center justify-evenly" style={{ flex: 1 }}>
+                        <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
