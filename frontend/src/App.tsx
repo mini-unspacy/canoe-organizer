@@ -735,6 +735,7 @@ function App() {
                   backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   borderRight: '1px solid #94a3b8',
+                  borderLeft: '1px solid #94a3b8',
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
@@ -1055,6 +1056,7 @@ function App() {
                   padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                   borderLeft: '1px solid #94a3b8',
+                  borderRight: '1px solid #94a3b8',
                 }}
               >
                 {/* Toolbar - sticky */}
