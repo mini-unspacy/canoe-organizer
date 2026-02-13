@@ -849,26 +849,24 @@ function App() {
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
                 }}
               >
-                {/* Toggle button + View By row */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent' }}>
-                  {/* Toggle button - top left */}
-                  <div
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    style={{
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      color: '#64748b',
-                      userSelect: 'none',
-                      padding: '2px 4px',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {sidebarOpen ? '›››' : '‹'}
-                  </div>
-                  {sidebarOpen && <>
-                  {/* View filter buttons */}
-                  {/* View filter text - left aligned */}
+                {/* Toggle button - above GRSA */}
+                <div
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: '#64748b',
+                    userSelect: 'none',
+                    padding: '2px 4px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {sidebarOpen ? '›››' : '‹'}
+                </div>
+                {sidebarOpen && <>
+                {/* View By + icons row */}
+                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
                   <div className="flex items-center flex-wrap gap-1">
                     {[
                       { id: "gender", label: "G" },
@@ -942,10 +940,8 @@ function App() {
                       +
                     </div>
                   </div>
-                  </>}
                 </div>
 
-                {sidebarOpen && <>
                 {/* Staging Sections - always visible with at least one droppable area */}
                 <div className="rounded-xl p-4 space-y-4" style={{ marginTop: '8px' }}>
                   {viewSections.length > 0 ? viewSections.map((section) => {
