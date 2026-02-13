@@ -733,10 +733,10 @@ function App() {
                   overflowY: leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent',
-                  padding: leftSidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                  padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '4px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
                   <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0 }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
@@ -1051,12 +1051,12 @@ function App() {
                   overflowX: 'hidden',
                   touchAction: isDragging ? 'none' : 'auto',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
-                  padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
+                  padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                 }}
               >
                 {/* Toolbar - sticky */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent', padding: '4px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
                   {/* Top row: toggle + A button */}
                   <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
                     <span
