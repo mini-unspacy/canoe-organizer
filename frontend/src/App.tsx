@@ -667,9 +667,9 @@ function App() {
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
   // Calculate dynamic horizontal sizing (no CSS transform)
-  const sidebarW = sidebarOpen ? 176 : 24;
+  const sidebarW = sidebarOpen ? 176 : 0;
   const mainPad = 16;
-  const flexGap = 8;
+  const flexGap = sidebarOpen ? 8 : 0;
   const containerWidth = windowWidth - sidebarW - flexGap - mainPad;
   const leftControlWidth = 36;
   const canoePadding = 16;
@@ -699,9 +699,9 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', height: '100%', gap: sidebarOpen ? '8px' : '0px', width: '100%', overflow: 'hidden', position: 'relative' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
                 {/* Header */}
                 <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
@@ -896,9 +896,10 @@ function App() {
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 176 : 24,
+                  ...(sidebarOpen
+                    ? { width: 176, flexShrink: 0 }
+                    : { position: 'absolute' as const, right: 0, top: 0, width: 24, zIndex: 30 }),
                   height: '100%',
-                  flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
