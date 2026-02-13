@@ -684,9 +684,9 @@ function App() {
             <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex justify-center gap-6 px-6">
+          <div style={{ height: `calc(100vh - ${headerCollapsed ? 0 : 52}px)`, display: 'flex', justifyContent: 'center', gap: '24px', padding: '0 24px', transition: 'height 0.2s' }}>
             {/* LEFT COLUMN - CANOES */}
-            <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto' }}>
+            <div ref={leftColRef} className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-2 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                     <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>sort by:</span>
@@ -863,7 +863,7 @@ function App() {
               </div>
 
               {/* RIGHT COLUMN - STAGING */}
-              <div ref={rightColRef} className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto' }}>
+              <div ref={rightColRef} className="scrollbar-hidden" style={{ width: 380, overflowY: 'auto', height: '100%' }}>
                 {/* View By Toggle with + Paddler button and Trash */}
                 <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
                   {/* View filter text - left aligned */}
