@@ -762,9 +762,9 @@ function App() {
                     {['today', 'schedule', 'roster', 'attendance', 'crews'].map((item) => (
                       <span
                         key={item}
-                        className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
+                        className="font-medium text-slate-300 hover:text-white cursor-pointer transition-colors"
                         style={{ fontSize: '15px', padding: '6px 8px', borderRadius: '8px' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4b5563')}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
                         {item}
@@ -1206,7 +1206,7 @@ function App() {
                             <Fragment key={paddler._id.toString()}>
                               {sectionBreak && (
                                 <div className="flex items-center justify-between w-full" style={{ padding: '4px 0 2px' }}>
-                                  <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+                                  <span className="font-semibold text-slate-300 text-sm">
                                     {sectionBreak.label} ({viewSections.find(s => s.id === sectionBreak.id)?.paddlers.length})
                                   </span>
                                   <div style={{ position: 'relative' }}>
