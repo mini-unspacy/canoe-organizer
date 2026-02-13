@@ -689,7 +689,7 @@ function App() {
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = sidebarOpen ? 176 : 24;
   const leftSidebarW = leftSidebarOpen ? 110 : 24;
-  const mainPad = 16;
+  const mainPad = 0;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * 2 - mainPad;
   const leftControlWidth = 36;
@@ -707,7 +707,7 @@ function App() {
       <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
-        <main className="max-w-6xl mx-auto px-2" style={{ height: '100%', overflow: 'hidden' }}>
+        <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
@@ -735,7 +735,6 @@ function App() {
                   backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   borderRight: '1px solid #94a3b8',
-                  borderLeft: leftSidebarOpen ? '1px solid #94a3b8' : 'none',
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#cbd5e1' : 'transparent', padding: '12px 4px 0 4px' }}>
@@ -1056,7 +1055,6 @@ function App() {
                   padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                   borderLeft: '1px solid #94a3b8',
-                  borderRight: sidebarOpen ? '1px solid #94a3b8' : 'none',
                 }}
               >
                 {/* Toolbar - sticky */}
