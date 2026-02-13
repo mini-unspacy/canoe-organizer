@@ -702,9 +702,9 @@ function App() {
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto' }}>
+              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {/* Header */}
-                <div className="py-1">
+                <div className="py-1" style={{ width: '100%', maxWidth: '600px' }}>
                   <span
                     style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
@@ -719,7 +719,7 @@ function App() {
                   </span>
                 </div>
                 {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', maxWidth: '600px' }}>
                     <span className="shrink-0 mr-2" style={{ color: '#c0c0c0', fontSize: containerWidth < 300 ? '11px' : containerWidth < 400 ? '14px' : '20px' }}>sort by:</span>
                     <Droppable droppableId="canoe-priority" direction="horizontal">
                       {(provided) => (
@@ -766,14 +766,14 @@ function App() {
                 </div>
 
                 {/* All Canoes */}
-                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const isFull = canoe.status === 'full';
                     return (
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', width: '100%', maxWidth: '600px' }}
+                        style={{ backgroundColor: '#d1d5db', padding: '8px 8px 8px 16px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
                       >
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '56px', marginRight: '2px', marginLeft: '-8px' }}>
