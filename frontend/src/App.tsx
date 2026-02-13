@@ -689,7 +689,7 @@ function App() {
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = sidebarOpen ? 176 : 24;
   const leftSidebarW = leftSidebarOpen ? 110 : 24;
-  const mainPad = 0;
+  const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * 2 - mainPad;
   const leftControlWidth = 36;
@@ -707,7 +707,7 @@ function App() {
       <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
-        <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden' }}>
+        <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
           {hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
