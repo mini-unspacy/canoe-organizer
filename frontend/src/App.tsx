@@ -318,6 +318,15 @@ function App() {
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
+  const [lockedCanoes, setLockedCanoes] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('lockedCanoes');
+    if (saved) { try { return new Set(JSON.parse(saved)); } catch { /* default */ } }
+    return new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lockedCanoes', JSON.stringify([...lockedCanoes]));
+  }, [lockedCanoes]);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const [sortPillOpen, setSortPillOpen] = useState(false);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
@@ -461,7 +470,8 @@ function App() {
     triggerAnimation();
     setIsReassigning(true);
     
-    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat);
+    // Skip paddlers in locked canoes
+    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat && !lockedCanoes.has(p.assignedCanoe));
     assignedPaddlers.sort((a: Paddler, b: Paddler) => {
       const canoeA = canoes.find((c: Canoe) => c.id === a.assignedCanoe);
       const canoeB = canoes.find((c: Canoe) => c.id === b.assignedCanoe);
@@ -470,15 +480,15 @@ function App() {
       if (canoeIdxA !== canoeIdxB) return canoeIdxA - canoeIdxB;
       return (a.assignedSeat || 0) - (b.assignedSeat || 0);
     });
-    
-    const sortedAssigned = canoeSortedPaddlers.filter(p => p.assignedCanoe);
-    
+
+    const sortedAssigned = canoeSortedPaddlers.filter(p => p.assignedCanoe && !lockedCanoes.has(p.assignedCanoe));
+
     // Parallel execution for speed
     const updates = [];
     for (let i = 0; i < Math.min(assignedPaddlers.length, sortedAssigned.length); i++) {
       const current = assignedPaddlers[i];
       const target = sortedAssigned[i];
-      
+
       if (current.id !== target.id) {
         updates.push(
           assignPaddler({
@@ -563,6 +573,9 @@ function App() {
     const oldCanoeId = draggedPaddler.assignedCanoe;
     const oldSeat = draggedPaddler.assignedSeat;
 
+    // Block dragging from a locked canoe
+    if (oldCanoeId && lockedCanoes.has(oldCanoeId)) return;
+
     if (source.droppableId === destination.droppableId) return;
 
     // Dropped to staging
@@ -576,9 +589,12 @@ function App() {
     // Parse destination
     const destParts = destination.droppableId.split("-");
     if (destParts.length !== 4 || destParts[0] !== "canoe" || destParts[2] !== "seat") return;
-    
+
     const destCanoeId = destParts[1];
     const destSeat = parseInt(destParts[3]);
+
+    // Block dragging into a locked canoe
+    if (lockedCanoes.has(destCanoeId)) return;
     if (isNaN(destSeat)) return;
 
     const targetCanoe = canoes?.find((c: Canoe) => c.id === destCanoeId);
@@ -627,10 +643,10 @@ function App() {
 
   const handleUnassignAll = async () => {
     if (!paddlers) return;
-    // Use Promise.all for parallel execution - much faster!
-    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat);
+    // Skip paddlers in locked canoes
+    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat && !lockedCanoes.has(p.assignedCanoe));
     await Promise.all(
-      assignedPaddlers.map((p: Paddler) => 
+      assignedPaddlers.map((p: Paddler) =>
         unassignPaddler({ paddlerId: p.id, canoeId: p.assignedCanoe!, seat: p.assignedSeat! })
       )
     );
@@ -876,24 +892,47 @@ function App() {
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box' }}
+                        className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
+                        style={{ backgroundColor: '#d1d5db', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
                       >
+                        {/* Lock button - top right */}
+                        <span
+                          onClick={() => setLockedCanoes(prev => {
+                            const next = new Set(prev);
+                            if (next.has(canoe.id)) next.delete(canoe.id);
+                            else next.add(canoe.id);
+                            return next;
+                          })}
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            right: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            lineHeight: 1,
+                            color: lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8',
+                            userSelect: 'none',
+                            zIndex: 5,
+                          }}
+                          title={lockedCanoes.has(canoe.id) ? 'Unlock canoe' : 'Lock canoe'}
+                        >
+                          {lockedCanoes.has(canoe.id) ? '🔒' : '🔓'}
+                        </span>
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '30px', marginRight: '0px' }}>
                           {/* Designation - top left */}
                           <span
-                            className="text-[15px] font-black text-black dark:text-white leading-none cursor-pointer hover:text-blue-600 transition-colors"
+                            className={`text-[15px] font-black leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'text-slate-400 cursor-default' : 'text-black dark:text-white cursor-pointer hover:text-blue-600'}`}
                             style={{ WebkitTextStroke: '0.5px' }}
-                            onClick={() => setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                            onClick={() => !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* -/+ buttons - bottom left */}
                           <div className="flex items-center" style={{ gap: '16px' }}>
                             <span
-                              onClick={() => handleRemoveCanoe(canoe.id)}
-                              className="text-[18px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors leading-none"
+                              onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
+                              className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'text-slate-300 cursor-default' : 'text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer'}`}
                               title="Remove canoe"
                             >
                               −
