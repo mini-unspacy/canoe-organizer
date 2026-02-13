@@ -754,13 +754,13 @@ function App() {
                         onClick={handleAssign}
                         className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
                       >
-                        assign
+                        ←assign
                       </span>
                       <span
                         onClick={() => { triggerAnimation(); handleUnassignAll(); }}
                         className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
                       >
-                        return
+                        return→
                       </span>
                     </div>
                 </div>
