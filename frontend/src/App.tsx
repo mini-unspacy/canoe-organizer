@@ -317,18 +317,13 @@ function App() {
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
-  const canoeContainerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(9999);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
 
   useEffect(() => {
-    const el = canoeContainerRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(entries => {
-      setContainerWidth(entries[0].contentRect.width);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  });
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Canoe designations - persist to localStorage
   const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
@@ -634,14 +629,17 @@ function App() {
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
-  // Calculate canoe width - dynamic based on container
+  // Calculate canoe width - dynamic based on window and sidebar
+  const sidebarW = sidebarOpen ? 176 : 24;
+  const mainPad = 16; // px-2 = 8px each side
+  const flexGap = 8;
+  const containerWidth = windowWidth - sidebarW - flexGap - mainPad;
   const leftControlWidth = 36;
   const canoePadding = 16;
-  const maxCanoeWidth = (TOTAL_CIRCLE_SPACE * 6) + leftControlWidth + canoePadding;
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
   const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
   const dynamicCircle = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6)));
-  const canoeWidth = Math.min(maxCanoeWidth, containerWidth);
+  const canoeWidth = containerWidth;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -663,7 +661,7 @@ function App() {
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div ref={canoeContainerRef} style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
+              <div style={{ width: containerWidth, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" style={{ width: '100%', overflowY: 'auto', height: '100%' }}>
                 {/* Header */}
                 <div className="py-1">
