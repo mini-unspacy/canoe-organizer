@@ -843,13 +843,15 @@ function App() {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="fixed top-1/2 -translate-y-1/2 cursor-pointer z-50 flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white rounded-l-lg transition-all"
           style={{
-            right: sidebarOpen ? 396 : 0,
-            width: 24,
-            height: 48,
+            right: sidebarOpen ? 240 : 0,
+            width: 32,
+            height: 64,
             transition: 'right 0.3s ease',
+            fontSize: '16px',
+            fontWeight: 'bold',
           }}
         >
-          <span style={{ fontSize: '14px' }}>{sidebarOpen ? '›' : '‹'}</span>
+          {sidebarOpen ? '›››' : '‹‹‹'}
         </div>
 
         {/* RIGHT COLUMN - STAGING SIDEBAR */}
@@ -858,8 +860,8 @@ function App() {
           style={{
             position: 'fixed',
             top: 0,
-            right: sidebarOpen ? 0 : -396,
-            width: 396,
+            right: sidebarOpen ? 0 : -240,
+            width: 240,
             height: '100vh',
             overflowY: 'auto',
             transition: 'right 0.3s ease',
@@ -870,27 +872,28 @@ function App() {
           }}
         >
                 {/* View By Toggle with + Paddler button and Trash */}
-                <div className="flex items-center justify-between px-1 py-1 sticky z-20 bg-slate-200 dark:bg-slate-950" style={{ top: 0 }}>
+                <div className="flex items-center justify-between px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#cbd5e1' }}>
                   {/* View filter text - left aligned */}
-                  <div className="flex items-center flex-wrap">
-                    <span className="text-[22px] shrink-0 mr-2" style={{ color: '#c0c0c0' }}>view by:</span>
+                  <div className="flex items-center flex-wrap gap-1">
                     {[
-                      { id: "gender", label: "gender" },
-                      { id: "type", label: "racer?" },
-                      { id: "seatPreference", label: "preferred seat" },
-                      { id: "ability", label: "ability" },
-                    ].map((option, index) => (
-                      <span key={option.id} className="flex items-center">
-                        {index > 0 && <span className="text-[22px] text-slate-300 dark:text-slate-600 mx-2">/</span>}
-                        <span
-                          onClick={() => setViewBy(option.id as ViewBy)}
-                          className={`text-[22px] font-medium cursor-pointer transition-colors
-                            ${viewBy === option.id
-                              ? 'text-blue-500 dark:text-blue-400'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'}`}
-                        >
-                          {option.label}
-                        </span>
+                      { id: "gender", label: "G" },
+                      { id: "type", label: "R" },
+                      { id: "seatPreference", label: "S" },
+                      { id: "ability", label: "A" },
+                    ].map((option) => (
+                      <span
+                        key={option.id}
+                        onClick={() => setViewBy(option.id as ViewBy)}
+                        className={`w-7 h-7 flex items-center justify-center text-[12px] font-bold cursor-pointer transition-colors rounded-full`}
+                        style={{
+                          borderWidth: '2px',
+                          borderStyle: 'solid',
+                          ...(viewBy === option.id
+                            ? { backgroundColor: '#475569', color: '#fff', borderColor: '#334155' }
+                            : { backgroundColor: '#e2e8f0', color: '#94a3b8', borderColor: '#cbd5e1' }),
+                        }}
+                      >
+                        {option.label}
                       </span>
                     ))}
                   </div>
