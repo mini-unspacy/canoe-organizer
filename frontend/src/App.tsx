@@ -316,6 +316,19 @@ function App() {
   const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const canoeContainerRef = useRef<HTMLDivElement>(null);
+  const [canoeScale, setCanoeScale] = useState(1);
+
+  useEffect(() => {
+    const el = canoeContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const w = entries[0].contentRect.width;
+      setCanoeScale(Math.min(1, w / canoeWidth));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
 
   // Canoe designations - persist to localStorage
   const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
@@ -642,9 +655,10 @@ function App() {
               <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', height: '100%', gap: '8px' }}>
+            <div style={{ display: 'flex', height: '100%', gap: '8px' }}>
               {/* LEFT COLUMN - CANOES */}
-              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: '100%' }}>
+              <div ref={canoeContainerRef} style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
+              <div className="scrollbar-hidden" style={{ width: canoeWidth, overflowY: 'auto', height: canoeScale < 1 ? `${100 / canoeScale}%` : '100%', transform: canoeScale < 1 ? `scale(${canoeScale})` : undefined, transformOrigin: 'top left' }}>
                 {/* Header */}
                 <div className="py-1">
                   <span
@@ -834,21 +848,19 @@ function App() {
                   )}
                 </div>
               </div>
+              </div>
 
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
               <div
                 className="scrollbar-hidden"
                 style={{
-                  position: 'fixed',
-                  right: 0,
-                  top: 0,
                   width: sidebarOpen ? 176 : 24,
-                  height: '100vh',
+                  height: '100%',
+                  flexShrink: 0,
                   overflowY: sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: sidebarOpen ? '#cbd5e1' : 'transparent',
                   padding: sidebarOpen ? '4px 4px 0 4px' : '4px 0 0 0',
-                  zIndex: 30,
                 }}
               >
                 {/* Toolbar row - sticky */}
