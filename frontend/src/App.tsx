@@ -356,60 +356,10 @@ function App() {
 
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
-  // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
-  const dragSourceIdRef = useRef<string | null>(null);
-  const swapStyleRef = useRef<HTMLStyleElement | null>(null);
+  const handleDragStart = useCallback((_start: DragStart) => {}, []);
+  const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
 
-  const handleDragStart = useCallback((start: DragStart) => {
-    dragSourceIdRef.current = start.source.droppableId;
-  }, []);
-
-  const handleDragUpdate = useCallback((update: DragUpdate) => {
-    const destId = update.destination?.droppableId || null;
-
-    // Always clean up previous swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-
-    // Only inject swap preview for canoe seat targets with an existing paddler
-    if (!destId || !dragSourceIdRef.current || destId === dragSourceIdRef.current || !destId.includes('-seat-')) {
-      return;
-    }
-
-    const targetDroppable = document.querySelector(`[data-rfd-droppable-id="${destId}"]`);
-    const sourceDroppable = document.querySelector(`[data-rfd-droppable-id="${dragSourceIdRef.current}"]`);
-    if (!targetDroppable || !sourceDroppable) return;
-
-    const targetDraggable = targetDroppable.querySelector('[data-rfd-draggable-id]');
-    if (!targetDraggable) return;
-
-    const draggableId = targetDraggable.getAttribute('data-rfd-draggable-id');
-    if (!draggableId) return;
-
-    const sr = sourceDroppable.getBoundingClientRect();
-    const tr = targetDroppable.getBoundingClientRect();
-    const dx = sr.left - tr.left;
-    const dy = sr.top - tr.top;
-
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `[data-rfd-draggable-id="${draggableId}"] { transform: translate(${dx}px, ${dy}px) !important; transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important; z-index: 100 !important; position: relative !important; }`;
-    document.head.appendChild(styleEl);
-    swapStyleRef.current = styleEl;
-  }, []);
-
-  // Smart canoe display - start with minimum needed, but user can add more
-  useEffect(() => {
-    if (!paddlers || !canoes) return;
-    const neededCanoes = Math.ceil(paddlers.length / 6);
-    // Only add if we have fewer than needed (never remove)
-    if (neededCanoes > canoes.length) {
-      for (let i = canoes.length; i < neededCanoes; i++) {
-        addCanoe({ name: `Canoe ${i + 1}` });
-      }
-    }
-  }, [paddlers?.length, canoes?.length]);
+  // No auto canoe creation - assign button handles this
 
   // Canoe sorted paddlers for display
   const canoeSortedPaddlers = useMemo(() => 
@@ -473,12 +423,6 @@ function App() {
   }, [paddlers, canoes, canoeSortedPaddlers, isReassigning, triggerAnimation]);
 
   const onDragEnd = async (result: DropResult) => {
-    // Clean up swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-    dragSourceIdRef.current = null;
     const { source, destination, draggableId } = result;
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
@@ -593,6 +537,7 @@ function App() {
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
+    if (!canoes || canoes.length <= 1) return; // keep at least 1
     triggerAnimation();
     removeCanoe({ canoeId });
   };
@@ -630,6 +575,18 @@ function App() {
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingPaddler(null);
+  };
+
+  const handleAssign = async () => {
+    if (!paddlers || !canoes) return;
+    const neededCanoes = Math.ceil(paddlers.length / 6);
+    if (neededCanoes > canoes.length) {
+      for (let i = canoes.length; i < neededCanoes; i++) {
+        await addCanoe({ name: `Canoe ${i + 1}` });
+      }
+    }
+    triggerAnimation();
+    assignOptimal({ priority: canoePriority });
   };
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
@@ -715,7 +672,7 @@ function App() {
                     </Droppable>
                     <div className="flex flex-col items-end shrink-0 ml-3 gap-1">
                       <span
-                        onClick={() => { triggerAnimation(); assignOptimal({ priority: canoePriority }); }}
+                        onClick={handleAssign}
                         className="font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
                       >
                         assign
@@ -737,7 +694,7 @@ function App() {
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '10px 8px', marginBottom: '4px' }}
+                        style={{ backgroundColor: '#d1d5db', padding: '16px 8px 16px 16px', marginBottom: '4px' }}
                       >
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '28px', marginRight: '4px' }}>
@@ -889,28 +846,32 @@ function App() {
 
                 {sidebarOpen && (
                 <>
-                  <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
-                    {[
-                      { id: "gender", label: "G" },
-                      { id: "type", label: "R" },
-                      { id: "seatPreference", label: "S" },
-                      { id: "ability", label: "A" },
-                    ].map((option) => (
-                      <span
-                        key={option.id}
-                        onClick={() => setViewBy(option.id as ViewBy)}
-                        className={`w-11 h-11 flex items-center justify-center text-[15px] font-bold cursor-pointer transition-colors rounded-full`}
-                        style={{
-                          borderWidth: '3px',
-                          borderStyle: 'solid',
-                          ...(viewBy === option.id
-                            ? { backgroundColor: '#475569', color: '#fff', borderColor: '#334155' }
-                            : { backgroundColor: '#e2e8f0', color: '#94a3b8', borderColor: '#cbd5e1' }),
-                        }}
-                      >
-                        {option.label}
-                      </span>
-                    ))}
+                  <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                    <span
+                      onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
+                      className="w-9 h-9 flex items-center justify-center text-[13px] font-bold cursor-pointer rounded-full"
+                      style={{ backgroundColor: '#475569', color: '#fff', borderWidth: '3px', borderStyle: 'solid', borderColor: '#334155' }}
+                    >
+                      {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[viewBy]}
+                    </span>
+                    {openSortMenu === 'viewby' && (
+                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
+                        {[
+                          { id: "gender", label: "Gender" },
+                          { id: "type", label: "Racer" },
+                          { id: "seatPreference", label: "Seat" },
+                          { id: "ability", label: "Ability" },
+                        ].map((opt) => (
+                          <div
+                            key={opt.id}
+                            onClick={() => { setViewBy(opt.id as ViewBy); setOpenSortMenu(null); }}
+                            style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#1e293b' : '#64748b', backgroundColor: viewBy === opt.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
+                          >
+                            {opt.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {/* Edit/Trash/+ icons */}
                   <div className="flex items-center gap-1">
