@@ -3,7 +3,7 @@ import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult, DragStart, DragUpdate } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
 
 import { useAnimationTrigger } from "./useAnimationTrigger";
 
@@ -1191,7 +1191,7 @@ function App() {
                         {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
                           const sectionBreak = sectionBreaks.find(b => b.index === index);
                           return (
-                            <React.Fragment key={paddler._id.toString()}>
+                            <Fragment key={paddler._id.toString()}>
                               {sectionBreak && (
                                 <div className="flex items-center justify-between w-full" style={{ padding: '4px 0 2px' }}>
                                   <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
@@ -1249,7 +1249,7 @@ function App() {
                                   </div>
                                 )}
                               </Draggable>
-                            </React.Fragment>
+                            </Fragment>
                           );
                         }) : (
                           <span className="text-slate-400 text-sm w-full text-center mt-4">Drag paddlers here to unassign</span>
