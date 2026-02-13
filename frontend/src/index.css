@@ -217,6 +217,14 @@ button:focus-visible {
   }
 }
 
+/* Prevent touch scrolling from intercepting drag on mobile */
+[data-rfd-drag-handle-draggable-id] {
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 /* Hide scrollbars but keep scrolling */
 .scrollbar-hidden {
   scrollbar-width: none; /* Firefox */

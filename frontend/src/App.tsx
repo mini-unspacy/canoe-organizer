@@ -364,6 +364,16 @@ function App() {
   const handleDragStart = useCallback((_start: DragStart) => { setIsDragging(true); }, []);
   const handleDragUpdate = useCallback((_update: DragUpdate) => {}, []);
 
+  // Block native touchmove on the whole page during drag to prevent scroll interference
+  useEffect(() => {
+    if (!isDragging) return;
+    const handler = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener('touchmove', handler, { passive: false });
+    return () => document.removeEventListener('touchmove', handler);
+  }, [isDragging]);
+
   // No auto canoe creation - assign button handles this
 
   // Canoe sorted paddlers for display
@@ -788,7 +798,7 @@ function App() {
                                         <Draggable draggableId={assignedPaddler.id} index={0}>
                                           {(provided, snapshot) => {
                                             const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, touchAction: 'none', ...(snapshot.isDragging ? {} : { position: 'static' }) }}>
+                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} style={{ ...provided.draggableProps.style, touchAction: 'none' }}>
                                                 <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} />
                                               </div>
                                             );
@@ -1029,7 +1039,7 @@ function App() {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        style={{ ...provided.draggableProps.style, touchAction: 'none', ...(snapshot.isDragging ? {} : { position: 'static' }) }}
+                                        style={{ ...provided.draggableProps.style, touchAction: 'none' }}
                                       >
                                         <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                       </div>
