@@ -1,7 +1,28 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
+  ...authTables,
+
+  // Override default users table with custom fields
+  users: defineTable({
+    // Auth.js default fields
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    // Custom fields
+    role: v.optional(v.union(v.literal("admin"), v.literal("normal"))),
+    paddlerId: v.optional(v.string()),
+    onboardingComplete: v.optional(v.boolean()),
+  })
+    .index("email", ["email"])
+    .index("by_paddlerId", ["paddlerId"]),
+
   paddlers: defineTable({
     id: v.string(),
     firstName: v.string(),
@@ -9,9 +30,9 @@ export default defineSchema({
     lastName: v.optional(v.string()),
     gender: v.union(v.literal("kane"), v.literal("wahine")),
     type: v.union(v.literal("racer"), v.literal("casual"), v.literal("very-casual")),
-    seatPreference: v.optional(v.string()), // e.g., "612000" = prefers seat 6, then 1, then 2, then no preference
-    preferredSeats: v.optional(v.array(v.number())), // DEPRECATED: old field for migration
-    ability: v.number(), // 1-5 (red-green)
+    seatPreference: v.optional(v.string()),
+    preferredSeats: v.optional(v.array(v.number())),
+    ability: v.number(),
     assignedCanoe: v.optional(v.string()),
     assignedSeat: v.optional(v.number())
   })
@@ -20,13 +41,13 @@ export default defineSchema({
 
   canoes: defineTable({
     id: v.string(),
-    name: v.string(), // "Canoe 1", "Canoe 2"
-    designation: v.optional(v.string()), // e.g. "57", "67", "700"
+    name: v.string(),
+    designation: v.optional(v.string()),
     assignments: v.array(v.object({
-      seat: v.number(), // 1-6
+      seat: v.number(),
       paddlerId: v.string()
     })),
-    status: v.string() // "open", "full", "locked"
+    status: v.string()
   })
     .index("by_canoe_id", ["id"]),
 
@@ -38,15 +59,6 @@ export default defineSchema({
     .index("by_paddler_event", ["paddlerId", "eventId"])
     .index("by_paddler", ["paddlerId"])
     .index("by_event", ["eventId"]),
-
-  users: defineTable({
-    email: v.string(),
-    password: v.string(),
-    role: v.union(v.literal("admin"), v.literal("normal")),
-    paddlerId: v.string(),
-  })
-    .index("by_email", ["email"])
-    .index("by_paddlerId", ["paddlerId"]),
 
   eventAssignments: defineTable({
     eventId: v.string(),
@@ -61,14 +73,14 @@ export default defineSchema({
   events: defineTable({
     id: v.string(),
     title: v.string(),
-    date: v.string(), // ISO "YYYY-MM-DD"
-    time: v.string(), // "HH:MM" 24h
+    date: v.string(),
+    time: v.string(),
     location: v.string(),
     eventType: v.optional(v.union(v.literal("practice"), v.literal("race"), v.literal("other"))),
     repeating: v.union(v.literal("none"), v.literal("weekly"), v.literal("monthly")),
-    weekdays: v.optional(v.array(v.number())), // 0-6 (sun-sat) for weekly
-    monthdays: v.optional(v.array(v.number())), // 1-31 for monthly
-    repeatUntil: v.optional(v.string()), // "YYYY-MM"
+    weekdays: v.optional(v.array(v.number())),
+    monthdays: v.optional(v.array(v.number())),
+    repeatUntil: v.optional(v.string()),
     seriesId: v.optional(v.string()),
   })
     .index("by_event_id", ["id"])

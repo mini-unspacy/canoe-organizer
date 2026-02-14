@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as canoes from "../canoes.js";
 import type * as eventAssignments from "../eventAssignments.js";
 import type * as events from "../events.js";
+import type * as http from "../http.js";
 import type * as paddlers from "../paddlers.js";
 import type * as paddling from "../paddling.js";
 
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   canoes: typeof canoes;
   eventAssignments: typeof eventAssignments;
   events: typeof events;
+  http: typeof http;
   paddlers: typeof paddlers;
   paddling: typeof paddling;
 }>;

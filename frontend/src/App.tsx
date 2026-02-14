@@ -1,4 +1,5 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult, DragStart, DragUpdate } from "@hello-pangea/dnd";
@@ -7,6 +8,7 @@ import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "rea
 
 import { useAnimationTrigger } from "./useAnimationTrigger";
 import LoginPage from "./LoginPage";
+import OnboardingPage from "./OnboardingPage";
 
 type User = { email: string; role: "admin" | "normal"; paddlerId: string };
 
@@ -1342,7 +1344,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         onMouseEnter={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = '#4b5563'; }}
                         onMouseLeave={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
-                        {item}
+                        {item === 'today' ? 'event' : item}
                       </span>
                     ))}
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
@@ -1382,7 +1384,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const d = new Date(selectedEvent.date + 'T00:00:00');
                     const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                     const dayName = dayNames[d.getDay()];
-                    const dayMonth = `${d.getDate()}/${d.getMonth() + 1}`;
+                    const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#c0c0c0', fontWeight: 500 }}>
@@ -1410,7 +1412,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
                       const now = new Date();
                       const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-                      return `${dayNames[now.getDay()]} ${now.getDate()}/${now.getMonth() + 1} ---`;
+                      return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
                     })()}</span>
                   ))}
                 </div>
@@ -2367,31 +2369,65 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   );
 }
 
-function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    try {
-      const saved = localStorage.getItem('currentUser');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
+function AuthenticatedApp() {
+  const { signOut } = useAuthActions();
+  const convexUser = useQuery(api.auth.currentUser);
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    localStorage.setItem('selectedPaddlerId', user.paddlerId);
+  // Still loading user data
+  if (convexUser === undefined) {
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "#111827", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
+      </div>
+    );
+  }
+
+  // User doc not found (shouldn't happen, but handle gracefully)
+  if (!convexUser) {
+    return <LoginPage />;
+  }
+
+  // Onboarding not complete — show onboarding screen
+  if (!convexUser.onboardingComplete || !convexUser.paddlerId) {
+    return <OnboardingPage />;
+  }
+
+  // Sync paddlerId to localStorage for components that read it
+  if (convexUser.paddlerId) {
+    localStorage.setItem("selectedPaddlerId", convexUser.paddlerId);
+  }
+
+  const currentUser: User = {
+    email: convexUser.email || "",
+    role: convexUser.role || "normal",
+    paddlerId: convexUser.paddlerId,
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('selectedPaddlerId');
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("selectedPaddlerId");
+    void signOut();
   };
 
-  if (!currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
   return <AppMain currentUser={currentUser} onLogout={handleLogout} />;
+}
+
+function App() {
+  return (
+    <>
+      <AuthLoading>
+        <div style={{ minHeight: "100vh", backgroundColor: "#111827", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
+        </div>
+      </AuthLoading>
+      <Unauthenticated>
+        <LoginPage />
+      </Unauthenticated>
+      <Authenticated>
+        <AuthenticatedApp />
+      </Authenticated>
+    </>
+  );
 }
 
 export default App;

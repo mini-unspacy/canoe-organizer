@@ -1,38 +1,93 @@
+import Google from "@auth/core/providers/google";
+import Apple from "@auth/core/providers/apple";
+import Facebook from "@auth/core/providers/facebook";
+import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 10);
 
-export const login = mutation({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
-    if (!user) {
-      return { error: "invalid email or password" };
-    }
-    if (user.password !== args.password) {
-      return { error: "invalid email or password" };
-    }
-    return { email: user.email, role: user.role, paddlerId: user.paddlerId };
+export const { auth, signIn, signOut, store } = convexAuth({
+  providers: [Google, Apple, Facebook],
+  callbacks: {
+    async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
+      if (!existingUserId) {
+        // New user — check if they match a known admin email
+        const user = await ctx.db.get(userId);
+        const email = user?.email?.toLowerCase();
+
+        // Admin emails that should auto-link to existing paddler profiles
+        const ADMIN_EMAILS: Record<string, string> = {
+          "ken.c.li@gmail.com": "admin",
+        };
+
+        if (email && email in ADMIN_EMAILS) {
+          // Find existing paddler by name match (Ken Li)
+          const paddlers = await ctx.db.query("paddlers").collect();
+          const kenPaddler = paddlers.find(
+            (p) => p.firstName === "Ken" && (p.lastName === "Li" || p.lastInitial === "L")
+          );
+          await ctx.db.patch(userId, {
+            role: "admin",
+            onboardingComplete: !!kenPaddler,
+            ...(kenPaddler ? { paddlerId: kenPaddler.id } : {}),
+          });
+        } else {
+          await ctx.db.patch(userId, {
+            role: "normal",
+            onboardingComplete: false,
+          });
+        }
+      }
+    },
   },
 });
 
-export const getUser = query({
-  args: { email: v.string() },
+export const currentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    return await ctx.db.get(userId);
+  },
+});
+
+export const completeOnboarding = mutation({
+  args: {
+    firstName: v.string(),
+    lastName: v.string(),
+    gender: v.union(v.literal("kane"), v.literal("wahine")),
+    phone: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
-    if (!user) return null;
-    return { email: user.email, role: user.role, paddlerId: user.paddlerId };
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Create paddler profile
+    const paddlerId = nanoid();
+    await ctx.db.insert("paddlers", {
+      id: paddlerId,
+      firstName: args.firstName,
+      lastInitial: args.lastName[0] || "A",
+      lastName: args.lastName,
+      gender: args.gender,
+      type: "casual",
+      ability: 3,
+      seatPreference: "000000",
+    });
+
+    // Update user with paddler link and complete onboarding
+    await ctx.db.patch(userId, {
+      paddlerId,
+      onboardingComplete: true,
+      ...(args.phone ? { phone: args.phone } : {}),
+    });
+
+    return { paddlerId };
   },
 });
 
@@ -40,75 +95,8 @@ export const getAllUsers = query({
   args: {},
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
-    return users.map((u) => ({ email: u.email, paddlerId: u.paddlerId }));
-  },
-});
-
-export const seedUsers = mutation({
-  args: {},
-  handler: async (ctx) => {
-    // Check if users already exist
-    const existing = await ctx.db.query("users").first();
-    if (existing) {
-      return { message: "users already seeded" };
-    }
-
-    const paddlers = await ctx.db.query("paddlers").collect();
-
-    // Find or create Ken Li paddler
-    let kenPaddler = paddlers.find(
-      (p) => p.firstName === "Ken" && (p.lastName === "Li" || p.lastInitial === "L")
-    );
-    let kenPaddlerId: string;
-    if (kenPaddler) {
-      kenPaddlerId = kenPaddler.id;
-    } else {
-      kenPaddlerId = nanoid();
-      await ctx.db.insert("paddlers", {
-        id: kenPaddlerId,
-        firstName: "Ken",
-        lastInitial: "L",
-        lastName: "Li",
-        gender: "kane",
-        type: "racer",
-        ability: 5,
-        seatPreference: "000000",
-      });
-    }
-
-    // Create admin user for Ken Li
-    await ctx.db.insert("users", {
-      email: "ken.c.li@gmail.com",
-      password: "12345",
-      role: "admin",
-      paddlerId: kenPaddlerId,
-    });
-
-    // Create normal users for all other paddlers
-    const usedEmails = new Set<string>(["ken.c.li@gmail.com"]);
-
-    for (const p of paddlers) {
-      if (p.id === kenPaddlerId) continue;
-
-      const first = p.firstName.toLowerCase().replace(/[^a-z]/g, "");
-      const lastInit = (p.lastName?.[0] || p.lastInitial || "x").toLowerCase();
-      let baseEmail = `${first}.${lastInit}@example.com`;
-      let email = baseEmail;
-      let suffix = 2;
-      while (usedEmails.has(email)) {
-        email = `${first}.${lastInit}${suffix}@example.com`;
-        suffix++;
-      }
-      usedEmails.add(email);
-
-      await ctx.db.insert("users", {
-        email,
-        password: "54321",
-        role: "normal",
-        paddlerId: p.id,
-      });
-    }
-
-    return { message: "users seeded", count: usedEmails.size };
+    return users
+      .filter((u) => u.paddlerId)
+      .map((u) => ({ email: u.email || "", paddlerId: u.paddlerId! }));
   },
 });
