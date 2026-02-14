@@ -28,4 +28,28 @@ export default defineSchema({
     status: v.string() // "open", "full", "locked"
   })
     .index("by_canoe_id", ["id"]),
+
+  attendance: defineTable({
+    paddlerId: v.string(),
+    eventId: v.string(),
+    attending: v.boolean(),
+  })
+    .index("by_paddler_event", ["paddlerId", "eventId"])
+    .index("by_paddler", ["paddlerId"]),
+
+  events: defineTable({
+    id: v.string(),
+    title: v.string(),
+    date: v.string(), // ISO "YYYY-MM-DD"
+    time: v.string(), // "HH:MM" 24h
+    location: v.string(),
+    eventType: v.optional(v.union(v.literal("practice"), v.literal("race"), v.literal("other"))),
+    repeating: v.union(v.literal("none"), v.literal("weekly"), v.literal("monthly")),
+    weekdays: v.optional(v.array(v.number())), // 0-6 (sun-sat) for weekly
+    monthdays: v.optional(v.array(v.number())), // 1-31 for monthly
+    repeatUntil: v.optional(v.string()), // "YYYY-MM"
+    seriesId: v.optional(v.string()),
+  })
+    .index("by_event_id", ["id"])
+    .index("by_date", ["date"]),
 });

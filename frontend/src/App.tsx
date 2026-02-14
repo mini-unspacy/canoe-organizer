@@ -132,19 +132,12 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
 
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
 
-  // Display name: compact = initials only, otherwise truncated first + last initial
   const firstInitial = paddler.firstName?.[0] || '?';
   const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
-  let displayName: string;
-  if (compact) {
-    displayName = `${firstInitial}${lastInitial}`;
-  } else {
-    const maxFirstNameLen = 5;
-    const truncatedFirst = paddler.firstName.length > maxFirstNameLen
-      ? paddler.firstName.slice(0, maxFirstNameLen)
-      : paddler.firstName;
-    displayName = `${truncatedFirst}${lastInitial}`;
-  }
+  const maxFirstNameLen = 5;
+  const truncatedFirst = paddler.firstName.length > maxFirstNameLen
+    ? paddler.firstName.slice(0, maxFirstNameLen)
+    : paddler.firstName;
 
   // Inner ability circle color: red (1) to green (5)
   const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
@@ -171,10 +164,11 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         touchAction: 'manipulation',
       }}
     >
-      {/* Name - in the center */}
-      <span className="text-[9px] leading-tight font-bold px-1 truncate max-w-full text-center" style={{ color: '#c0c0c0' }}>
-        {displayName}
-      </span>
+      {/* Name - two lines centered */}
+      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#e0e0e0' }}>
+        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.3px' }}>{compact ? firstInitial : truncatedFirst}</span>
+        <span className="text-[10px] font-black" style={{ WebkitTextStroke: '0.3px' }}>{lastInitial}</span>
+      </div>
       
       {/* Ability badge - small circle at bottom left */}
       <div 
@@ -281,6 +275,550 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
   });
 };
 
+function SchedulePage() {
+  const events = useQuery(api.events.getEvents);
+  const paddlers = useQuery(api.paddlers.getPaddlers);
+  const addEventMut = useMutation(api.events.addEvent);
+  const updateEventMut = useMutation(api.events.updateEvent);
+  const deleteEventMut = useMutation(api.events.deleteEvent);
+  const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
+
+  const [selectedPaddlerId, setSelectedPaddlerId] = useState<string | null>(() => {
+    return localStorage.getItem('selectedPaddlerId');
+  });
+
+  // Persist selected paddler to localStorage
+  useEffect(() => {
+    if (selectedPaddlerId) {
+      localStorage.setItem('selectedPaddlerId', selectedPaddlerId);
+    } else {
+      localStorage.removeItem('selectedPaddlerId');
+    }
+  }, [selectedPaddlerId]);
+
+  // Reset if selected paddler no longer exists
+  useEffect(() => {
+    if (selectedPaddlerId && paddlers && !paddlers.find(p => p.id === selectedPaddlerId)) {
+      setSelectedPaddlerId(null);
+    }
+  }, [selectedPaddlerId, paddlers]);
+
+  const attendanceData = useQuery(
+    api.attendance.getAttendanceForPaddler,
+    selectedPaddlerId ? { paddlerId: selectedPaddlerId } : "skip"
+  );
+
+  const attendingEventIds = useMemo(() => {
+    if (!attendanceData) return new Set<string>();
+    return new Set(attendanceData.filter(a => a.attending).map(a => a.eventId));
+  }, [attendanceData]);
+
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    title: '', date: '', time: '', location: '',
+    eventType: 'practice' as 'practice' | 'race' | 'other',
+    repeating: 'none' as 'none' | 'weekly' | 'monthly',
+    weekdays: [] as number[],
+    monthdays: [] as number[],
+    repeatUntil: '',
+  });
+  const [activeMonth, setActiveMonth] = useState('');
+  const scheduleScrollRef = useRef<HTMLDivElement>(null);
+  const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const eventsByMonth = useMemo(() => {
+    if (!events) return [];
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = events.filter(e => e.date >= today);
+    const grouped: Record<string, typeof upcoming> = {};
+    for (const e of upcoming) {
+      const monthKey = e.date.slice(0, 7);
+      if (!grouped[monthKey]) grouped[monthKey] = [];
+      grouped[monthKey].push(e);
+    }
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    return Object.keys(grouped).sort().map(month => {
+      const [y, m] = month.split('-');
+      return {
+        month,
+        label: `${monthNames[parseInt(m) - 1]} ${y}`,
+        events: grouped[month].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)),
+      };
+    });
+  }, [events]);
+
+  const allMonths = useMemo(() => {
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const now = new Date();
+    const result: { month: string; label: string }[] = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      result.push({ month: key, label: `${monthNames[d.getMonth()]} ${d.getFullYear()}` });
+    }
+    return result;
+  }, []);
+
+  const monthList = useMemo(() => allMonths.map(m => m.month), [allMonths]);
+
+  useEffect(() => {
+    if (!activeMonth && allMonths.length > 0) {
+      setActiveMonth(allMonths[0].month);
+    }
+  }, [allMonths, activeMonth]);
+
+  return (
+    <div style={{ display: 'flex', height: 'calc(100% - 40px)', gap: '0' }}>
+      {/* Month indicator strip */}
+      <div style={{ width: '48px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '2px', paddingTop: '8px' }}>
+        {allMonths.map(m => {
+          const abbr = m.label.split(' ')[0];
+          const isActive = activeMonth === m.month;
+          return (
+            <span
+              key={m.month}
+              onClick={() => {
+                const el = monthRefs.current[m.month];
+                if (el && scheduleScrollRef.current) {
+                  scheduleScrollRef.current.scrollTo({ top: el.offsetTop - scheduleScrollRef.current.offsetTop, behavior: 'smooth' });
+                }
+                setActiveMonth(m.month);
+              }}
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: isActive ? '#ffffff' : '#9ca3af',
+                backgroundColor: isActive ? '#4b5563' : 'transparent',
+                borderRadius: '4px',
+                padding: '4px 6px',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              {abbr}
+            </span>
+          );
+        })}
+      </div>
+
+      {/* Event list */}
+      <div
+        ref={scheduleScrollRef}
+        onScroll={() => {
+          const container = scheduleScrollRef.current;
+          if (!container) return;
+          const scrollTop = container.scrollTop;
+          let found = monthList[0] || '';
+          for (const m of monthList) {
+            const el = monthRefs.current[m];
+            if (el && el.offsetTop - container.offsetTop <= scrollTop + 60) {
+              found = m;
+            }
+          }
+          if (found && found !== activeMonth) setActiveMonth(found);
+        }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 8px', position: 'relative' }}
+        className="scrollbar-hidden"
+      >
+        {/* + event button and paddler selector */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', padding: '8px 0', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: 'auto' }}>
+            <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>i am:</span>
+            <select
+              value={selectedPaddlerId || ''}
+              onChange={e => setSelectedPaddlerId(e.target.value || null)}
+              style={{
+                backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px',
+                padding: '3px 6px', color: '#c0c0c0', fontSize: '12px', outline: 'none',
+                maxWidth: '140px',
+              }}
+            >
+              <option value="">—</option>
+              {paddlers && [...paddlers].sort((a, b) => a.firstName.localeCompare(b.firstName)).map(p => (
+                <option key={p.id} value={p.id}>{p.firstName} {p.lastInitial}</option>
+              ))}
+            </select>
+          </div>
+          <span
+            onClick={() => {
+              setEditingEventId(null);
+              setEventForm({ title: '', date: '', time: '', location: '', eventType: 'practice', repeating: 'none', weekdays: [], monthdays: [], repeatUntil: '' });
+              setShowEventForm(true);
+            }}
+            style={{
+              cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569',
+              userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px',
+            }}
+          >
+            + event
+          </span>
+        </div>
+
+        {/* Inline event form */}
+        {showEventForm && !editingEventId && (
+          <div style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: '1px solid #4b5563' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Event type selector */}
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {(['practice', 'race', 'other'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
+                    style={{
+                      padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                      border: '2px solid',
+                      borderColor: eventForm.eventType === t ? (t === 'practice' ? '#3b82f6' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                      backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
+                      color: eventForm.eventType === t ? (t === 'practice' ? '#60a5fa' : t === 'race' ? '#f87171' : '#94a3b8') : '#6b7280',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="title"
+                value={eventForm.title}
+                onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
+                style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+              />
+              <input
+                type="text"
+                placeholder="location"
+                value={eventForm.location}
+                onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
+                style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {(editingEventId || eventForm.repeating === 'none') && (
+                  <input
+                    type="date"
+                    value={eventForm.date}
+                    onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
+                    style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                  />
+                )}
+                <input
+                  type="time"
+                  value={eventForm.time}
+                  onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
+                  style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+              {!editingEventId && (<>
+              {/* Repeating pills */}
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, marginRight: '2px' }}>repeat:</span>
+                {(['none', 'weekly', 'monthly'] as const).map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [] }))}
+                    style={{
+                      padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                      border: '2px solid',
+                      borderColor: eventForm.repeating === r ? '#3b82f6' : 'transparent',
+                      backgroundColor: eventForm.repeating === r ? 'rgba(59,130,246,0.15)' : 'transparent',
+                      color: eventForm.repeating === r ? '#60a5fa' : '#6b7280',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+              {/* Day-of-week multi-select for weekly */}
+              {eventForm.repeating === 'weekly' && (
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const).map((day, i) => {
+                    const isSelected = eventForm.weekdays.includes(i);
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => {
+                          setEventForm(f => ({
+                            ...f,
+                            weekdays: isSelected ? f.weekdays.filter(d => d !== i) : [...f.weekdays, i].sort(),
+                          }));
+                        }}
+                        style={{
+                          padding: '4px 0', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                          border: '2px solid',
+                          borderColor: isSelected ? '#3b82f6' : '#4b5563',
+                          backgroundColor: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
+                          color: isSelected ? '#60a5fa' : '#6b7280',
+                          cursor: 'pointer',
+                          flex: 1,
+                          textAlign: 'center',
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Day-of-month mini calendar for monthly */}
+              {eventForm.repeating === 'monthly' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                    const isSelected = eventForm.monthdays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => {
+                          setEventForm(f => ({
+                            ...f,
+                            monthdays: isSelected ? f.monthdays.filter(d => d !== day) : [...f.monthdays, day].sort((a, b) => a - b),
+                          }));
+                        }}
+                        style={{
+                          padding: '3px 0', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
+                          border: '1.5px solid',
+                          borderColor: isSelected ? '#3b82f6' : '#4b5563',
+                          backgroundColor: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
+                          color: isSelected ? '#60a5fa' : '#6b7280',
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Till when */}
+              {eventForm.repeating !== 'none' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, flexShrink: 0 }}>till when</span>
+                  <input
+                    type="month"
+                    value={eventForm.repeatUntil}
+                    onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
+                    style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                  />
+                </div>
+              )}
+              </>)}
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
+                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
+                >
+                  cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!eventForm.title || !eventForm.time) return;
+                    const startDate = eventForm.date || new Date().toISOString().slice(0, 10);
+                    await addEventMut({
+                      title: eventForm.title,
+                      date: startDate,
+                      time: eventForm.time,
+                      location: eventForm.location || '',
+                      eventType: eventForm.eventType,
+                      repeating: eventForm.repeating,
+                      weekdays: eventForm.weekdays.length > 0 ? eventForm.weekdays : undefined,
+                      monthdays: eventForm.monthdays.length > 0 ? eventForm.monthdays : undefined,
+                      repeatUntil: eventForm.repeatUntil || undefined,
+                    });
+                    setShowEventForm(false);
+                  }}
+                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
+                >
+                  add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Event list by month */}
+        {allMonths.map(m => {
+          const group = eventsByMonth.find(g => g.month === m.month);
+          const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          return (
+            <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
+              <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, padding: '12px 0 6px', textTransform: 'lowercase' }}>
+                {m.label}
+              </div>
+              {group ? group.events.map(evt => {
+                const d = new Date(evt.date + 'T00:00:00');
+                const dayNum = d.getDate();
+                const dayName = dayNames[d.getDay()];
+                if (editingEventId === evt.id && showEventForm) {
+                  return (
+                    <div key={evt.id} style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '4px', marginTop: '4px', border: '1px solid #4b5563' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {/* Event type selector */}
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {(['practice', 'race', 'other'] as const).map(t => (
+                            <button
+                              key={t}
+                              onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
+                              style={{
+                                padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                                border: '2px solid',
+                                borderColor: eventForm.eventType === t ? (t === 'practice' ? '#3b82f6' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                                backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
+                                color: eventForm.eventType === t ? (t === 'practice' ? '#60a5fa' : t === 'race' ? '#f87171' : '#94a3b8') : '#6b7280',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="title"
+                          value={eventForm.title}
+                          onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
+                          style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="location"
+                          value={eventForm.location}
+                          onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
+                          style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="date"
+                            value={eventForm.date}
+                            onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
+                            style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          />
+                          <input
+                            type="time"
+                            value={eventForm.time}
+                            onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
+                            style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
+                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
+                          >
+                            cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!eventForm.title || !eventForm.time) return;
+                              await updateEventMut({
+                                eventId: editingEventId,
+                                title: eventForm.title,
+                                date: eventForm.date,
+                                time: eventForm.time,
+                                location: eventForm.location,
+                                eventType: eventForm.eventType,
+                              });
+                              setShowEventForm(false);
+                              setEditingEventId(null);
+                            }}
+                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
+                          >
+                            save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                const isAttending = attendingEventIds.has(evt.id);
+                return (
+                  <div
+                    key={evt.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #4b5563' }}
+                  >
+                    <div style={{ width: '36px', textAlign: 'center', flexShrink: 0 }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0c0c0', lineHeight: 1.1 }}>{dayNum}</div>
+                      <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 600 }}>{dayName}</div>
+                    </div>
+                    {selectedPaddlerId && (
+                      <div
+                        onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
+                        style={{
+                          width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', userSelect: 'none',
+                          border: `2px solid ${isAttending ? '#22c55e' : '#4b5563'}`,
+                          backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'transparent',
+                          color: isAttending ? '#22c55e' : '#6b7280',
+                          fontSize: '13px', fontWeight: 700,
+                        }}
+                      >
+                        {isAttending ? 'Y' : 'N'}
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', color: '#c0c0c0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.title}</div>
+                      <div style={{ fontSize: '11px', color: '#6b7280', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {evt.eventType && (
+                          <span style={{
+                            padding: '1px 6px', borderRadius: '999px', fontSize: '9px', fontWeight: 600,
+                            backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
+                            color: evt.eventType === 'practice' ? '#60a5fa' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
+                            border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
+                          }}>
+                            {evt.eventType}
+                          </span>
+                        )}
+                        <span>{evt.time}</span>
+                        {evt.location && <span>{evt.location}</span>}
+                        {evt.repeating !== 'none' && (
+                          <span style={{ padding: '1px 6px', borderRadius: '999px', fontSize: '9px', fontWeight: 600, border: '1px solid #4b5563', color: '#9ca3af' }}>
+                            {evt.repeating}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <svg
+                      onClick={() => {
+                        setEditingEventId(evt.id);
+                        setEventForm({
+                          title: evt.title, date: evt.date, time: evt.time, location: evt.location,
+                          eventType: evt.eventType || 'practice',
+                          repeating: evt.repeating,
+                          weekdays: evt.weekdays || [],
+                          monthdays: evt.monthdays || [],
+                          repeatUntil: evt.repeatUntil || '',
+                        });
+                        setShowEventForm(true);
+                      }}
+                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ cursor: 'pointer', flexShrink: 0, padding: '4px', boxSizing: 'content-box' }}
+                    >
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <svg
+                      onClick={() => deleteEventMut({ eventId: evt.id })}
+                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ cursor: 'pointer', flexShrink: 0, padding: '4px', boxSizing: 'content-box' }}
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </div>
+                );
+              }) : (
+                <div style={{ padding: '8px 0', fontSize: '12px', color: '#4b5563' }}>—</div>
+              )}
+            </div>
+          );
+        })}
+        <div style={{ height: '80px' }} />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const canoes = useQuery(api.canoes.getCanoes);
   const paddlers = useQuery(api.paddlers.getPaddlers);
@@ -297,6 +835,8 @@ function App() {
   const addPaddler = useMutation(api.paddlers.addPaddler);
   const deletePaddler = useMutation(api.paddlers.deletePaddler);
   const updatePaddler = useMutation(api.paddlers.updatePaddler);
+
+
 
   // Canoe sort priority (draggable) - persist to localStorage
   const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(() => {
@@ -324,6 +864,9 @@ function App() {
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
+  const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
+  const [editingSeatPrefId, setEditingSeatPrefId] = useState<string | null>(null);
+  const [tempSeatPref, setTempSeatPref] = useState('000000');
   const [lockedCanoes, setLockedCanoes] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('lockedCanoes');
     if (saved) { try { return new Set(JSON.parse(saved)); } catch { /* default */ } }
@@ -460,7 +1003,7 @@ function App() {
     paddlers ? paddlers.filter((p: Paddler) => !p.assignedCanoe) : [],
   [paddlers]);
 
-  const viewSections = useMemo(() => 
+  const viewSections = useMemo(() =>
     getViewSections(unassignedPaddlers, viewBy),
   [unassignedPaddlers, viewBy]);
 
@@ -687,7 +1230,7 @@ function App() {
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
   // Calculate dynamic horizontal sizing (no CSS transform)
-  const sidebarW = sidebarOpen ? 176 : 24;
+  const sidebarW = activePage === 'today' ? (sidebarOpen ? 176 : 24) : 0;
   const leftSidebarW = leftSidebarOpen ? 110 : 24;
   const mainPad = 4;
   const flexGap = 8;
@@ -735,7 +1278,6 @@ function App() {
                   backgroundColor: leftSidebarOpen ? '#374151' : 'transparent',
                   padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   borderRight: '1px solid #94a3b8',
-                  borderLeft: '1px solid #94a3b8',
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#374151' : 'transparent', padding: '12px 4px 0 4px' }}>
@@ -759,13 +1301,20 @@ function App() {
                 </div>
                 {leftSidebarOpen && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px' }}>
-                    {['today', 'schedule', 'roster', 'attendance', 'crews'].map((item) => (
+                    {(['today', 'schedule', 'roster', 'attendance', 'crews'] as const).map((item) => (
                       <span
                         key={item}
+                        onClick={() => setActivePage(item)}
                         className="font-medium hover:text-white cursor-pointer transition-colors"
-                        style={{ fontSize: '15px', padding: '6px 8px', borderRadius: '8px', color: '#c0c0c0' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4b5563')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        style={{
+                          fontSize: '15px',
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          color: activePage === item ? '#ffffff' : '#c0c0c0',
+                          backgroundColor: activePage === item ? '#4b5563' : 'transparent',
+                        }}
+                        onMouseEnter={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = '#4b5563'; }}
+                        onMouseLeave={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
                         {item}
                       </span>
@@ -789,9 +1338,10 @@ function App() {
                       fontSize: '28px',
                     }}
                   >
-                    Lokahi Outrigger Canoe Club
+                    Lokahi
                   </span>
                 </div>
+                {activePage === 'today' && (<>
                 {/* Sort Widget */}
                 <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
                     <div style={{ position: 'relative' }}>
@@ -884,13 +1434,13 @@ function App() {
                       onClick={handleAssign}
                       style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
-                      ←assign
+                      {sidebarOpen ? '←' : '←assign'}
                     </span>
                     <span
                       onClick={() => { triggerAnimation(); handleUnassignAll(); }}
                       style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
-                      return→
+                      {sidebarOpen ? '→' : 'return→'}
                     </span>
                 </div>
 
@@ -902,7 +1452,7 @@ function App() {
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: '#d1d5db', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
+                        style={{ backgroundColor: 'transparent', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
                       >
                         {/* Lock button - top right */}
                         <svg
@@ -927,8 +1477,8 @@ function App() {
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '30px', marginRight: '0px' }}>
                           {/* Designation - top left */}
                           <span
-                            className={`text-[15px] font-black leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'text-slate-400 cursor-default' : 'text-black dark:text-white cursor-pointer hover:text-blue-600'}`}
-                            style={{ WebkitTextStroke: '0.5px' }}
+                            className={`text-[15px] font-black leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'cursor-pointer hover:text-blue-600'}`}
+                            style={{ WebkitTextStroke: '0.5px', color: '#94a3b8' }}
                             onClick={() => !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
@@ -937,14 +1487,16 @@ function App() {
                           <div className="flex items-center" style={{ gap: '16px' }}>
                             <span
                               onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                              className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'text-slate-300 cursor-default' : 'text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer'}`}
+                              className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
+                              style={{ color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8' }}
                               title="Remove canoe"
                             >
                               −
                             </span>
                             <span
                               onClick={() => handleAddCanoeAfter(index)}
-                              className="text-[18px] font-bold text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition-colors leading-none"
+                              className="text-[18px] font-bold hover:text-emerald-600 cursor-pointer transition-colors leading-none"
+                              style={{ color: '#94a3b8' }}
                               title="Add canoe"
                             >
                               +
@@ -1007,7 +1559,7 @@ function App() {
                                           {(provided, snapshot) => {
                                             const node = (
                                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
-                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen} />
+                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
                                               </div>
                                             );
                                             return node;
@@ -1037,10 +1589,213 @@ function App() {
                     </button>
                   )}
                 </div>
+                </>)}
+
+                {activePage === 'schedule' && <SchedulePage />}
+
+                {activePage === 'roster' && paddlers && (
+                  <div style={{ padding: '8px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table style={{ width: '100%', minWidth: '500px', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '2px solid #4b5563' }}>
+                          <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>name</th>
+                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>gender</th>
+                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>type</th>
+                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>ability</th>
+                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>seat pref</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paddlers.map((p: Paddler) => (
+                          <tr key={p._id.toString()} style={{ borderBottom: '1px solid #4b5563' }}>
+                            <td style={{ padding: '8px 12px', color: '#c0c0c0', fontSize: '14px', fontWeight: 500 }}>
+                              {p.firstName} {p.lastName}
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              <button
+                                onClick={() => updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' })}
+                                style={{
+                                  padding: '4px 12px',
+                                  borderRadius: '999px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  border: '2px solid',
+                                  borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
+                                  backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
+                                  color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                {p.gender}
+                              </button>
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              {windowWidth < 768 ? (
+                                <button
+                                  onClick={() => {
+                                    const types: Array<'racer' | 'casual' | 'very-casual'> = ['racer', 'casual', 'very-casual'];
+                                    const next = types[(types.indexOf(p.type) + 1) % 3];
+                                    updatePaddler({ paddlerId: p.id, type: next });
+                                  }}
+                                  style={{
+                                    padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                                    border: '2px solid',
+                                    borderColor: p.type === 'racer' ? '#8b5cf6' : p.type === 'casual' ? '#3b82f6' : '#64748b',
+                                    backgroundColor: p.type === 'racer' ? 'rgba(139,92,246,0.15)' : p.type === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)',
+                                    color: p.type === 'racer' ? '#a78bfa' : p.type === 'casual' ? '#60a5fa' : '#94a3b8',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {p.type === 'very-casual' ? 'v-casual' : p.type}
+                                </button>
+                              ) : (
+                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                  {(['racer', 'casual', 'very-casual'] as const).map((t) => (
+                                    <button
+                                      key={t}
+                                      onClick={() => updatePaddler({ paddlerId: p.id, type: t })}
+                                      style={{
+                                        padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                                        border: '2px solid',
+                                        borderColor: p.type === t
+                                          ? t === 'racer' ? '#8b5cf6' : t === 'casual' ? '#3b82f6' : '#64748b'
+                                          : 'transparent',
+                                        backgroundColor: p.type === t
+                                          ? t === 'racer' ? 'rgba(139,92,246,0.15)' : t === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)'
+                                          : 'transparent',
+                                        color: p.type === t
+                                          ? t === 'racer' ? '#a78bfa' : t === 'casual' ? '#60a5fa' : '#94a3b8'
+                                          : '#6b7280',
+                                        cursor: 'pointer',
+                                      }}
+                                    >
+                                      {t === 'very-casual' ? 'v-casual' : t}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              {windowWidth < 768 ? (() => {
+                                const color = p.ability >= 4 ? '#10b981' : p.ability >= 3 ? '#eab308' : '#ef4444';
+                                return (
+                                  <button
+                                    onClick={() => updatePaddler({ paddlerId: p.id, ability: (p.ability % 5) + 1 })}
+                                    style={{
+                                      width: '28px', height: '28px', borderRadius: '6px',
+                                      fontSize: '12px', fontWeight: 700, border: '2px solid',
+                                      borderColor: color, backgroundColor: `${color}26`, color,
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    {p.ability}
+                                  </button>
+                                );
+                              })() : (
+                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                  {[1, 2, 3, 4, 5].map((level) => {
+                                    const isActive = p.ability === level;
+                                    const color = level >= 4 ? '#10b981' : level >= 3 ? '#eab308' : '#ef4444';
+                                    return (
+                                      <button
+                                        key={level}
+                                        onClick={() => updatePaddler({ paddlerId: p.id, ability: level })}
+                                        style={{
+                                          width: '28px', height: '28px', borderRadius: '6px',
+                                          fontSize: '12px', fontWeight: 700, border: '2px solid',
+                                          borderColor: isActive ? color : 'transparent',
+                                          backgroundColor: isActive ? `${color}26` : 'transparent',
+                                          color: isActive ? color : '#6b7280',
+                                          cursor: 'pointer',
+                                        }}
+                                      >
+                                        {level}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center', position: 'relative' }}>
+                              <span
+                                onClick={() => { if (editingSeatPrefId !== p.id) { setEditingSeatPrefId(p.id); setTempSeatPref(p.seatPreference || '000000'); } }}
+                                style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563' }}
+                              >
+                                {p.seatPreference?.split('').map(Number).filter(n => n > 0).join(' > ') || '—'}
+                              </span>
+                              {editingSeatPrefId === p.id && (
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                                  <div style={{ display: 'flex', gap: '3px' }}>
+                                    {[1, 2, 3, 4, 5, 6].map((seat) => {
+                                      const prefs = tempSeatPref.split('').map(Number).filter(n => n > 0);
+                                      const isSelected = prefs.includes(seat);
+                                      const priority = prefs.indexOf(seat) + 1;
+                                      return (
+                                        <button
+                                          key={seat}
+                                          onClick={() => {
+                                            const currentPrefs = tempSeatPref.split('').map(Number).filter(n => n > 0);
+                                            let newPrefs;
+                                            if (currentPrefs.includes(seat)) {
+                                              newPrefs = currentPrefs.filter(s => s !== seat);
+                                            } else {
+                                              newPrefs = [...currentPrefs, seat];
+                                            }
+                                            setTempSeatPref([...newPrefs, ...Array(6 - newPrefs.length).fill(0)].join('').slice(0, 6));
+                                          }}
+                                          style={{
+                                            width: '20px', height: '20px', borderRadius: '4px',
+                                            fontSize: '10px', fontWeight: 700, border: '1.5px solid',
+                                            borderColor: isSelected ? '#f97316' : '#4b5563',
+                                            backgroundColor: isSelected ? 'rgba(249,115,22,0.15)' : 'transparent',
+                                            color: isSelected ? '#fb923c' : '#6b7280',
+                                            cursor: 'pointer', position: 'relative', padding: 0, lineHeight: 1,
+                                          }}
+                                        >
+                                          {seat}
+                                          {isSelected && (
+                                            <span style={{
+                                              position: 'absolute', top: '-3px', right: '-3px',
+                                              width: '10px', height: '10px', borderRadius: '50%',
+                                              backgroundColor: '#f97316', color: '#fff',
+                                              fontSize: '6px', fontWeight: 700,
+                                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            }}>
+                                              {priority}
+                                            </span>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button
+                                      onClick={() => setEditingSeatPrefId(null)}
+                                      style={{ padding: '1px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
+                                    >
+                                      ✕
+                                    </button>
+                                    <button
+                                      onClick={() => { updatePaddler({ paddlerId: p.id, seatPreference: tempSeatPref }); setEditingSeatPrefId(null); }}
+                                      style={{ padding: '1px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
+                                    >
+                                      ✓
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
               </div>
 
               {/* RIGHT COLUMN - STAGING SIDEBAR */}
+              {activePage === 'today' && (
               <div
                 className="scrollbar-hidden"
                 style={{
@@ -1056,7 +1811,6 @@ function App() {
                   padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                   borderLeft: '1px solid #94a3b8',
-                  borderRight: '1px solid #94a3b8',
                 }}
               >
                 {/* Toolbar - sticky */}
@@ -1276,6 +2030,7 @@ function App() {
                 {/* Bottom spacer to keep content above iOS browser bar */}
                 <div style={{ flexShrink: 0, height: 80, minHeight: 80 }} />
               </div>
+              )}
             </div>
           )}
         </main>

@@ -9,7 +9,9 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as attendance from "../attendance.js";
 import type * as canoes from "../canoes.js";
+import type * as events from "../events.js";
 import type * as paddlers from "../paddlers.js";
 import type * as paddling from "../paddling.js";
 
@@ -21,7 +23,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  attendance: typeof attendance;
   canoes: typeof canoes;
+  events: typeof events;
   paddlers: typeof paddlers;
   paddling: typeof paddling;
 }>;
