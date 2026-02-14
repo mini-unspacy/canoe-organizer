@@ -64,7 +64,7 @@ export default function LoginPage() {
         </p>
 
         <button
-          onClick={() => void signIn("google")}
+          onClick={() => signIn("google", { redirectTo: "/" }).catch(console.error)}
           style={buttonStyle("#4285F4")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
@@ -79,7 +79,7 @@ export default function LoginPage() {
         </button>
 
         <button
-          onClick={() => void signIn("apple")}
+          onClick={() => signIn("apple", { redirectTo: "/" }).catch(console.error)}
           style={buttonStyle("#000000")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
@@ -91,7 +91,7 @@ export default function LoginPage() {
         </button>
 
         <button
-          onClick={() => void signIn("facebook")}
+          onClick={() => signIn("facebook", { redirectTo: "/" }).catch(console.error)}
           style={buttonStyle("#1877F2")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
