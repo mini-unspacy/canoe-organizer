@@ -72,35 +72,6 @@ const sortPaddlersByPriority = (paddlers: Paddler[], priority: CanoeSortItem[]):
   });
 };
 
-// Generate random paddler - racer/casual/very-casual are three options under "racer?"
-const generateRandomPaddler = () => {
-  const kaneFirstNames = ["James", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Anthony"];
-  const wahineFirstNames = ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Lisa", "Nancy"];
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez"];
-  
-  const typeRoll = Math.random();
-  let type: "racer" | "casual" | "very-casual";
-  if (typeRoll > 0.5) type = "racer";
-  else if (typeRoll > 0.25) type = "casual";
-  else type = "very-casual";
-  
-  const gender = Math.random() > 0.5 ? "kane" : "wahine" as const;
-  const firstName = gender === "kane" 
-    ? kaneFirstNames[Math.floor(Math.random() * kaneFirstNames.length)]
-    : wahineFirstNames[Math.floor(Math.random() * wahineFirstNames.length)];
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-  
-  return {
-    firstName,
-    lastName,
-    gender,
-    type,
-    ability: Math.floor(Math.random() * 5) + 1,
-    seatPreference: Math.random() > 0.3 
-      ? String(Math.floor(Math.random() * 6) + 1).repeat(Math.floor(Math.random() * 4) + 1).padEnd(6, '0')
-      : "000000"
-  };
-};
 
 const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact }) => {
   const circleRef = useRef<HTMLDivElement>(null);
@@ -301,7 +272,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
 
   // Reset if selected paddler no longer exists
   useEffect(() => {
-    if (selectedPaddlerId && paddlers && !paddlers.find(p => p.id === selectedPaddlerId)) {
+    if (selectedPaddlerId && paddlers && !paddlers.find((p: Paddler) => p.id === selectedPaddlerId)) {
       setSelectedPaddlerId(null);
     }
   }, [selectedPaddlerId, paddlers]);
@@ -313,7 +284,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
 
   const attendingEventIds = useMemo(() => {
     if (!attendanceData) return new Set<string>();
-    return new Set(attendanceData.filter(a => a.attending).map(a => a.eventId));
+    return new Set(attendanceData.filter((a: { attending: boolean }) => a.attending).map((a: { eventId: string }) => a.eventId));
   }, [attendanceData]);
 
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -333,7 +304,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
     const today = new Date().toISOString().slice(0, 10);
-    const upcoming = events.filter(e => e.date >= today);
+    const upcoming = events.filter((e: { date: string }) => e.date >= today);
     const grouped: Record<string, typeof upcoming> = {};
     for (const e of upcoming) {
       const monthKey = e.date.slice(0, 7);
@@ -346,7 +317,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
       return {
         month,
         label: `${monthNames[parseInt(m) - 1]} ${y}`,
-        events: grouped[month].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)),
+        events: grouped[month].sort((a: { date: string; time: string }, b: { date: string; time: string }) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)),
       };
     });
   }, [events]);
@@ -635,7 +606,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
               <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, padding: '12px 0 6px', textTransform: 'lowercase' }}>
                 {m.label}
               </div>
-              {group ? group.events.map(evt => {
+              {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
                 const d = new Date(evt.date + 'T00:00:00');
                 const dayNum = d.getDate();
                 const dayName = dayNames[d.getDay()];
@@ -779,8 +750,8 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
                         setEditingEventId(evt.id);
                         setEventForm({
                           title: evt.title, date: evt.date, time: evt.time, location: evt.location,
-                          eventType: evt.eventType || 'practice',
-                          repeating: evt.repeating,
+                          eventType: (evt.eventType || 'practice') as 'practice' | 'race' | 'other',
+                          repeating: evt.repeating as 'none' | 'weekly' | 'monthly',
                           weekdays: evt.weekdays || [],
                           monthdays: evt.monthdays || [],
                           repeatUntil: evt.repeatUntil || '',
@@ -829,8 +800,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // const _clearCanoes = useMutation(api.canoes.clearAllCanoes);
   const addCanoe = useMutation(api.canoes.addCanoe);
   const removeCanoe = useMutation(api.canoes.removeCanoe);
-  const addPaddler = useMutation(api.paddlers.addPaddler);
-  const deletePaddler = useMutation(api.paddlers.deletePaddler);
+
+
   const updatePaddler = useMutation(api.paddlers.updatePaddler);
   const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
   const setAttendanceMut = useMutation(api.attendance.setAttendance);
@@ -838,7 +809,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const allUsers = useQuery(api.auth.getAllUsers);
   const userEmailByPaddlerId = useMemo(() => {
     if (!allUsers) return new Map<string, string>();
-    return new Map(allUsers.map(u => [u.paddlerId, u.email]));
+    return new Map<string, string>(allUsers.map((u: { paddlerId: string; email: string }) => [u.paddlerId, u.email]));
   }, [allUsers]);
 
   // Read selectedPaddlerId from localStorage (persisted by SchedulePage), fallback to currentUser
@@ -889,7 +860,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   );
   const eventAttendingPaddlerIds = useMemo(() => {
     if (!eventAttendance) return null;
-    return new Set(eventAttendance.map(a => a.paddlerId));
+    return new Set(eventAttendance.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAttendance]);
 
   const eventAssignments = useQuery(
@@ -910,14 +881,14 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
   const assignedPaddlerIds = useMemo(() => {
     if (!eventAssignments) return new Set<string>();
-    return new Set(eventAssignments.map(a => a.paddlerId));
+    return new Set(eventAssignments.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAssignments]);
 
   // Find today's event (first event matching today's date)
   const todayEvent = useMemo(() => {
     if (!allEvents) return undefined; // still loading
     const today = new Date().toISOString().slice(0, 10);
-    const evt = allEvents.find(e => e.date === today);
+    const evt = allEvents.find((e: { date: string }) => e.date === today);
     if (!evt) return null; // no event today
     return { id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType };
   }, [allEvents]);
@@ -1074,7 +1045,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     await toggleAttendanceMut({ paddlerId, eventId });
     // If toggling from YES to NO, also unassign from their canoe seat
     if (wasAttending) {
-      const assignment = eventAssignments?.find(a => a.paddlerId === paddlerId);
+      const assignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === paddlerId);
       if (assignment) {
         await unassignPaddler({ eventId, paddlerId, canoeId: assignment.canoeId, seat: assignment.seat });
       }
@@ -1128,7 +1099,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
       if (draggedPaddler) {
         // Unassign from canoe if assigned in this event
-        const paddlerAssignment = eventAssignments?.find(a => a.paddlerId === draggableId);
+        const paddlerAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
         if (paddlerAssignment) {
           await unassignPaddler({
             eventId: selectedEvent.id,
@@ -1173,7 +1144,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     if (!draggedPaddler) return;
 
     // Look up current assignment from eventAssignments
-    const currentAssignment = eventAssignments?.find(a => a.paddlerId === draggableId);
+    const currentAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
     const oldCanoeId = currentAssignment?.canoeId;
     const oldSeat = currentAssignment?.seat;
 
@@ -1229,12 +1200,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     }
 
     await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-  };
-
-  const handleAddPaddler = async () => {
-    triggerAnimation();
-    const newPaddler = generateRandomPaddler();
-    await addPaddler(newPaddler);
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
@@ -1834,7 +1799,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 onClick={() => { if (editingSeatPrefId !== p.id) { setEditingSeatPrefId(p.id); setTempSeatPref(p.seatPreference || '000000'); } }}
                                 style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563' }}
                               >
-                                {p.seatPreference?.split('').map(Number).filter(n => n > 0).join(' > ') || '—'}
+                                {p.seatPreference?.split('').map(Number).filter((n: number) => n > 0).join(' > ') || '—'}
                               </span>
                               {editingSeatPrefId === p.id && (
                                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
