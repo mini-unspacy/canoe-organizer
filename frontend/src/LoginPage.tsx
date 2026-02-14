@@ -3,7 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 export default function LoginPage() {
   const { signIn } = useAuthActions();
 
-  const buttonStyle = (bg: string, hover: string) => ({
+  const buttonStyle = (bg: string) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
         <button
           onClick={() => void signIn("google")}
-          style={buttonStyle("#4285F4", "#3367D6")}
+          style={buttonStyle("#4285F4")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
         <button
           onClick={() => void signIn("apple")}
-          style={buttonStyle("#000000", "#1a1a1a")}
+          style={buttonStyle("#000000")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >
@@ -92,7 +92,7 @@ export default function LoginPage() {
 
         <button
           onClick={() => void signIn("facebook")}
-          style={buttonStyle("#1877F2", "#166FE5")}
+          style={buttonStyle("#1877F2")}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >

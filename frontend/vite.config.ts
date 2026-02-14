@@ -13,6 +13,7 @@ export default defineConfig({
   },
   server: {
     host: true,
+    allowedHosts: ["mini"],
     fs: {
       allow: ['..', '.']
     }
