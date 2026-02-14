@@ -21,6 +21,7 @@ export default defineSchema({
   canoes: defineTable({
     id: v.string(),
     name: v.string(), // "Canoe 1", "Canoe 2"
+    designation: v.optional(v.string()), // e.g. "57", "67", "700"
     assignments: v.array(v.object({
       seat: v.number(), // 1-6
       paddlerId: v.string()

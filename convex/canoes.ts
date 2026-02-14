@@ -268,3 +268,16 @@ export const removeCanoe = mutation({
     return { success: true, message: `Removed canoe ${canoeDoc.name}` };
   },
 });
+
+export const updateDesignation = mutation({
+  args: {
+    canoeId: v.string(),
+    designation: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const canoeDoc = await ctx.db.query("canoes").withIndex("by_canoe_id", (q) => q.eq("id", args.canoeId)).unique();
+    if (!canoeDoc) throw new Error("Canoe not found");
+    await ctx.db.patch(canoeDoc._id, { designation: args.designation });
+    return { success: true };
+  },
+});

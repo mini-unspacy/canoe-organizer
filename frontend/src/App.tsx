@@ -424,30 +424,13 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
         style={{ flex: 1, overflowY: 'auto', padding: '0 8px', position: 'relative' }}
         className="scrollbar-hidden"
       >
-        {/* + event button and paddler selector */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', padding: '8px 0', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: 'auto' }}>
-            <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>i am:</span>
-            <select
-              value={selectedPaddlerId || ''}
-              onChange={e => setSelectedPaddlerId(e.target.value || null)}
-              style={{
-                backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px',
-                padding: '3px 6px', color: '#c0c0c0', fontSize: '12px', outline: 'none',
-                maxWidth: '140px',
-              }}
-            >
-              <option value="">—</option>
-              {paddlers && [...paddlers].sort((a, b) => a.firstName.localeCompare(b.firstName)).map(p => (
-                <option key={p.id} value={p.id}>{p.firstName} {p.lastInitial}</option>
-              ))}
-            </select>
-          </div>
-          {isAdmin && <span
+        {/* Floating + event button (admin only) */}
+        {isAdmin && <div style={{ position: 'sticky', top: '8px', zIndex: 20, float: 'right' }}>
+          <span
             onClick={() => {
               setEditingEventId(null);
               setEventForm({ title: '', date: '', time: '', location: '', eventType: 'practice', repeating: 'none', weekdays: [], monthdays: [], repeatUntil: '' });
-              setShowEventForm(true);
+              setShowEventForm(!showEventForm);
             }}
             style={{
               cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569',
@@ -455,12 +438,13 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
             }}
           >
             + event
-          </span>}
-        </div>
+          </span>
 
-        {/* Inline event form */}
-        {showEventForm && !editingEventId && (
-          <div style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: '1px solid #4b5563' }}>
+          {/* Inline event form */}
+          {showEventForm && !editingEventId && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowEventForm(false)} />
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', border: '1px solid #4b5563', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Event type selector */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -638,7 +622,9 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
               </div>
             </div>
           </div>
-        )}
+            </>
+          )}
+        </div>}
 
         {/* Event list by month */}
         {allMonths.map(m => {
@@ -740,7 +726,10 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
                     key={evt.id}
                     style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #4b5563' }}
                   >
-                    <div style={{ width: '36px', textAlign: 'center', flexShrink: 0 }}>
+                    <div
+                      onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
+                      style={{ width: '36px', textAlign: 'center', flexShrink: 0, cursor: onSelectEvent ? 'pointer' : 'default' }}
+                    >
                       <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0c0c0', lineHeight: 1.1 }}>{dayNum}</div>
                       <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 600 }}>{dayName}</div>
                     </div>
@@ -970,17 +959,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     };
   }, []);
 
-  // Canoe designations - persist to localStorage
-  const [canoeDesignations, setCanoeDesignations] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('canoeDesignations');
-    if (saved) { try { return JSON.parse(saved); } catch { /* default */ } }
-    return {};
-  });
+  // Canoe designations - read from DB, derive as a map
+  const updateDesignationMut = useMutation(api.canoes.updateDesignation);
+  const canoeDesignations = useMemo(() => {
+    if (!canoes) return {} as Record<string, string>;
+    const map: Record<string, string> = {};
+    for (const c of canoes) {
+      if (c.designation) map[c.id] = c.designation;
+    }
+    return map;
+  }, [canoes]);
   const [openDesignator, setOpenDesignator] = useState<string | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem('canoeDesignations', JSON.stringify(canoeDesignations));
-  }, [canoeDesignations]);
   
   // Edit modal state
   const [editingPaddler, setEditingPaddler] = useState<Paddler | null>(null);
@@ -1461,8 +1450,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   ))}
                 </div>
                 {activePage === 'today' && (<>
-                {/* Sort Widget */}
-                <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
+                {/* Sort Widget (admin only) */}
+                {isAdmin && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
                     <div style={{ position: 'relative' }}>
                       <span
                         onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
@@ -1561,11 +1550,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     >
                       {sidebarOpen && windowWidth < 768 ? '→' : 'return→'}
                     </span>
-                </div>
+                </div>}
 
                 {/* All Canoes */}
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  {canoes?.map((canoe: Canoe, index: number) => {
+                  {(selectedEvent ? canoes : canoes?.slice(0, 1))?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
                     return (
@@ -1574,8 +1563,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
                         style={{ backgroundColor: 'transparent', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
                       >
-                        {/* Lock button - top right */}
-                        <svg
+                        {/* Lock button - top right (admin only) */}
+                        {isAdmin && <svg
                           onClick={() => setLockedCanoes(prev => {
                             const next = new Set(prev);
                             if (next.has(canoe.id)) next.delete(canoe.id);
@@ -1592,19 +1581,19 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
                           }
-                        </svg>
+                        </svg>}
                         {/* Canoe designation + controls */}
                         <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '30px', marginRight: '0px' }}>
                           {/* Designation - top left */}
                           <span
-                            className={`text-[15px] font-black leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'cursor-pointer hover:text-blue-600'}`}
+                            className={`text-[15px] font-black leading-none transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
                             style={{ WebkitTextStroke: '0.5px', color: '#94a3b8' }}
-                            onClick={() => !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                            onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
-                          {/* -/+ buttons - bottom left */}
-                          <div className="flex items-center" style={{ gap: '16px' }}>
+                          {/* -/+ buttons - bottom left (admin only) */}
+                          {isAdmin && <div className="flex items-center" style={{ gap: '16px' }}>
                             <span
                               onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
                               className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
@@ -1621,7 +1610,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             >
                               +
                             </span>
-                          </div>
+                          </div>}
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
                             <>
@@ -1630,7 +1619,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 {CANOE_DESIGNATIONS.map(d => (
                                   <button
                                     key={d}
-                                    onClick={(e) => { e.stopPropagation(); setCanoeDesignations(prev => ({ ...prev, [canoe.id]: d })); setOpenDesignator(null); }}
+                                    onClick={(e) => { e.stopPropagation(); updateDesignationMut({ canoeId: canoe.id, designation: d }); setOpenDesignator(null); }}
                                     className="px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-center transition-colors"
                                   >
                                     {d}
@@ -1641,7 +1630,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     e.stopPropagation();
                                     const custom = prompt('Enter canoe number:');
                                     if (custom && custom.trim()) {
-                                      setCanoeDesignations(prev => ({ ...prev, [canoe.id]: custom.trim() }));
+                                      updateDesignationMut({ canoeId: canoe.id, designation: custom.trim() });
                                     }
                                     setOpenDesignator(null);
                                   }}
