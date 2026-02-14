@@ -12,9 +12,12 @@ function formatDate(d: Date): string {
 }
 
 function parseEndDate(repeatUntil: string): Date {
-  // "YYYY-MM" → last day of that month
-  const [y, m] = repeatUntil.split("-").map(Number);
-  return new Date(y, m, 0); // day 0 of next month = last day of this month
+  // "YYYY-MM-DD" → that date, or "YYYY-MM" → last day of that month
+  const parts = repeatUntil.split("-").map(Number);
+  if (parts.length >= 3) {
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+  return new Date(parts[0], parts[1], 0); // day 0 of next month = last day of this month
 }
 
 export const getEvents = query({

@@ -473,7 +473,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
                 {(['none', 'weekly', 'monthly'] as const).map(r => (
                   <button
                     key={r}
-                    onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [] }))}
+                    onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [], repeatUntil: r !== 'none' && !f.repeatUntil ? new Date().toISOString().slice(0, 10) : f.repeatUntil }))}
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
@@ -553,7 +553,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, flexShrink: 0 }}>till when</span>
                   <input
-                    type="month"
+                    type="date"
                     value={eventForm.repeatUntil}
                     onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
                     style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
