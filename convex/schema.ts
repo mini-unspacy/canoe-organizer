@@ -35,7 +35,27 @@ export default defineSchema({
     attending: v.boolean(),
   })
     .index("by_paddler_event", ["paddlerId", "eventId"])
-    .index("by_paddler", ["paddlerId"]),
+    .index("by_paddler", ["paddlerId"])
+    .index("by_event", ["eventId"]),
+
+  users: defineTable({
+    email: v.string(),
+    password: v.string(),
+    role: v.union(v.literal("admin"), v.literal("normal")),
+    paddlerId: v.string(),
+  })
+    .index("by_email", ["email"])
+    .index("by_paddlerId", ["paddlerId"]),
+
+  eventAssignments: defineTable({
+    eventId: v.string(),
+    canoeId: v.string(),
+    seat: v.number(),
+    paddlerId: v.string(),
+  })
+    .index("by_event", ["eventId"])
+    .index("by_event_canoe", ["eventId", "canoeId"])
+    .index("by_event_paddler", ["eventId", "paddlerId"]),
 
   events: defineTable({
     id: v.string(),

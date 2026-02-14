@@ -6,6 +6,9 @@ import type { Doc } from "./convex_generated/dataModel";
 import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
 
 import { useAnimationTrigger } from "./useAnimationTrigger";
+import LoginPage from "./LoginPage";
+
+type User = { email: string; role: "admin" | "normal"; paddlerId: string };
 
 type Paddler = Doc<"paddlers">;
 type Canoe = Doc<"canoes">;
@@ -275,7 +278,7 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
   });
 };
 
-function SchedulePage() {
+function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean }) {
   const events = useQuery(api.events.getEvents);
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const addEventMut = useMutation(api.events.addEvent);
@@ -440,7 +443,7 @@ function SchedulePage() {
               ))}
             </select>
           </div>
-          <span
+          {isAdmin && <span
             onClick={() => {
               setEditingEventId(null);
               setEventForm({ title: '', date: '', time: '', location: '', eventType: 'practice', repeating: 'none', weekdays: [], monthdays: [], repeatUntil: '' });
@@ -452,7 +455,7 @@ function SchedulePage() {
             }}
           >
             + event
-          </span>
+          </span>}
         </div>
 
         {/* Inline event form */}
@@ -757,8 +760,11 @@ function SchedulePage() {
                         {isAttending ? 'Y' : 'N'}
                       </div>
                     )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', color: '#c0c0c0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.title}</div>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                      <div
+                        onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
+                        style={{ fontSize: '14px', color: '#c0c0c0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onSelectEvent ? 'pointer' : 'default' }}
+                      >{evt.title}</div>
                       <div style={{ fontSize: '11px', color: '#6b7280', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
@@ -779,7 +785,7 @@ function SchedulePage() {
                         )}
                       </div>
                     </div>
-                    <svg
+                    {isAdmin && <svg
                       onClick={() => {
                         setEditingEventId(evt.id);
                         setEventForm({
@@ -797,14 +803,14 @@ function SchedulePage() {
                     >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                    <svg
+                    </svg>}
+                    {isAdmin && <svg
                       onClick={() => deleteEventMut({ eventId: evt.id })}
                       width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                       style={{ cursor: 'pointer', flexShrink: 0, padding: '4px', boxSizing: 'content-box' }}
                     >
                       <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
+                    </svg>}
                   </div>
                 );
               }) : (
@@ -819,12 +825,14 @@ function SchedulePage() {
   );
 }
 
-function App() {
+function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () => void }) {
+  const isAdmin = currentUser.role === 'admin';
   const canoes = useQuery(api.canoes.getCanoes);
   const paddlers = useQuery(api.paddlers.getPaddlers);
-  const assignPaddler = useMutation(api.canoes.assignPaddlerToSeat);
-  const unassignPaddler = useMutation(api.canoes.unassignPaddler);
-  const assignOptimal = useMutation(api.canoes.assignOptimal);
+  const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
+  const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
+  const assignOptimal = useMutation(api.eventAssignments.assignOptimalForEvent);
+  const unassignAllForEventMut = useMutation(api.eventAssignments.unassignAllForEvent);
   const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
   const populateCanoes = useMutation(api.canoes.populateSampleCanoes);
   // Unused: clearPaddlers, clearCanoes
@@ -835,6 +843,22 @@ function App() {
   const addPaddler = useMutation(api.paddlers.addPaddler);
   const deletePaddler = useMutation(api.paddlers.deletePaddler);
   const updatePaddler = useMutation(api.paddlers.updatePaddler);
+  const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
+  const setAttendanceMut = useMutation(api.attendance.setAttendance);
+  const allEvents = useQuery(api.events.getEvents);
+  const allUsers = useQuery(api.auth.getAllUsers);
+  const userEmailByPaddlerId = useMemo(() => {
+    if (!allUsers) return new Map<string, string>();
+    return new Map(allUsers.map(u => [u.paddlerId, u.email]));
+  }, [allUsers]);
+
+  // Read selectedPaddlerId from localStorage (persisted by SchedulePage), fallback to currentUser
+  const [selectedPaddlerId, setSelectedPaddlerId] = useState<string | null>(() => localStorage.getItem('selectedPaddlerId') || currentUser.paddlerId);
+  useEffect(() => {
+    const handler = () => setSelectedPaddlerId(localStorage.getItem('selectedPaddlerId'));
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
 
 
@@ -865,6 +889,57 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
+  const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; date: string; time: string; location: string; eventType?: string } | null>(null);
+  const [showAddSearch, setShowAddSearch] = useState(false);
+  const [addSearchQuery, setAddSearchQuery] = useState('');
+  const addSearchInputRef = useRef<HTMLInputElement>(null);
+
+  const eventAttendance = useQuery(
+    api.attendance.getAttendanceForEvent,
+    selectedEvent ? { eventId: selectedEvent.id } : "skip"
+  );
+  const eventAttendingPaddlerIds = useMemo(() => {
+    if (!eventAttendance) return null;
+    return new Set(eventAttendance.map(a => a.paddlerId));
+  }, [eventAttendance]);
+
+  const eventAssignments = useQuery(
+    api.eventAssignments.getEventAssignments,
+    selectedEvent ? { eventId: selectedEvent.id } : "skip"
+  );
+
+  const canoeAssignmentsByCanoe = useMemo(() => {
+    const map = new Map<string, { seat: number; paddlerId: string }[]>();
+    if (!eventAssignments) return map;
+    for (const a of eventAssignments) {
+      const list = map.get(a.canoeId) || [];
+      list.push({ seat: a.seat, paddlerId: a.paddlerId });
+      map.set(a.canoeId, list);
+    }
+    return map;
+  }, [eventAssignments]);
+
+  const assignedPaddlerIds = useMemo(() => {
+    if (!eventAssignments) return new Set<string>();
+    return new Set(eventAssignments.map(a => a.paddlerId));
+  }, [eventAssignments]);
+
+  // Find today's event (first event matching today's date)
+  const todayEvent = useMemo(() => {
+    if (!allEvents) return undefined; // still loading
+    const today = new Date().toISOString().slice(0, 10);
+    const evt = allEvents.find(e => e.date === today);
+    if (!evt) return null; // no event today
+    return { id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType };
+  }, [allEvents]);
+
+  // Auto-select today's event on load (once events are loaded and no event selected yet)
+  useEffect(() => {
+    if (todayEvent && !selectedEvent) {
+      setSelectedEvent(todayEvent);
+    }
+  }, [todayEvent]);
+
   const [editingSeatPrefId, setEditingSeatPrefId] = useState<string | null>(null);
   const [tempSeatPref, setTempSeatPref] = useState('000000');
   const [lockedCanoes, setLockedCanoes] = useState<Set<string>>(() => {
@@ -999,9 +1074,23 @@ function App() {
     paddlers ? sortPaddlersByPriority(paddlers, canoePriority) : [],
   [paddlers, canoePriority]);
 
-  const unassignedPaddlers = useMemo(() => 
-    paddlers ? paddlers.filter((p: Paddler) => !p.assignedCanoe) : [],
-  [paddlers]);
+  const unassignedPaddlers = useMemo(() => {
+    if (!paddlers || !selectedEvent || !eventAttendingPaddlerIds) return [];
+    return paddlers.filter((p: Paddler) => !assignedPaddlerIds.has(p.id) && eventAttendingPaddlerIds.has(p.id));
+  }, [paddlers, selectedEvent, eventAttendingPaddlerIds, assignedPaddlerIds]);
+
+  // Toggle attendance and unassign from canoe (even locked) when marking NO
+  const handleToggleAttendance = useCallback(async (paddlerId: string, eventId: string) => {
+    const wasAttending = eventAttendingPaddlerIds?.has(paddlerId);
+    await toggleAttendanceMut({ paddlerId, eventId });
+    // If toggling from YES to NO, also unassign from their canoe seat
+    if (wasAttending) {
+      const assignment = eventAssignments?.find(a => a.paddlerId === paddlerId);
+      if (assignment) {
+        await unassignPaddler({ eventId, paddlerId, canoeId: assignment.canoeId, seat: assignment.seat });
+      }
+    }
+  }, [eventAttendingPaddlerIds, eventAssignments, toggleAttendanceMut, unassignPaddler]);
 
   const viewSections = useMemo(() =>
     getViewSections(unassignedPaddlers, viewBy),
@@ -1018,43 +1107,18 @@ function App() {
   }, [canoePriority]);
 
   const handleReassignCanoes = useCallback(async () => {
-    if (!paddlers || !canoes || isReassigning) return;
+    if (!paddlers || !canoes || isReassigning || !selectedEvent) return;
     triggerAnimation();
     setIsReassigning(true);
-    
-    // Skip paddlers in locked canoes
-    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat && !lockedCanoes.has(p.assignedCanoe));
-    assignedPaddlers.sort((a: Paddler, b: Paddler) => {
-      const canoeA = canoes.find((c: Canoe) => c.id === a.assignedCanoe);
-      const canoeB = canoes.find((c: Canoe) => c.id === b.assignedCanoe);
-      const canoeIdxA = canoes.indexOf(canoeA!);
-      const canoeIdxB = canoes.indexOf(canoeB!);
-      if (canoeIdxA !== canoeIdxB) return canoeIdxA - canoeIdxB;
-      return (a.assignedSeat || 0) - (b.assignedSeat || 0);
+
+    await assignOptimal({
+      eventId: selectedEvent.id,
+      priority: canoePriority,
+      excludeCanoeIds: [...lockedCanoes],
     });
 
-    const sortedAssigned = canoeSortedPaddlers.filter(p => p.assignedCanoe && !lockedCanoes.has(p.assignedCanoe));
-
-    // Parallel execution for speed
-    const updates = [];
-    for (let i = 0; i < Math.min(assignedPaddlers.length, sortedAssigned.length); i++) {
-      const current = assignedPaddlers[i];
-      const target = sortedAssigned[i];
-
-      if (current.id !== target.id) {
-        updates.push(
-          assignPaddler({
-            paddlerId: target.id,
-            canoeId: current.assignedCanoe!,
-            seat: current.assignedSeat!,
-          })
-        );
-      }
-    }
-    
-    await Promise.all(updates);
     setIsReassigning(false);
-  }, [paddlers, canoes, canoeSortedPaddlers, isReassigning, triggerAnimation]);
+  }, [paddlers, canoes, isReassigning, selectedEvent, canoePriority, lockedCanoes, triggerAnimation]);
 
   const onDragEnd = async (result: DropResult) => {
     setIsDragging(false);
@@ -1069,20 +1133,23 @@ function App() {
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
-    // Handle trash can - delete paddler
+    // Handle trash can - mark absent for event, or just unassign if no event
     if (destination.droppableId === "trash-can") {
+      if (!selectedEvent) return;
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
       if (draggedPaddler) {
-        // Unassign from canoe if assigned
-        if (draggedPaddler.assignedCanoe && draggedPaddler.assignedSeat) {
+        // Unassign from canoe if assigned in this event
+        const paddlerAssignment = eventAssignments?.find(a => a.paddlerId === draggableId);
+        if (paddlerAssignment) {
           await unassignPaddler({
+            eventId: selectedEvent.id,
             paddlerId: draggableId,
-            canoeId: draggedPaddler.assignedCanoe,
-            seat: draggedPaddler.assignedSeat
+            canoeId: paddlerAssignment.canoeId,
+            seat: paddlerAssignment.seat,
           });
         }
-        // Delete the paddler
-        await deletePaddler({ paddlerId: draggableId });
+        // Set attendance to NO
+        await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
       }
       return;
     }
@@ -1111,11 +1178,15 @@ function App() {
       return;
     }
 
+    if (!selectedEvent) return;
+
     const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
     if (!draggedPaddler) return;
 
-    const oldCanoeId = draggedPaddler.assignedCanoe;
-    const oldSeat = draggedPaddler.assignedSeat;
+    // Look up current assignment from eventAssignments
+    const currentAssignment = eventAssignments?.find(a => a.paddlerId === draggableId);
+    const oldCanoeId = currentAssignment?.canoeId;
+    const oldSeat = currentAssignment?.seat;
 
     // Block dragging from a locked canoe
     if (oldCanoeId && lockedCanoes.has(oldCanoeId)) return;
@@ -1125,7 +1196,7 @@ function App() {
     // Dropped to staging
     if (destination.droppableId.startsWith("staging-")) {
       if (oldCanoeId && oldSeat) {
-        await unassignPaddler({ paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
       }
       return;
     }
@@ -1144,7 +1215,9 @@ function App() {
     const targetCanoe = canoes?.find((c: Canoe) => c.id === destCanoeId);
     if (!targetCanoe) return;
 
-    const existingAssignment = targetCanoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === destSeat);
+    // Look up existing occupant from eventAssignments
+    const destAssignments = canoeAssignmentsByCanoe.get(destCanoeId) || [];
+    const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
     // SWAP - handle seamlessly without going through staging
@@ -1153,20 +1226,20 @@ function App() {
       if (existingPaddler && oldCanoeId && oldSeat) {
         // Direct swap - both operations in parallel
         await Promise.all([
-          unassignPaddler({ paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
-          assignPaddler({ paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat })
+          unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
+          assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat })
         ]);
       } else {
-        await unassignPaddler({ paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
       }
     }
 
     // Only unassign if we're actually moving (not just swapping)
     if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
-      await unassignPaddler({ paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+      await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
     }
 
-    await assignPaddler({ paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
+    await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
   };
 
   const handleAddPaddler = async () => {
@@ -1186,14 +1259,11 @@ function App() {
   };
 
   const handleUnassignAll = async () => {
-    if (!paddlers) return;
-    // Skip paddlers in locked canoes
-    const assignedPaddlers = paddlers.filter((p: Paddler) => p.assignedCanoe && p.assignedSeat && !lockedCanoes.has(p.assignedCanoe));
-    await Promise.all(
-      assignedPaddlers.map((p: Paddler) =>
-        unassignPaddler({ paddlerId: p.id, canoeId: p.assignedCanoe!, seat: p.assignedSeat! })
-      )
-    );
+    if (!selectedEvent) return;
+    await unassignAllForEventMut({
+      eventId: selectedEvent.id,
+      excludeCanoeIds: [...lockedCanoes],
+    });
   };
 
   const handleSectionSort = (sectionId: string, sortBy: SortBy) => {
@@ -1216,21 +1286,23 @@ function App() {
   };
 
   const handleAssign = async () => {
-    if (!paddlers || !canoes) return;
-    const neededCanoes = Math.ceil(paddlers.length / 6);
+    if (!paddlers || !canoes || !selectedEvent) return;
+    // Count attending paddlers for this event
+    const attendingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : paddlers.length;
+    const neededCanoes = Math.ceil(attendingCount / 6);
     if (neededCanoes > canoes.length) {
       for (let i = canoes.length; i < neededCanoes; i++) {
         await addCanoe({ name: `Canoe ${i + 1}` });
       }
     }
     triggerAnimation();
-    assignOptimal({ priority: canoePriority });
+    assignOptimal({ eventId: selectedEvent.id, priority: canoePriority, excludeCanoeIds: [...lockedCanoes] });
   };
 
   const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
 
   // Calculate dynamic horizontal sizing (no CSS transform)
-  const sidebarW = activePage === 'today' ? (sidebarOpen ? 176 : 24) : 0;
+  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 176 : 24) : 0;
   const leftSidebarW = leftSidebarOpen ? 110 : 24;
   const mainPad = 4;
   const flexGap = 8;
@@ -1300,11 +1372,11 @@ function App() {
                   </div>
                 </div>
                 {leftSidebarOpen && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
                     {(['today', 'schedule', 'roster', 'attendance', 'crews'] as const).map((item) => (
                       <span
                         key={item}
-                        onClick={() => setActivePage(item)}
+                        onClick={() => { setActivePage(item); if (item === 'today') setSelectedEvent(todayEvent || null); }}
                         className="font-medium hover:text-white cursor-pointer transition-colors"
                         style={{
                           fontSize: '15px',
@@ -1319,6 +1391,18 @@ function App() {
                         {item}
                       </span>
                     ))}
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
+                      <div style={{ fontSize: '10px', color: '#9ca3af', padding: '0 8px', wordBreak: 'break-all' }}>
+                        {currentUser.email}
+                      </div>
+                      <span
+                        onClick={onLogout}
+                        className="cursor-pointer hover:text-white transition-colors"
+                        style={{ fontSize: '13px', color: '#9ca3af', padding: '4px 8px', display: 'block' }}
+                      >
+                        log out
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1327,7 +1411,7 @@ function App() {
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Header */}
-                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span
                     style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
@@ -1340,6 +1424,41 @@ function App() {
                   >
                     Lokahi
                   </span>
+                  {activePage === 'today' && (selectedEvent ? (() => {
+                    const d = new Date(selectedEvent.date + 'T00:00:00');
+                    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                    const dayName = dayNames[d.getDay()];
+                    const dayMonth = `${d.getDate()}/${d.getMonth() + 1}`;
+                    const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
+                    return (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#c0c0c0', fontWeight: 500 }}>
+                        {selectedPaddlerId && (
+                          <div
+                            onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                            style={{
+                              width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer', userSelect: 'none',
+                              border: `2px solid ${isAttending ? '#22c55e' : '#4b5563'}`,
+                              backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'transparent',
+                              color: isAttending ? '#22c55e' : '#6b7280',
+                              fontSize: '13px', fontWeight: 700,
+                            }}
+                          >
+                            {isAttending ? 'Y' : 'N'}
+                          </div>
+                        )}
+                        <span>{dayName} {dayMonth}</span>
+                        <span style={{ fontWeight: 600 }}>{selectedEvent.title}</span>
+                      </span>
+                    );
+                  })() : (
+                    <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
+                      const now = new Date();
+                      const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                      return `${dayNames[now.getDay()]} ${now.getDate()}/${now.getMonth() + 1} ---`;
+                    })()}</span>
+                  ))}
                 </div>
                 {activePage === 'today' && (<>
                 {/* Sort Widget */}
@@ -1434,20 +1553,21 @@ function App() {
                       onClick={handleAssign}
                       style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
-                      {sidebarOpen ? '←' : '←assign'}
+                      {sidebarOpen && windowWidth < 768 ? '←' : '←assign'}
                     </span>
                     <span
                       onClick={() => { triggerAnimation(); handleUnassignAll(); }}
                       style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
-                      {sidebarOpen ? '→' : 'return→'}
+                      {sidebarOpen && windowWidth < 768 ? '→' : 'return→'}
                     </span>
                 </div>
 
                 {/* All Canoes */}
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
-                    const isFull = canoe.status === 'full';
+                    const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
+                    const isFull = canoeEventAssignments.length === 6;
                     return (
                       <div
                         key={canoe._id.toString()}
@@ -1538,7 +1658,7 @@ function App() {
                         <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px 0 0' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
-                            const assignment = canoe.assignments.find((a: { seat: number; paddlerId: string }) => a.seat === seat);
+                            const assignment = canoeEventAssignments.find(a => a.seat === seat);
                             const assignedPaddler = assignment ? canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) : undefined;
 
                             return (
@@ -1591,18 +1711,22 @@ function App() {
                 </div>
                 </>)}
 
-                {activePage === 'schedule' && <SchedulePage />}
+                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} onSelectEvent={(evt) => {
+                  setSelectedEvent(evt);
+                  setActivePage('today');
+                }} />}
 
                 {activePage === 'roster' && paddlers && (
                   <div style={{ padding: '8px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    <table style={{ width: '100%', minWidth: '500px', borderCollapse: 'collapse' }}>
+                    <table style={{ width: '100%', minWidth: isAdmin ? '500px' : '280px', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ borderBottom: '2px solid #4b5563' }}>
                           <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>name</th>
                           <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>gender</th>
-                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>type</th>
-                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>ability</th>
-                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>seat pref</th>
+                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>type</th>}
+                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>ability</th>}
+                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>seat pref</th>}
+                          <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>email</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1613,7 +1737,7 @@ function App() {
                             </td>
                             <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               <button
-                                onClick={() => updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' })}
+                                onClick={() => isAdmin && updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' })}
                                 style={{
                                   padding: '4px 12px',
                                   borderRadius: '999px',
@@ -1623,13 +1747,13 @@ function App() {
                                   borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
                                   backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
                                   color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
-                                  cursor: 'pointer',
+                                  cursor: isAdmin ? 'pointer' : 'default',
                                 }}
                               >
                                 {p.gender}
                               </button>
                             </td>
-                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {windowWidth < 768 ? (
                                 <button
                                   onClick={() => {
@@ -1674,8 +1798,8 @@ function App() {
                                   ))}
                                 </div>
                               )}
-                            </td>
-                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                            </td>}
+                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {windowWidth < 768 ? (() => {
                                 const color = p.ability >= 4 ? '#10b981' : p.ability >= 3 ? '#eab308' : '#ef4444';
                                 return (
@@ -1715,8 +1839,8 @@ function App() {
                                   })}
                                 </div>
                               )}
-                            </td>
-                            <td style={{ padding: '8px 12px', textAlign: 'center', position: 'relative' }}>
+                            </td>}
+                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center', position: 'relative' }}>
                               <span
                                 onClick={() => { if (editingSeatPrefId !== p.id) { setEditingSeatPrefId(p.id); setTempSeatPref(p.seatPreference || '000000'); } }}
                                 style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563' }}
@@ -1784,6 +1908,9 @@ function App() {
                                   </div>
                                 </div>
                               )}
+                            </td>}
+                            <td style={{ padding: '8px 12px', color: '#9ca3af', fontSize: '13px' }}>
+                              {userEmailByPaddlerId.get(p.id) || '—'}
                             </td>
                           </tr>
                         ))}
@@ -1794,8 +1921,8 @@ function App() {
               </div>
               </div>
 
-              {/* RIGHT COLUMN - STAGING SIDEBAR */}
-              {activePage === 'today' && (
+              {/* RIGHT COLUMN - STAGING SIDEBAR (admin only) */}
+              {activePage === 'today' && isAdmin && (
               <div
                 className="scrollbar-hidden"
                 style={{
@@ -1910,19 +2037,68 @@ function App() {
                             borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#9ca3af',
                             transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
                           }}
-                          title="Drag paddlers here to delete"
+                          title="Drag paddlers here to mark absent"
                         >
                           <span style={{ fontSize: '16px' }}>🗑️</span>
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>
                       )}
                     </Droppable>
-                    <div
-                      onClick={handleAddPaddler}
-                      className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
-                      style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff' }}
-                    >
-                      +
+                    <div style={{ position: 'relative' }}>
+                      <div
+                        onClick={() => {
+                          if (!selectedEvent) return;
+                          setShowAddSearch(!showAddSearch);
+                          setAddSearchQuery('');
+                          setTimeout(() => addSearchInputRef.current?.focus(), 50);
+                        }}
+                        className={`rounded-full border-[3px] flex items-center justify-center transition-all ${selectedEvent ? 'cursor-pointer hover:opacity-80' : 'opacity-40 cursor-not-allowed'}`}
+                        style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff' }}
+                        title={selectedEvent ? 'Add paddler to event' : 'Select an event first'}
+                      >
+                        +
+                      </div>
+                      {showAddSearch && selectedEvent && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setShowAddSearch(false)} />
+                          <div className="absolute bottom-full right-0 mb-2 z-20 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-2" style={{ width: '200px' }}>
+                            <input
+                              ref={addSearchInputRef}
+                              type="text"
+                              value={addSearchQuery}
+                              onChange={(e) => setAddSearchQuery(e.target.value)}
+                              placeholder="search paddler..."
+                              className="w-full px-2 py-1 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-400"
+                              autoFocus
+                            />
+                            <div className="mt-1 max-h-[200px] overflow-y-auto">
+                              {(() => {
+                                const query = addSearchQuery.toLowerCase().trim();
+                                if (!query || !paddlers) return null;
+                                const matches = paddlers.filter((p: Paddler) => {
+                                  if (eventAttendingPaddlerIds?.has(p.id)) return false;
+                                  const fullName = `${p.firstName} ${p.lastName || ''}`.toLowerCase();
+                                  return fullName.includes(query);
+                                }).slice(0, 8);
+                                if (matches.length === 0) return <div className="text-xs text-slate-400 px-2 py-1">no matches</div>;
+                                return matches.map((p: Paddler) => (
+                                  <div
+                                    key={p.id}
+                                    onClick={async () => {
+                                      await setAttendanceMut({ paddlerId: p.id, eventId: selectedEvent.id, attending: true });
+                                      setShowAddSearch(false);
+                                      setAddSearchQuery('');
+                                    }}
+                                    className="px-2 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded cursor-pointer"
+                                  >
+                                    {p.firstName} {p.lastName ? p.lastName[0] + '.' : ''}
+                                  </div>
+                                ));
+                              })()}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>
@@ -2235,6 +2411,33 @@ function App() {
       </div>
     </DragDropContext>
   );
+}
+
+function App() {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('currentUser');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('selectedPaddlerId', user.paddlerId);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('selectedPaddlerId');
+  };
+
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  return <AppMain currentUser={currentUser} onLogout={handleLogout} />;
 }
 
 export default App;
