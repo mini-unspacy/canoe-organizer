@@ -1394,7 +1394,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                     return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#c0c0c0', fontWeight: 500 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700 }}>
                         {selectedPaddlerId && (
                           <div
                             onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
@@ -1412,7 +1412,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           </div>
                         )}
                         <span>{dayName} {dayMonth}</span>
-                        <span style={{ fontWeight: 600 }}>{selectedEvent.title}</span>
                       </span>
                     );
                   })() : (
@@ -1537,6 +1536,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
+                  <div style={{ textAlign: 'center', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>{selectedEvent?.title}</div>
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
