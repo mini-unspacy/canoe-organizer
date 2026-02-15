@@ -1429,7 +1429,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const dayName = dayNames[d.getDay()];
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const goingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : 0;
+                    const goingCount = eventAttendingPaddlerIds && paddlers ? paddlers.filter(p => eventAttendingPaddlerIds.has(p.id)).length : 0;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         <span>{dayName} {dayMonth}</span>
