@@ -1649,35 +1649,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
                           }
                         </svg>}
-                        {/* Canoe designation + controls */}
-                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '24px', marginRight: '0px' }}>
-                          {/* Designation - top left */}
+                        {/* Canoe designation + controls — overlaid, not taking horizontal space */}
+                        <div style={{ position: 'absolute', top: '2px', left: '4px', zIndex: 5 }}>
                           <span
-                            className={`text-[15px] font-black leading-none transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
-                            style={{ WebkitTextStroke: '0.5px', color: '#94a3b8' }}
+                            className={`text-[11px] font-black leading-none transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
+                            style={{ WebkitTextStroke: '0.3px', color: '#94a3b8' }}
                             onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
-                          {/* -/+ buttons - bottom left (admin only) */}
-                          {isAdmin && <div className="flex items-center" style={{ gap: '8px' }}>
-                            <span
-                              onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                              className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
-                              style={{ color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8' }}
-                              title="Remove canoe"
-                            >
-                              −
-                            </span>
-                            <span
-                              onClick={() => handleAddCanoeAfter(index)}
-                              className="text-[18px] font-bold hover:text-emerald-600 cursor-pointer transition-colors leading-none"
-                              style={{ color: '#94a3b8' }}
-                              title="Add canoe"
-                            >
-                              +
-                            </span>
-                          </div>}
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
                             <>
@@ -1709,7 +1689,26 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             </>
                           )}
                         </div>
-                        
+                        {/* -/+ buttons — overlaid bottom left */}
+                        {isAdmin && <div className="flex items-center" style={{ position: 'absolute', bottom: '2px', left: '4px', zIndex: 5, gap: '4px' }}>
+                          <span
+                            onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
+                            className={`text-[14px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
+                            style={{ color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8' }}
+                            title="Remove canoe"
+                          >
+                            −
+                          </span>
+                          <span
+                            onClick={() => handleAddCanoeAfter(index)}
+                            className="text-[14px] font-bold hover:text-emerald-600 cursor-pointer transition-colors leading-none"
+                            style={{ color: '#94a3b8' }}
+                            title="Add canoe"
+                          >
+                            +
+                          </span>
+                        </div>}
+
                         {/* 6 seats */}
                         <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
