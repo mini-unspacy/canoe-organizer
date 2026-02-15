@@ -1263,14 +1263,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     assignOptimal({ eventId: selectedEvent.id, priority: canoePriority, excludeCanoeIds: [...lockedCanoes] });
   };
 
-  const hasNoData = (!canoes || canoes.length === 0) && (!paddlers || paddlers.length === 0);
+  const dataLoading = canoes === undefined || paddlers === undefined;
+  const hasNoData = !dataLoading && canoes.length === 0 && paddlers.length === 0;
 
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 176 : 24) : 0;
-  const leftSidebarW = leftSidebarOpen ? 110 : 24;
+  const leftSidebarW = leftSidebarOpen ? 110 : 40;
   const mainPad = 4;
   const flexGap = 8;
-  const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * 2 - mainPad;
+  const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
   const leftControlWidth = 36;
   const canoePadding = 16;
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
@@ -1287,7 +1288,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
-          {hasNoData ? (
+          {dataLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <div style={{ color: '#9ca3af', fontSize: '14px' }}>loading...</div>
+            </div>
+          ) : hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
                 onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
@@ -1304,20 +1309,20 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: leftSidebarOpen ? 110 : 24,
+                  width: leftSidebarOpen ? 110 : 40,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   overflowY: leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: leftSidebarOpen ? '#374151' : 'transparent',
-                  padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
-                  borderRight: '1px solid #94a3b8',
+                  backgroundColor: '#374151',
+                  padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 2px 0 2px',
+                  borderRight: '1px solid #4b5563',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: leftSidebarOpen ? '#374151' : 'transparent', padding: '12px 4px 0 4px' }}>
-                  <div className="flex items-center" style={{ marginBottom: leftSidebarOpen ? '4px' : 0, justifyContent: leftSidebarOpen ? 'flex-end' : 'flex-start' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#374151', padding: '12px 4px 0 4px' }}>
+                  <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: leftSidebarOpen ? 'flex-end' : 'center' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
                       style={{
@@ -1335,7 +1340,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                   </div>
                 </div>
-                {leftSidebarOpen && (
+                {leftSidebarOpen ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
                     {(['today', 'schedule', 'roster', 'attendance', 'crews'] as const).map((item) => (
                       <span
@@ -1367,6 +1372,37 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         log out
                       </span>
                     </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 4px', flex: 1 }}>
+                    {([
+                      { page: 'today' as const, icon: '📅' },
+                      { page: 'schedule' as const, icon: '🗓' },
+                      { page: 'roster' as const, icon: '👥' },
+                      { page: 'attendance' as const, icon: '✓' },
+                      { page: 'crews' as const, icon: '🛶' },
+                    ]).map(({ page, icon }) => (
+                      <span
+                        key={page}
+                        onClick={() => { setActivePage(page); if (page === 'today') setSelectedEvent(todayEvent || null); }}
+                        title={page === 'today' ? 'event' : page}
+                        style={{
+                          cursor: 'pointer',
+                          fontSize: page === 'attendance' ? '14px' : '16px',
+                          padding: '6px 8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '8px',
+                          backgroundColor: activePage === page ? '#4b5563' : 'transparent',
+                          userSelect: 'none',
+                        }}
+                        onMouseEnter={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = '#4b5563'; }}
+                        onMouseLeave={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        {icon}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1687,24 +1723,22 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     {...provided.droppableProps}
                                     style={{ width: dynamicCircleW, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
                                   >
-                                    <div
-                                      className={`rounded-full flex items-center justify-center transition-all
-                                        ${snapshot.isDraggingOver ? 'scale-110 ring-2 ring-slate-400' : assignedPaddler ? '' : 'border-2 border-dashed border-slate-400'}`}
-                                      style={{ ...(!assignedPaddler && !snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : snapshot.isDraggingOver ? { backgroundColor: '#9ca3af' } : {}), width: dynamicCircleW, height: CIRCLE_SIZE }}
-                                    >
-                                      {assignedPaddler ? (
-                                        <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                                          {(provided, snapshot) => {
-                                            const node = (
-                                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
-                                                <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
-                                              </div>
-                                            );
-                                            return node;
-                                          }}
-                                        </Draggable>
-                                      ) : null}
-                                    </div>
+                                    {/* Empty seat / drag-over visual */}
+                                    {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
+                                      <div
+                                        className={`rounded-full transition-all ${snapshot.isDraggingOver ? 'scale-110 ring-2 ring-white' : 'border-2 border-dashed border-slate-400'}`}
+                                        style={{ position: 'absolute', top: 0, left: 0, backgroundColor: snapshot.isDraggingOver ? '#60a5fa' : '#9ca3af', width: dynamicCircleW, height: CIRCLE_SIZE, pointerEvents: 'none' }}
+                                      />
+                                    )}
+                                    {assignedPaddler ? (
+                                      <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
+                                        {(provided, snapshot) => (
+                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
+                                            <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ) : null}
                                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
                                 )}
@@ -2467,7 +2501,7 @@ function AuthenticatedApp() {
   // Still loading user data
   if (convexUser === undefined) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#111827", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", backgroundColor: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
       </div>
     );
@@ -2507,7 +2541,7 @@ function App() {
   return (
     <>
       <AuthLoading>
-        <div style={{ minHeight: "100vh", backgroundColor: "#111827", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ minHeight: "100vh", backgroundColor: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
         </div>
       </AuthLoading>

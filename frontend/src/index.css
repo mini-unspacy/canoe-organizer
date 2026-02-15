@@ -81,6 +81,7 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  background-color: #374151;
 }
 
 h1 {
