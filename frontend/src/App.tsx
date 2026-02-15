@@ -1649,11 +1649,22 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
                           }
                         </svg>}
-                        {/* Canoe designation + controls — overlaid, not taking horizontal space */}
-                        <div style={{ position: 'absolute', top: '2px', left: '4px', zIndex: 5 }}>
+                        {/* Canoe designation pill — straddles top border */}
+                        <div style={{ position: 'absolute', top: '-8px', left: '6px', zIndex: 5 }}>
                           <span
-                            className={`text-[11px] font-black leading-none transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
-                            style={{ WebkitTextStroke: '0.3px', color: '#94a3b8' }}
+                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
+                            style={{
+                              display: 'inline-block',
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              color: '#94a3b8',
+                              backgroundColor: '#374151',
+                              border: '1px solid #64748b',
+                              borderRadius: '999px',
+                              padding: '1px 7px',
+                              lineHeight: '14px',
+                              whiteSpace: 'nowrap',
+                            }}
                             onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                           >
                             {canoeDesignations[canoe.id] || '???'}
@@ -1689,20 +1700,32 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             </>
                           )}
                         </div>
-                        {/* -/+ buttons — overlaid bottom left */}
-                        {isAdmin && <div className="flex items-center" style={{ position: 'absolute', bottom: '2px', left: '4px', zIndex: 5, gap: '4px' }}>
+                        {/* -/+ circle buttons — straddle bottom border */}
+                        {isAdmin && <div className="flex items-center" style={{ position: 'absolute', bottom: '-9px', left: '4px', zIndex: 5, gap: '6px' }}>
                           <span
                             onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                            className={`text-[14px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
-                            style={{ color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8' }}
+                            className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              width: '18px', height: '18px', borderRadius: '50%',
+                              backgroundColor: '#374151', border: '1px solid #64748b',
+                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
+                              color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
+                            }}
                             title="Remove canoe"
                           >
                             −
                           </span>
                           <span
                             onClick={() => handleAddCanoeAfter(index)}
-                            className="text-[14px] font-bold hover:text-emerald-600 cursor-pointer transition-colors leading-none"
-                            style={{ color: '#94a3b8' }}
+                            className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              width: '18px', height: '18px', borderRadius: '50%',
+                              backgroundColor: '#374151', border: '1px solid #64748b',
+                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
+                              color: '#94a3b8',
+                            }}
                             title="Add canoe"
                           >
                             +
