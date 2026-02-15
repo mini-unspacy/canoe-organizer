@@ -1711,7 +1711,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         </div>
                         
                         {/* 6 seats */}
-                        <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px 0 0' }}>
+                        <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoeEventAssignments.find(a => a.seat === seat);
