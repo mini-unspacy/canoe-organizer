@@ -1425,7 +1425,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </div>
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
-                {isAdmin && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
+                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
                     <div style={{ position: 'relative' }}>
                       <span
                         onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
@@ -1526,9 +1526,14 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                 </div>}
 
-                {/* All Canoes */}
+                {/* All Canoes or No Event message */}
+                {!selectedEvent ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '600px', margin: '80px auto 0', padding: '0 20px' }}>
+                    <span style={{ fontSize: '32px', fontWeight: 700, color: '#4b5563', textAlign: 'center' }}>NO EVENT TODAY</span>
+                  </div>
+                ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  {(selectedEvent ? canoes : canoes?.slice(0, 1))?.map((canoe: Canoe, index: number) => {
+                  {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
                     return (
@@ -1672,6 +1677,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </button>
                   )}
                 </div>
+                )}
                 </>)}
 
                 {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} onSelectEvent={(evt) => {
