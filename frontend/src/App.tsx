@@ -1430,7 +1430,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const dayName = dayNames[d.getDay()];
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const goingCount = eventAttendingPaddlerIds && paddlers ? paddlers.filter(p => eventAttendingPaddlerIds.has(p.id)).length : 0;
+                    const goingCount = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
                         <span style={{ overflow: 'hidden' }}>{dayName} {dayMonth}</span>
@@ -1459,9 +1459,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             ) : (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
                                 {paddlers
-                                  ?.filter(p => eventAttendingPaddlerIds!.has(p.id))
-                                  .sort((a, b) => a.firstName.localeCompare(b.firstName))
-                                  .map(p => (
+                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
+                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                                  .map((p: Paddler) => (
                                     <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
                                       {p.firstName} {p.lastName || p.lastInitial}
                                     </div>
