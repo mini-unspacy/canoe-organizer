@@ -1,5 +1,14 @@
 import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
+
+const CustomPassword = Password({
+  profile(params) {
+    return { email: params.email as string };
+  },
+  validatePasswordRequirements(password: string) {
+    if (password.length < 4) throw new Error("Password must be at least 4 characters");
+  },
+});
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
@@ -8,7 +17,7 @@ import { customAlphabet } from "nanoid";
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 10);
 
 export const { auth, signIn, signOut, store } = convexAuth({
-  providers: [Google, Password],
+  providers: [Google, CustomPassword],
   callbacks: {
     async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
       if (!existingUserId) {
