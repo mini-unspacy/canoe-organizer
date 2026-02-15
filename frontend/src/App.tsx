@@ -1600,7 +1600,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#9ca3af' }}>going?</span>
                           <div
                             onClick={() => selectedEvent && handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
                             style={{
