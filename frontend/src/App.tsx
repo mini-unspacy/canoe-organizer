@@ -1389,7 +1389,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </span>
                   {activePage === 'today' && (selectedEvent ? (() => {
                     const d = new Date(selectedEvent.date + 'T00:00:00');
-                    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const dayName = dayNames[d.getDay()];
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
@@ -1418,7 +1418,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   })() : (
                     <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
                       const now = new Date();
-                      const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                      const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                       return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
                     })()}</span>
                   ))}
@@ -1533,6 +1533,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
+                  <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
+                </div>
+                <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
