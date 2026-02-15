@@ -713,9 +713,9 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
                           width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           cursor: 'pointer', userSelect: 'none',
-                          border: `2px solid ${isAttending ? '#22c55e' : '#4b5563'}`,
-                          backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'transparent',
-                          color: isAttending ? '#22c55e' : '#6b7280',
+                          border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
+                          backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                          color: isAttending ? '#22c55e' : '#ef4444',
                           fontSize: '13px', fontWeight: 700,
                         }}
                       >
