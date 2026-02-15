@@ -1431,7 +1431,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const goingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : 0;
                     return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: sidebarOpen ? `${Math.min(18, Math.max(11, Math.floor(containerWidth / 30)))}px` : '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative' }}>
                         <span>{dayName} {dayMonth}</span>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
