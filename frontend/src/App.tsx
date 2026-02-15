@@ -1482,23 +1482,23 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </div>
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
-                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
+                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: sidebarOpen && windowWidth < 768 ? '4px' : '8px' }}>
                     <div style={{ position: 'relative' }}>
                       <span
                         onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
                         style={{
                           cursor: 'pointer',
-                          fontSize: '13px',
+                          fontSize: sidebarOpen && windowWidth < 768 ? '11px' : '13px',
                           fontWeight: 800,
                           color: '#475569',
                           userSelect: 'none',
-                          padding: '2px 8px',
+                          padding: sidebarOpen && windowWidth < 768 ? '2px 5px' : '2px 8px',
                           backgroundColor: '#e2e8f0',
                           borderRadius: '999px',
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        sort by:
+                        {sidebarOpen && windowWidth < 768 ? 'sort:' : 'sort by:'}
                       </span>
                       {sortPillOpen && (
                         <>
@@ -1571,13 +1571,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <div style={{ flex: 1 }} />
                     <span
                       onClick={handleAssign}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      style={{ cursor: 'pointer', fontSize: sidebarOpen && windowWidth < 768 ? '11px' : '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: sidebarOpen && windowWidth < 768 ? '2px 5px' : '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
                       {sidebarOpen && windowWidth < 768 ? '←' : '←assign'}
                     </span>
                     <span
                       onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      style={{ cursor: 'pointer', fontSize: sidebarOpen && windowWidth < 768 ? '11px' : '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: sidebarOpen && windowWidth < 768 ? '2px 5px' : '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
                       {sidebarOpen && windowWidth < 768 ? '→' : 'return→'}
                     </span>
