@@ -1268,7 +1268,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
   // Calculate dynamic horizontal sizing (no CSS transform)
   const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 176 : 24) : 0;
-  const leftSidebarW = leftSidebarOpen ? 110 : 40;
+  const leftSidebarW = leftSidebarOpen ? 110 : 28;
   const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
@@ -1309,7 +1309,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: leftSidebarOpen ? 110 : 40,
+                  width: leftSidebarOpen ? 110 : 28,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
@@ -1388,8 +1388,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         title={page === 'today' ? 'event' : page}
                         style={{
                           cursor: 'pointer',
-                          fontSize: page === 'attendance' ? '14px' : '16px',
-                          padding: '6px 8px',
+                          fontSize: page === 'attendance' ? '12px' : '14px',
+                          padding: '4px 2px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
