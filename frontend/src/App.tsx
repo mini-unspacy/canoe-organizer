@@ -1076,7 +1076,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     prevCanoePriorityRef.current = priorityKey;
   }, [canoePriority]);
 
-  const handleReassignCanoes = useCallback(async () => {
+  const handleReassignCanoes = useCallback(async (onlyReassignExisting = true) => {
     if (!paddlers || !canoes || isReassigning || !selectedEvent) return;
     triggerAnimation();
     setIsReassigning(true);
@@ -1085,6 +1085,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       eventId: selectedEvent.id,
       priority: canoePriority,
       excludeCanoeIds: [...lockedCanoes],
+      onlyReassignExisting,
     });
 
     setIsReassigning(false);
