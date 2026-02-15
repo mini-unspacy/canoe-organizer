@@ -1534,8 +1534,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
                   <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
-                </div>
-                <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
