@@ -973,6 +973,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const swapStyleRef = useRef<HTMLStyleElement | null>(null);
 
   const [dragFromStaging, setDragFromStaging] = useState(false);
+  const [inFlightPaddlerId, setInFlightPaddlerId] = useState<string | null>(null);
 
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
@@ -1190,6 +1191,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
+    // Hide paddler from staging immediately so it doesn't flash back there
+    setInFlightPaddlerId(draggableId);
+
     // SWAP - handle seamlessly without going through staging
     if (existingPaddlerId && existingPaddlerId !== draggableId) {
       const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId);
@@ -1210,6 +1214,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     }
 
     await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
+    setInFlightPaddlerId(null);
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
@@ -2268,7 +2273,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', ...(inFlightPaddlerId === paddler.id ? { opacity: 0, pointerEvents: 'none' as const } : {}) }}
                                   >
                                     <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
                                   </div>
