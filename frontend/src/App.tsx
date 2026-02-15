@@ -818,6 +818,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     return new Map<string, string>(allUsers.map((u: { paddlerId: string; role: string }) => [u.paddlerId, u.role]));
   }, [allUsers]);
   const toggleAdminMut = useMutation(api.auth.toggleAdmin);
+  const deleteUserByPaddlerIdMut = useMutation(api.auth.deleteUserByPaddlerId);
+  const deletePaddlerMut = useMutation(api.paddlers.deletePaddler);
 
   // Read selectedPaddlerId from localStorage (persisted by SchedulePage), fallback to currentUser
   const [selectedPaddlerId, setSelectedPaddlerId] = useState<string | null>(() => localStorage.getItem('selectedPaddlerId') || currentUser.paddlerId);
@@ -1689,6 +1691,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>seat pref</th>}
                           {isAdmin && <th style={{ textAlign: 'center', padding: '8px 4px', color: '#9ca3af', fontSize: '12px', fontWeight: 600, width: '40px' }}>adm</th>}
                           <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>email</th>
+                          {isAdmin && <th style={{ width: '32px' }}></th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -1882,6 +1885,24 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             <td style={{ padding: '8px 12px', color: '#9ca3af', fontSize: '13px' }}>
                               {userEmailByPaddlerId.get(p.id) || '—'}
                             </td>
+                            {isAdmin && <td style={{ padding: '8px 4px', textAlign: 'center', width: '32px' }}>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Delete ${p.firstName} ${p.lastName || p.lastInitial}? This removes their paddler profile and user account.`)) {
+                                    deleteUserByPaddlerIdMut({ paddlerId: p.id });
+                                    deletePaddlerMut({ paddlerId: p.id });
+                                  }
+                                }}
+                                style={{
+                                  background: 'none', border: 'none', color: '#6b7280', fontSize: '14px',
+                                  cursor: 'pointer', padding: '2px 4px', borderRadius: '4px', lineHeight: 1,
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = '#6b7280'; }}
+                              >
+                                ✕
+                              </button>
+                            </td>}
                           </tr>
                         ))}
                       </tbody>

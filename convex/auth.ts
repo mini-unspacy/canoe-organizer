@@ -126,3 +126,29 @@ export const toggleAdmin = mutation({
     });
   },
 });
+
+export const deleteUserByPaddlerId = mutation({
+  args: { paddlerId: v.string() },
+  handler: async (ctx, args) => {
+    const callerId = await getAuthUserId(ctx);
+    if (!callerId) throw new Error("Not authenticated");
+    const caller = await ctx.db.get(callerId);
+    if (!caller || caller.role !== "admin") throw new Error("Not authorized");
+
+    // Delete user account
+    const users = await ctx.db.query("users").collect();
+    const target = users.find((u) => u.paddlerId === args.paddlerId);
+    if (target) {
+      // Delete auth sessions and accounts for this user
+      const sessions = await ctx.db.query("authSessions").collect();
+      for (const s of sessions) {
+        if (s.userId === target._id) await ctx.db.delete(s._id);
+      }
+      const accounts = await ctx.db.query("authAccounts").collect();
+      for (const a of accounts) {
+        if (a.userId === target._id) await ctx.db.delete(a._id);
+      }
+      await ctx.db.delete(target._id);
+    }
+  },
+});
