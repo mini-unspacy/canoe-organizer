@@ -1520,7 +1520,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>
                     {selectedPaddlerId && (() => {
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
@@ -1543,6 +1543,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         </div>
                       );
                     })()}
+                    <span style={{ color: '#6b7280' }}>-</span>
                     {selectedEvent?.title}
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
