@@ -1528,12 +1528,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
                 {/* All Canoes or No Event message */}
                 {!selectedEvent ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '600px', margin: '80px auto 0', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '600px', margin: '80px auto 0', padding: '0 20px', gap: '16px' }}>
                     <span style={{ fontSize: '32px', fontWeight: 700, color: '#4b5563', textAlign: 'center' }}>NO EVENT TODAY</span>
+                    <span
+                      onClick={() => setActivePage('schedule')}
+                      style={{ fontSize: '15px', fontWeight: 600, color: '#3b82f6', cursor: 'pointer' }}
+                    >SEE SCHEDULE</span>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
+                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
