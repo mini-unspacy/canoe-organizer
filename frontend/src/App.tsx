@@ -1650,7 +1650,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           }
                         </svg>}
                         {/* Canoe designation + controls */}
-                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '30px', marginRight: '0px' }}>
+                        <div className="flex flex-col justify-between shrink-0 relative self-stretch" style={{ minWidth: '24px', marginRight: '0px' }}>
                           {/* Designation - top left */}
                           <span
                             className={`text-[15px] font-black leading-none transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
@@ -1660,7 +1660,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             {canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* -/+ buttons - bottom left (admin only) */}
-                          {isAdmin && <div className="flex items-center" style={{ gap: '16px' }}>
+                          {isAdmin && <div className="flex items-center" style={{ gap: '8px' }}>
                             <span
                               onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
                               className={`text-[18px] font-bold leading-none transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 cursor-pointer'}`}
