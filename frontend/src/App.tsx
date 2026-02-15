@@ -1628,7 +1628,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       <div
                         key={canoe._id.toString()}
                         className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: 'transparent', padding: '8px 10px 8px 2px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
+                        style={{ backgroundColor: 'transparent', padding: '8px 4px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
                       >
                         {/* Lock button - top right (admin only) */}
                         {isAdmin && <svg
