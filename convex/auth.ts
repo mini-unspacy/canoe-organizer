@@ -1,4 +1,5 @@
 import Google from "@auth/core/providers/google";
+import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
@@ -7,7 +8,7 @@ import { customAlphabet } from "nanoid";
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 10);
 
 export const { auth, signIn, signOut, store } = convexAuth({
-  providers: [Google],
+  providers: [Google, Password],
   callbacks: {
     async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
       if (!existingUserId) {

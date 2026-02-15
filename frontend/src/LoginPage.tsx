@@ -1,7 +1,13 @@
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useState } from "react";
 
 export default function LoginPage() {
   const { signIn } = useAuthActions();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const buttonStyle = (bg: string) => ({
     display: "flex",
@@ -19,6 +25,35 @@ export default function LoginPage() {
     color: "#ffffff",
     transition: "opacity 0.15s",
   });
+
+  const inputStyle = {
+    backgroundColor: "#374151",
+    border: "1px solid #4b5563",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    color: "#e5e7eb",
+    fontSize: "14px",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box" as const,
+  };
+
+  const handlePasswordAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.set("email", email.trim().toLowerCase());
+      formData.set("password", password);
+      formData.set("flow", isSignUp ? "signUp" : "signIn");
+      await signIn("password", formData);
+    } catch {
+      setError(isSignUp ? "sign up failed" : "invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -78,29 +113,51 @@ export default function LoginPage() {
           continue with Google
         </button>
 
-        <button
-          onClick={() => signIn("apple", { redirectTo: "/" }).catch(console.error)}
-          style={buttonStyle("#000000")}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-          </svg>
-          continue with Apple
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0" }}>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#4b5563" }} />
+          <span style={{ color: "#6b7280", fontSize: "12px" }}>or</span>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#4b5563" }} />
+        </div>
 
-        <button
-          onClick={() => signIn("facebook", { redirectTo: "/" }).catch(console.error)}
-          style={buttonStyle("#1877F2")}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-          continue with Facebook
-        </button>
+        <form onSubmit={handlePasswordAuth} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <input
+            type="email"
+            placeholder="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="password"
+            placeholder="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={inputStyle}
+          />
+          {error && (
+            <div style={{ color: "#f87171", fontSize: "13px", textAlign: "center" }}>{error}</div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              ...buttonStyle("#4b5563"),
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "..." : isSignUp ? "sign up" : "sign in"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
+            style={{ background: "none", border: "none", color: "#6b7280", fontSize: "12px", cursor: "pointer", padding: "2px" }}
+          >
+            {isSignUp ? "already have an account? sign in" : "need an account? sign up"}
+          </button>
+        </form>
       </div>
     </div>
   );
