@@ -1395,22 +1395,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700 }}>
-                        {selectedPaddlerId && (
-                          <div
-                            onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
-                            style={{
-                              width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              cursor: 'pointer', userSelect: 'none',
-                              border: `2px solid ${isAttending ? '#22c55e' : '#4b5563'}`,
-                              backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'transparent',
-                              color: isAttending ? '#22c55e' : '#6b7280',
-                              fontSize: '13px', fontWeight: 700,
-                            }}
-                          >
-                            {isAttending ? 'Y' : 'N'}
-                          </div>
-                        )}
                         <span>{dayName} {dayMonth}</span>
                       </span>
                     );
@@ -1536,7 +1520,31 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ textAlign: 'center', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>{selectedEvent?.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>
+                    {selectedPaddlerId && (() => {
+                      const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#9ca3af' }}>going?</span>
+                          <div
+                            onClick={() => selectedEvent && handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                            style={{
+                              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer', userSelect: 'none',
+                              border: `2px solid ${isAttending ? '#22c55e' : '#4b5563'}`,
+                              backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'transparent',
+                              color: isAttending ? '#22c55e' : '#6b7280',
+                              fontSize: '16px', fontWeight: 700,
+                            }}
+                          >
+                            {isAttending ? 'Y' : 'N'}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {selectedEvent?.title}
+                  </div>
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
