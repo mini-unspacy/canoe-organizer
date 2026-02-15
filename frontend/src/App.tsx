@@ -1411,7 +1411,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Header */}
-                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
                   <span
                     style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
@@ -1592,7 +1592,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: `${Math.min(26, Math.max(14, Math.floor(containerWidth / 22)))}px`, fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap' }}>
                     {selectedPaddlerId && (() => {
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
@@ -1618,7 +1618,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280' }}>-</span>
                     {selectedEvent?.time} {selectedEvent?.title}
                   </div>
-                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
+                  <div style={{ textAlign: 'center', fontSize: `${Math.min(22, Math.max(12, Math.floor(containerWidth / 26)))}px`, fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
