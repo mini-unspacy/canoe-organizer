@@ -1592,7 +1592,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: sidebarOpen ? `${Math.min(26, Math.max(14, Math.floor(containerWidth / 22)))}px` : '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: `${Math.min(26, Math.max(14, Math.floor(containerWidth / 22)))}px`, fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap' }}>
                     {selectedPaddlerId && (() => {
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
@@ -1618,7 +1618,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280' }}>-</span>
                     {selectedEvent?.time} {selectedEvent?.title}
                   </div>
-                  <div style={{ textAlign: 'center', fontSize: sidebarOpen ? `${Math.min(22, Math.max(12, Math.floor(containerWidth / 26)))}px` : '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap' }}>PADDLER ASSIGNMENT</div>
+                  <div style={{ textAlign: 'center', fontSize: `${Math.min(22, Math.max(12, Math.floor(containerWidth / 26)))}px`, fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
