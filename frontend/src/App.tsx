@@ -862,6 +862,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [showAddSearch, setShowAddSearch] = useState(false);
   const [addSearchQuery, setAddSearchQuery] = useState('');
   const addSearchInputRef = useRef<HTMLInputElement>(null);
+  const [showGoingList, setShowGoingList] = useState(false);
 
   const eventAttendance = useQuery(
     api.attendance.getAttendanceForEvent,
@@ -1372,7 +1373,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
               {/* MIDDLE COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Header */}
                 <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span
@@ -1392,10 +1393,45 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const dayName = dayNames[d.getDay()];
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
+                    const goingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : 0;
                     return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative' }}>
                         <span>{dayName} {dayMonth}</span>
+                        <span
+                          onClick={() => setShowGoingList(!showGoingList)}
+                          style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          ({goingCount} going)
+                        </span>
+                        {showGoingList && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
+                              backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '12px',
+                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                            }}
+                          >
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
+                              ATTENDING ({goingCount})
+                            </div>
+                            {goingCount === 0 ? (
+                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
+                                {paddlers
+                                  ?.filter(p => eventAttendingPaddlerIds!.has(p.id))
+                                  .sort((a, b) => a.firstName.localeCompare(b.firstName))
+                                  .map(p => (
+                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
+                                      {p.firstName} {p.lastName || p.lastInitial}
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </span>
                     );
                   })() : (
