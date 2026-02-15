@@ -1431,8 +1431,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const goingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : 0;
                     return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         <span>{dayName} {dayMonth}</span>
+                        {!sidebarOpen && <>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
                           style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}
@@ -1468,6 +1469,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             )}
                           </div>
                         )}
+                        </>}
                       </span>
                     );
                   })() : (
@@ -1592,11 +1594,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 ) : (
                 <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: `${Math.min(26, Math.max(14, Math.floor(containerWidth / 22)))}px`, fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                     {selectedPaddlerId && (() => {
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                           <span style={{ fontSize: '14px', fontWeight: 600, color: '#9ca3af' }}>going?</span>
                           <div
                             onClick={() => selectedEvent && handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
@@ -1615,10 +1617,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         </div>
                       );
                     })()}
-                    <span style={{ color: '#6b7280' }}>-</span>
-                    {selectedEvent?.time} {selectedEvent?.title}
+                    <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
+                    <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
-                  <div style={{ textAlign: 'center', fontSize: `${Math.min(22, Math.max(12, Math.floor(containerWidth / 26)))}px`, fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap' }}>PADDLER ASSIGNMENT</div>
+                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
