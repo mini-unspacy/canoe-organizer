@@ -3,9 +3,10 @@ import { useMutation } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 
-export default function OnboardingPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+export default function OnboardingPage({ name }: { name?: string }) {
+  const nameParts = name?.trim().split(/\s+/) || [];
+  const [firstName, setFirstName] = useState(nameParts[0] || "");
+  const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
   const [gender, setGender] = useState<"wahine" | "kane" | null>(null);
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);

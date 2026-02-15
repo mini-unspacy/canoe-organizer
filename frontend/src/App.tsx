@@ -2389,7 +2389,7 @@ function AuthenticatedApp() {
 
   // Onboarding not complete — show onboarding screen
   if (!convexUser.onboardingComplete || !convexUser.paddlerId) {
-    return <OnboardingPage />;
+    return <OnboardingPage name={convexUser.name} />;
   }
 
   // Sync paddlerId to localStorage for components that read it
