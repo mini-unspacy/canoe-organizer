@@ -1290,7 +1290,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
           {dataLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#374151', zIndex: 50 }}>
               <div style={{ color: '#9ca3af', fontSize: '14px' }}>loading...</div>
             </div>
           ) : hasNoData ? (
