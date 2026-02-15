@@ -95,6 +95,24 @@ export const getAllUsers = query({
     const users = await ctx.db.query("users").collect();
     return users
       .filter((u) => u.paddlerId)
-      .map((u) => ({ email: u.email || "", paddlerId: u.paddlerId! }));
+      .map((u) => ({ email: u.email || "", paddlerId: u.paddlerId!, role: u.role || "normal" }));
+  },
+});
+
+export const toggleAdmin = mutation({
+  args: { paddlerId: v.string() },
+  handler: async (ctx, args) => {
+    const callerId = await getAuthUserId(ctx);
+    if (!callerId) throw new Error("Not authenticated");
+    const caller = await ctx.db.get(callerId);
+    if (!caller || caller.role !== "admin") throw new Error("Not authorized");
+
+    const users = await ctx.db.query("users").collect();
+    const target = users.find((u) => u.paddlerId === args.paddlerId);
+    if (!target) throw new Error("User not found");
+
+    await ctx.db.patch(target._id, {
+      role: target.role === "admin" ? "normal" : "admin",
+    });
   },
 });
