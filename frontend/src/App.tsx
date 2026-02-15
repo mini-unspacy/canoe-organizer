@@ -2288,7 +2288,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         }) : (
                           <span className="text-sm w-full text-center mt-4" style={{ color: '#c0c0c0' }}>drag paddlers here to unassign</span>
                         )}
-                        {provided.placeholder}
+                        <div style={{ display: 'none' }}>{provided.placeholder}</div>
                       </div>
                     );
                   }}
