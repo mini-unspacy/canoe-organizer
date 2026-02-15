@@ -1191,11 +1191,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
-    // Hide paddler from staging immediately via DOM before React re-renders
+    // Hide paddler from staging immediately so it doesn't flash back there
     setInFlightPaddlerId(draggableId);
-    const hideStyle = document.createElement('style');
-    hideStyle.textContent = `[data-rfd-draggable-id="${draggableId}"] { opacity: 0 !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; }`;
-    document.head.appendChild(hideStyle);
 
     // SWAP - handle seamlessly without going through staging
     if (existingPaddlerId && existingPaddlerId !== draggableId) {
@@ -1217,7 +1214,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     }
 
     await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-    hideStyle.remove();
     setInFlightPaddlerId(null);
   };
 
