@@ -1616,7 +1616,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       );
                     })()}
                     <span style={{ color: '#6b7280' }}>-</span>
-                    {selectedEvent?.time} {selectedEvent?.title}
+                    {selectedEvent?.time}{sidebarOpen && windowWidth < 768 ? '' : ` ${selectedEvent?.title}`}
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
