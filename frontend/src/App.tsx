@@ -1431,12 +1431,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
                     const goingCount = eventAttendingPaddlerIds && paddlers ? paddlers.filter(p => eventAttendingPaddlerIds.has(p.id)).length : 0;
                     return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        <span>{dayName} {dayMonth}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
+                        <span style={{ overflow: 'hidden' }}>{dayName} {dayMonth}</span>
                         {!sidebarOpen && <>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
-                          style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}
+                          style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
                         >
                           ({goingCount} going)
                         </span>
