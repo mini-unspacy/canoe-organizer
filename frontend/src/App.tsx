@@ -251,7 +251,7 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
   });
 };
 
-function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean }) {
+function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number> }) {
   const events = useQuery(api.events.getEvents);
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const addEventMut = useMutation(api.events.addEvent);
@@ -302,6 +302,13 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
   const [activeMonth, setActiveMonth] = useState('');
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Restore scroll position when returning to schedule page
+  useEffect(() => {
+    if (scrollPosRef && scheduleScrollRef.current && scrollPosRef.current > 0) {
+      scheduleScrollRef.current.scrollTop = scrollPosRef.current;
+    }
+  }, []);
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
@@ -385,6 +392,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true }: { onSelectEvent?: (evt:
           const container = scheduleScrollRef.current;
           if (!container) return;
           const scrollTop = container.scrollTop;
+          if (scrollPosRef) scrollPosRef.current = scrollTop;
           let found = monthList[0] || '';
           for (const m of monthList) {
             const el = monthRefs.current[m];
@@ -863,6 +871,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [addSearchQuery, setAddSearchQuery] = useState('');
   const addSearchInputRef = useRef<HTMLInputElement>(null);
   const [showGoingList, setShowGoingList] = useState(false);
+  const scheduleScrollPosRef = useRef(0);
 
   const eventAttendance = useQuery(
     api.attendance.getAttendanceForEvent,
@@ -1788,7 +1797,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 )}
                 </>)}
 
-                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} onSelectEvent={(evt) => {
+                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} onSelectEvent={(evt) => {
                   setSelectedEvent(evt);
                   setActivePage('today');
                 }} />}
