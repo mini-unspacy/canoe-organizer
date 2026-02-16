@@ -714,7 +714,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                             {evt.eventType}
                           </span>
                         )}
-                        <span>{evt.time}</span>
+                        <span style={{ fontWeight: 700, fontSize: '18px', color: '#e0e0e0' }}>{evt.time}</span>
                         {evt.location && <span>{evt.location}</span>}
                       </div>
                     </div>
