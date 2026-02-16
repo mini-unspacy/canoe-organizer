@@ -716,11 +716,6 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                         )}
                         <span>{evt.time}</span>
                         {evt.location && <span>{evt.location}</span>}
-                        {evt.repeating !== 'none' && (
-                          <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', color: '#9ca3af' }}>
-                            {evt.repeating}
-                          </span>
-                        )}
                       </div>
                     </div>
                     {isAdmin && <svg
