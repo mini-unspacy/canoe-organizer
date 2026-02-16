@@ -38,7 +38,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
   };
 
   const inputStyle = {
-    backgroundColor: "#374151",
+    backgroundColor: "#000000",
     border: "1px solid #4b5563",
     borderRadius: "8px",
     padding: "10px 12px",
@@ -54,7 +54,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
     padding: "10px",
     borderRadius: "8px",
     border: selected ? "2px solid #3b82f6" : "2px solid #4b5563",
-    backgroundColor: selected ? "rgba(59,130,246,0.15)" : "#374151",
+    backgroundColor: selected ? "rgba(59,130,246,0.15)" : "#000000",
     color: selected ? "#93c5fd" : "#9ca3af",
     fontSize: "14px",
     fontWeight: 600 as const,
@@ -66,7 +66,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#111827",
+        backgroundColor: "#000000",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -76,7 +76,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
       <form
         onSubmit={handleSubmit}
         style={{
-          backgroundColor: "#1f2937",
+          backgroundColor: "#111111",
           borderRadius: "16px",
           padding: "40px 32px",
           width: "100%",

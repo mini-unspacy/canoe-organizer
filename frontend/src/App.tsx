@@ -425,7 +425,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
           {showEventForm && !editingEventId && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowEventForm(false)} />
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', border: '1px solid #4b5563', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#111111', borderRadius: '8px', padding: '12px', border: '1px solid #4b5563', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Event type selector */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -451,14 +451,14 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 placeholder="title"
                 value={eventForm.title}
                 onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
-                style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
               />
               <input
                 type="text"
                 placeholder="location"
                 value={eventForm.location}
                 onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
-                style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
               />
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(editingEventId || eventForm.repeating === 'none') && (
@@ -466,14 +466,14 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                     type="date"
                     value={eventForm.date}
                     onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                    style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                   />
                 )}
                 <input
                   type="time"
                   value={eventForm.time}
                   onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                  style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                  style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                 />
               </div>
               {!editingEventId && (<>
@@ -566,7 +566,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                     type="date"
                     value={eventForm.repeatUntil}
                     onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                    style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -622,7 +622,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 const dayName = dayNames[d.getDay()];
                 if (editingEventId === evt.id && showEventForm) {
                   return (
-                    <div key={evt.id} style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '4px', marginTop: '4px', border: '1px solid #4b5563' }}>
+                    <div key={evt.id} style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '12px', marginBottom: '4px', marginTop: '4px', border: '1px solid #4b5563' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {/* Event type selector */}
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -648,27 +648,27 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                           placeholder="title"
                           value={eventForm.title}
                           onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
-                          style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                         />
                         <input
                           type="text"
                           placeholder="location"
                           value={eventForm.location}
                           onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
-                          style={{ backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                         />
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <input
                             type="date"
                             value={eventForm.date}
                             onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                            style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                           />
                           <input
                             type="time"
                             value={eventForm.time}
                             onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                            style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
                           />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -1317,12 +1317,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
-      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#374151', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
         <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
           {dataLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#374151', zIndex: 50 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
               <div style={{ color: '#9ca3af', fontSize: '14px' }}>loading...</div>
             </div>
           ) : hasNoData ? (
@@ -1349,12 +1349,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   flexDirection: 'column',
                   overflowY: leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: '#374151',
+                  backgroundColor: '#000000',
                   padding: '12px 4px 0 4px',
                   borderRight: '1px solid #4b5563',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#374151', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
                   <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: leftSidebarOpen ? 'flex-end' : 'center' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
@@ -1459,7 +1459,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             onClick={(e) => e.stopPropagation()}
                             style={{
                               position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                              backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '12px',
+                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
                               padding: '12px 16px', minWidth: '220px', zIndex: 100,
                               boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                             }}
@@ -1496,7 +1496,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </div>
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
-                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
+                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#000000', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
                     <div ref={sortPillRef} style={{ position: 'relative' }}>
                       <span
                         onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
@@ -1659,7 +1659,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               fontSize: '10px',
                               fontWeight: 800,
                               color: '#94a3b8',
-                              backgroundColor: '#374151',
+                              backgroundColor: '#000000',
                               border: '1px solid #64748b',
                               borderRadius: '999px',
                               padding: '1px 7px',
@@ -1709,7 +1709,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#374151', border: '1px solid #64748b',
+                              backgroundColor: '#000000', border: '1px solid #64748b',
                               fontSize: '13px', fontWeight: 700, lineHeight: 1,
                               color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
                             }}
@@ -1723,7 +1723,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#374151', border: '1px solid #64748b',
+                              backgroundColor: '#000000', border: '1px solid #64748b',
                               fontSize: '13px', fontWeight: 700, lineHeight: 1,
                               color: '#94a3b8',
                             }}
@@ -1928,7 +1928,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 {p.seatPreference?.split('').map(Number).filter((n: number) => n > 0).join(' > ') || '—'}
                               </span>
                               {editingSeatPrefId === p.id && (
-                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#111111', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                                   <div style={{ display: 'flex', gap: '3px' }}>
                                     {[1, 2, 3, 4, 5, 6].map((seat) => {
                                       const prefs = tempSeatPref.split('').map(Number).filter(n => n > 0);
@@ -2040,14 +2040,14 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   touchAction: isDragging ? 'none' : 'auto',
-                  backgroundColor: sidebarOpen ? '#374151' : 'transparent',
+                  backgroundColor: sidebarOpen ? '#000000' : 'transparent',
                   padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
                   paddingBottom: 0,
                   borderLeft: '1px solid #94a3b8',
                 }}
               >
                 {/* Toolbar - sticky */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#374151' : 'transparent', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#000000' : 'transparent', padding: '12px 4px 0 4px' }}>
                   {/* Top row: toggle + A button */}
                   <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
                     <span
@@ -2526,7 +2526,7 @@ function AuthenticatedApp() {
   // Still loading user data
   if (convexUser === undefined) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
       </div>
     );
@@ -2566,7 +2566,7 @@ function App() {
   return (
     <>
       <AuthLoading>
-        <div style={{ minHeight: "100vh", backgroundColor: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ minHeight: "100vh", backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "14px" }}>loading...</div>
         </div>
       </AuthLoading>
