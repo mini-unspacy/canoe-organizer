@@ -1818,10 +1818,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             const assignedPaddler = assignment ? paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) : null;
                             const isMe = assignedPaddler?.id === currentUser.paddlerId;
                             return (
-                              <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222' }}>
+                              <div key={seat} style={{ ...monoStyle, fontSize: isMe ? '28px' : '24px', fontWeight: isMe ? 900 : 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: isMe ? '8px 0' : '6px 0', borderBottom: '1px solid #222222', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent' }}>
                                 <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
                                 {assignedPaddler ? (
-                                  <span style={isMe ? { color: '#60a5fa' } : undefined}>{assignedPaddler.firstName} {assignedPaddler.lastName}</span>
+                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>{assignedPaddler.firstName} {assignedPaddler.lastName}</span>
                                 ) : (
                                   <span>---</span>
                                 )}
