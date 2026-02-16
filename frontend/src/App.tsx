@@ -353,38 +353,6 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
 
   return (
     <div style={{ display: 'flex', height: 'calc(100% - 40px)', gap: '0' }}>
-      {/* Month indicator strip */}
-      <div style={{ width: '48px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '2px', paddingTop: '8px' }}>
-        {allMonths.map(m => {
-          const abbr = m.label.split(' ')[0];
-          const isActive = activeMonth === m.month;
-          return (
-            <span
-              key={m.month}
-              onClick={() => {
-                const el = monthRefs.current[m.month];
-                if (el && scheduleScrollRef.current) {
-                  scheduleScrollRef.current.scrollTo({ top: el.offsetTop - scheduleScrollRef.current.offsetTop, behavior: 'smooth' });
-                }
-                setActiveMonth(m.month);
-              }}
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: isActive ? '#ffffff' : '#9ca3af',
-                backgroundColor: isActive ? '#4b5563' : 'transparent',
-                borderRadius: '4px',
-                padding: '4px 6px',
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              {abbr}
-            </span>
-          );
-        })}
-      </div>
-
       {/* Event list */}
       <div
         ref={scheduleScrollRef}
@@ -402,7 +370,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 8px', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 16px', position: 'relative' }}
         className="scrollbar-hidden"
       >
         {/* Floating + event button (admin only) */}
@@ -414,8 +382,8 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
               setShowEventForm(!showEventForm);
             }}
             style={{
-              cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569',
-              userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px',
+              cursor: 'pointer', fontSize: '16px', fontWeight: 800, color: '#475569',
+              userSelect: 'none', padding: '4px 12px', backgroundColor: '#e2e8f0', borderRadius: '999px',
             }}
           >
             + event
@@ -613,7 +581,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
           const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
-              <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, padding: '12px 0 6px', textTransform: 'lowercase' }}>
+              <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
                 {m.label}
               </div>
               {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
@@ -705,26 +673,26 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 return (
                   <div
                     key={evt.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #4b5563' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 0', borderBottom: '1px solid #4b5563' }}
                   >
                     <div
                       onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
-                      style={{ width: '36px', textAlign: 'center', flexShrink: 0, cursor: onSelectEvent ? 'pointer' : 'default' }}
+                      style={{ width: '48px', textAlign: 'center', flexShrink: 0, cursor: onSelectEvent ? 'pointer' : 'default' }}
                     >
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#c0c0c0', lineHeight: 1.1 }}>{dayNum}</div>
-                      <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 600 }}>{dayName}</div>
+                      <div style={{ fontSize: '24px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{dayNum}</div>
+                      <div style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 600 }}>{dayName}</div>
                     </div>
                     {selectedPaddlerId && (
                       <div
                         onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
                         style={{
-                          width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                          width: '40px', height: '40px', borderRadius: '8px', flexShrink: 0,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           cursor: 'pointer', userSelect: 'none',
                           border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
                           backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
                           color: isAttending ? '#22c55e' : '#ef4444',
-                          fontSize: '13px', fontWeight: 700,
+                          fontSize: '18px', fontWeight: 700,
                         }}
                       >
                         {isAttending ? 'Y' : 'N'}
@@ -733,12 +701,12 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                       <div
                         onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
-                        style={{ fontSize: '14px', color: '#c0c0c0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onSelectEvent ? 'pointer' : 'default' }}
+                        style={{ fontSize: '20px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onSelectEvent ? 'pointer' : 'default' }}
                       >{evt.title}</div>
-                      <div style={{ fontSize: '11px', color: '#6b7280', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '16px', color: '#9ca3af', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
-                            padding: '1px 6px', borderRadius: '999px', fontSize: '9px', fontWeight: 600,
+                            padding: '2px 8px', borderRadius: '999px', fontSize: '13px', fontWeight: 600,
                             backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
                             color: evt.eventType === 'practice' ? '#60a5fa' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
                             border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
@@ -749,7 +717,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                         <span>{evt.time}</span>
                         {evt.location && <span>{evt.location}</span>}
                         {evt.repeating !== 'none' && (
-                          <span style={{ padding: '1px 6px', borderRadius: '999px', fontSize: '9px', fontWeight: 600, border: '1px solid #4b5563', color: '#9ca3af' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', color: '#9ca3af' }}>
                             {evt.repeating}
                           </span>
                         )}
@@ -768,23 +736,23 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                         });
                         setShowEventForm(true);
                       }}
-                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ cursor: 'pointer', flexShrink: 0, padding: '4px', boxSizing: 'content-box' }}
+                      width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ cursor: 'pointer', flexShrink: 0, padding: '6px', boxSizing: 'content-box' }}
                     >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>}
                     {isAdmin && <svg
                       onClick={() => deleteEventMut({ eventId: evt.id })}
-                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ cursor: 'pointer', flexShrink: 0, padding: '4px', boxSizing: 'content-box' }}
+                      width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ cursor: 'pointer', flexShrink: 0, padding: '6px', boxSizing: 'content-box' }}
                     >
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>}
                   </div>
                 );
               }) : (
-                <div style={{ padding: '8px 0', fontSize: '12px', color: '#4b5563' }}>—</div>
+                <div style={{ padding: '12px 0', fontSize: '16px', color: '#4b5563' }}>—</div>
               )}
             </div>
           );
