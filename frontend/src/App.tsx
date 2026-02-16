@@ -1604,9 +1604,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   {!isAdmin && <div style={{ marginBottom: '6px' }}>
                     <span
                       onClick={() => setShowAllBoats(!showAllBoats)}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
-                      {showAllBoats ? 'my boat' : 'all boats'}
+                      {showAllBoats ? 'MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
                     </span>
                   </div>}
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
