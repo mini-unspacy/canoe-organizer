@@ -1609,7 +1609,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
                     </span>
                   </div>}
-                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
                   {(isAdmin || showAllBoats) ? (<>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
