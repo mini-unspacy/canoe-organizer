@@ -2013,7 +2013,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 {/* Toolbar - sticky */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#000000' : 'transparent', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#000000' : 'transparent', padding: '12px 4px 0 4px' }} className="relative">
                   {/* Top row: toggle + A button */}
                   <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
                     <span
@@ -2135,7 +2135,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   {showAddSearch && selectedEvent && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowAddSearch(false)} />
-                      <div style={{ zIndex: 20, width: '100%', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', overflow: 'hidden', marginTop: '4px' }}>
+                      <div style={{ position: 'absolute', left: '4px', right: '4px', zIndex: 30, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', marginTop: '4px' }}>
                         <input
                           ref={addSearchInputRef}
                           type="text"
