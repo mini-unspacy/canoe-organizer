@@ -1601,7 +1601,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
                     <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
-                  {!isAdmin && <div style={{ marginBottom: '6px' }}>
+                  {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
                     <span
                       onClick={() => setShowAllBoats(!showAllBoats)}
                       style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
