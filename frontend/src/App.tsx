@@ -75,7 +75,7 @@ const sortPaddlersByPriority = (paddlers: Paddler[], priority: CanoeSortItem[]):
 };
 
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact }) => {
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin }) => {
   const circleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -146,8 +146,8 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         <span className="text-[10px] font-black" style={{ WebkitTextStroke: '0.3px' }}>{lastInitial}</span>
       </div>
       
-      {/* Ability badge - small circle at bottom left */}
-      <div 
+      {/* Ability badge - small circle at bottom left (admin only) */}
+      {isAdmin && <div
         className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
         style={{
           backgroundColor: abilityInnerColor,
@@ -160,10 +160,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         }}
       >
         {paddler.ability}
-      </div>
-      
-      {/* Type badge - square at bottom right */}
-      <div 
+      </div>}
+
+      {/* Type badge - square at bottom right (admin only) */}
+      {isAdmin && <div
         className="absolute flex items-center justify-center font-bold text-white border border-white/50"
         style={{
           backgroundColor: paddler.type === 'racer' ? '#8b5cf6' :
@@ -178,7 +178,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         }}
       >
         {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
-      </div>
+      </div>}
     </div>
   );
 };
@@ -1721,7 +1721,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
                                         {(provided, snapshot) => (
                                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
-                                            <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
+                                            <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} isAdmin={isAdmin} />
                                           </div>
                                         )}
                                       </Draggable>
@@ -2255,7 +2255,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     aria-roledescription=""
                                     style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
                                   >
-                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} />
+                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} />
                                   </div>
                                 )}
                               </Draggable>
