@@ -903,12 +903,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     return new Set(eventAssignments.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAssignments]);
 
-  // Find today's event (first event matching today's date)
+  // Find today's event, or the next upcoming event if none today
   const todayEvent = useMemo(() => {
     if (!allEvents) return undefined; // still loading
     const today = new Date().toISOString().slice(0, 10);
     const evt = allEvents.find((e: { date: string }) => e.date === today);
-    if (!evt) return null; // no event today
+    if (!evt) {
+      // No event today — find the next upcoming event
+      const upcoming = allEvents.filter((e: { date: string }) => e.date > today);
+      if (upcoming.length === 0) return null;
+      const next = upcoming.reduce((a, b) => a.date <= b.date ? a : b);
+      return { id: next.id, title: next.title, date: next.date, time: next.time, location: next.location, eventType: next.eventType };
+    }
     return { id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType };
   }, [allEvents]);
 
@@ -933,6 +939,23 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
   const [sortPillOpen, setSortPillOpen] = useState(false);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
+  const sortPillRef = useRef<HTMLDivElement>(null);
+  const openSortMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close sort menus on click outside
+  useEffect(() => {
+    if (!sortPillOpen && !openSortMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (sortPillOpen && sortPillRef.current && !sortPillRef.current.contains(e.target as Node)) {
+        setSortPillOpen(false);
+      }
+      if (openSortMenu && openSortMenuRef.current && !openSortMenuRef.current.contains(e.target as Node)) {
+        setOpenSortMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [sortPillOpen, openSortMenu]);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
 
@@ -1289,8 +1312,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6) - 2));
   // Canoe row height: fit 6 rows in viewport minus sticky sort bar (~32px)
   const sortBarHeight = 32;
-  const canoeMargin = 12;
-  const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 6);
+  const canoeMargin = 20;
+  const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 7);
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -1327,7 +1350,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   overflowY: leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: '#374151',
-                  padding: leftSidebarOpen ? '12px 4px 0 4px' : '12px 2px 0 2px',
+                  padding: '12px 4px 0 4px',
                   borderRight: '1px solid #4b5563',
                 }}
               >
@@ -1350,71 +1373,52 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                   </div>
                 </div>
-                {leftSidebarOpen ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
-                    {(['today', 'schedule', 'roster', 'attendance', 'crews'] as const).map((item) => (
-                      <span
-                        key={item}
-                        onClick={() => { setActivePage(item); if (item === 'today') setSelectedEvent(todayEvent || null); }}
-                        className="font-medium hover:text-white cursor-pointer transition-colors"
-                        style={{
-                          fontSize: '15px',
-                          padding: '6px 8px',
-                          borderRadius: '8px',
-                          color: activePage === item ? '#ffffff' : '#c0c0c0',
-                          backgroundColor: activePage === item ? '#4b5563' : 'transparent',
-                        }}
-                        onMouseEnter={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = '#4b5563'; }}
-                        onMouseLeave={(e) => { if (activePage !== item) e.currentTarget.style.backgroundColor = 'transparent'; }}
-                      >
-                        {item === 'today' ? 'event' : item}
-                      </span>
-                    ))}
-                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
-                      <div style={{ fontSize: '10px', color: '#9ca3af', padding: '0 8px', wordBreak: 'break-all' }}>
-                        {currentUser.email}
-                      </div>
-                      <span
-                        onClick={onLogout}
-                        className="cursor-pointer hover:text-white transition-colors"
-                        style={{ fontSize: '13px', color: '#9ca3af', padding: '4px 8px', display: 'block' }}
-                      >
-                        log out
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 4px', flex: 1 }}>
                     {([
-                      { page: 'today' as const, icon: '📅' },
-                      { page: 'schedule' as const, icon: '🗓' },
-                      { page: 'roster' as const, icon: '👥' },
-                      { page: 'attendance' as const, icon: '✓' },
-                      { page: 'crews' as const, icon: '🛶' },
-                    ]).map(({ page, icon }) => (
+                      { page: 'today' as const, icon: '⊞', label: 'event' },
+                      { page: 'schedule' as const, icon: '☰', label: 'schedule' },
+                      { page: 'roster' as const, icon: '♱', label: 'roster' },
+                      { page: 'attendance' as const, icon: '✓', label: 'attendance' },
+                      { page: 'crews' as const, icon: '⛵', label: 'crews' },
+                    ]).map(({ page, icon, label }) => (
                       <span
                         key={page}
                         onClick={() => { setActivePage(page); if (page === 'today') setSelectedEvent(todayEvent || null); }}
-                        title={page === 'today' ? 'event' : page}
+                        title={label}
+                        className="cursor-pointer transition-colors"
                         style={{
-                          cursor: 'pointer',
-                          fontSize: page === 'attendance' ? '12px' : '14px',
-                          padding: '4px 2px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: '6px 0 6px 0',
                           borderRadius: '8px',
+                          color: activePage === page ? '#ffffff' : '#c0c0c0',
                           backgroundColor: activePage === page ? '#4b5563' : 'transparent',
                           userSelect: 'none',
+                          justifyContent: 'flex-start',
                         }}
                         onMouseEnter={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = '#4b5563'; }}
                         onMouseLeave={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
-                        {icon}
+                        <span style={{ fontSize: '22px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+                        {leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 500 }}>{label}</span>}
                       </span>
                     ))}
+                    {leftSidebarOpen && (
+                      <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
+                        <div style={{ fontSize: '10px', color: '#9ca3af', padding: '0 8px', wordBreak: 'break-all' }}>
+                          {currentUser.email}
+                        </div>
+                        <span
+                          onClick={onLogout}
+                          className="cursor-pointer hover:text-white transition-colors"
+                          style={{ fontSize: '13px', color: '#9ca3af', padding: '4px 8px', display: 'block' }}
+                        >
+                          log out
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
               </div>
 
               {/* MIDDLE COLUMN - CANOES */}
@@ -1493,7 +1497,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
                 {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#374151', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
-                    <div style={{ position: 'relative' }}>
+                    <div ref={sortPillRef} style={{ position: 'relative' }}>
                       <span
                         onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
                         style={{
@@ -1511,8 +1515,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         {sidebarOpen && windowWidth < 768 ? 'sort:' : 'sort by:'}
                       </span>
                       {sortPillOpen && (
-                        <>
-                          <div className="fixed inset-0 z-30" onClick={() => setSortPillOpen(false)} />
                           <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
                             <DragDropContext onDragEnd={(result) => {
                               if (!result.destination) return;
@@ -1575,7 +1577,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               apply
                             </div>
                           </div>
-                        </>
                       )}
                     </div>
                     <div style={{ flex: 1 }} />
@@ -1593,18 +1594,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                 </div>}
 
-                {/* All Canoes or No Event message */}
-                {!selectedEvent ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '600px', margin: '80px auto 0', padding: '0 20px', gap: '16px' }}>
-                    <span style={{ fontSize: '32px', fontWeight: 700, color: '#4b5563', textAlign: 'center' }}>NO EVENT TODAY</span>
-                    <span
-                      onClick={() => setActivePage('schedule')}
-                      style={{ fontSize: '15px', fontWeight: 600, color: '#3b82f6', cursor: 'pointer' }}
-                    >SEE SCHEDULE</span>
-                  </div>
-                ) : (
-                <div style={{ marginTop: '8px', width: '100%', maxWidth: '600px', margin: '8px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                {selectedEvent && (
+                <div style={{ width: '100%', maxWidth: '600px', margin: '20px auto 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                     {selectedPaddlerId && (() => {
                       const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
                       return (
@@ -1629,7 +1621,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
                     <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
-                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
+                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
@@ -1659,7 +1651,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           }
                         </svg>}
                         {/* Canoe designation pill — straddles top border */}
-                        <div style={{ position: 'absolute', top: '-8px', left: '6px', zIndex: 5 }}>
+                        <div style={{ position: 'absolute', top: '-12px', left: '6px', zIndex: 5 }}>
                           <span
                             className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
                             style={{
@@ -2075,7 +2067,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
 
                   {sidebarOpen && (
-                    <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                    <div ref={openSortMenu === 'viewby' ? openSortMenuRef : undefined} style={{ position: 'relative', marginLeft: 'auto' }}>
                       <span
                         onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
                         style={{
@@ -2253,7 +2245,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   <span className="font-semibold text-sm" style={{ color: '#c0c0c0' }}>
                                     {sectionBreak.label} ({viewSections.find(s => s.id === sectionBreak.id)?.paddlers.length})
                                   </span>
-                                  <div style={{ position: 'relative' }}>
+                                  <div ref={openSortMenu === sectionBreak.id ? openSortMenuRef : undefined} style={{ position: 'relative' }}>
                                     <span
                                       onClick={() => setOpenSortMenu(openSortMenu === sectionBreak.id ? null : sectionBreak.id)}
                                       style={{
