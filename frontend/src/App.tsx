@@ -2488,7 +2488,7 @@ function AuthenticatedApp() {
   // Still loading user data
   if (convexUser === undefined) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
         <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
       </div>
     );
@@ -2528,7 +2528,7 @@ function App() {
   return (
     <>
       <AuthLoading>
-        <div style={{ minHeight: "100vh", backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
           <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
           <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
         </div>
