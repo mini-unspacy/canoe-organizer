@@ -912,7 +912,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       // No event today — find the next upcoming event
       const upcoming = allEvents.filter((e: { date: string }) => e.date > today);
       if (upcoming.length === 0) return null;
-      const next = upcoming.reduce((a, b) => a.date <= b.date ? a : b);
+      const next = upcoming.reduce((a: { date: string }, b: { date: string }) => a.date <= b.date ? a : b);
       return { id: next.id, title: next.title, date: next.date, time: next.time, location: next.location, eventType: next.eventType };
     }
     return { id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType };
