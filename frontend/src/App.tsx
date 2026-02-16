@@ -702,7 +702,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                       <div
                         onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
                         style={{ fontSize: '20px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onSelectEvent ? 'pointer' : 'default' }}
-                      >{evt.title}</div>
+                      ><span style={{ fontWeight: 700 }}>{evt.time}</span> {evt.title}</div>
                       <div style={{ fontSize: '16px', color: '#9ca3af', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
@@ -714,7 +714,6 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                             {evt.eventType}
                           </span>
                         )}
-                        <span style={{ fontWeight: 700, fontSize: '18px', color: '#e0e0e0' }}>{evt.time}</span>
                         {evt.location && <span>{evt.location}</span>}
                       </div>
                     </div>
