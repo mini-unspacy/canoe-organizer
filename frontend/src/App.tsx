@@ -2133,17 +2133,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       {showAddSearch && selectedEvent && (
                         <>
                           <div className="fixed inset-0 z-10" onClick={() => setShowAddSearch(false)} />
-                          <div className="absolute bottom-full right-0 mb-2 z-20 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-2" style={{ width: '200px' }}>
+                          <div style={{ position: 'absolute', bottom: '100%', right: 0, marginBottom: '8px', zIndex: 20, width: '220px', backgroundColor: '#111111', borderRadius: '8px', border: '1px solid #4b5563', padding: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
                             <input
                               ref={addSearchInputRef}
                               type="text"
                               value={addSearchQuery}
                               onChange={(e) => setAddSearchQuery(e.target.value)}
                               placeholder="search paddler..."
-                              className="w-full px-2 py-1 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-400"
+                              style={{ width: '100%', padding: '6px 8px', fontSize: '14px', borderRadius: '6px', border: '1px solid #4b5563', backgroundColor: '#000000', color: '#e0e0e0', outline: 'none', boxSizing: 'border-box' }}
                               autoFocus
                             />
-                            <div className="mt-1 max-h-[200px] overflow-y-auto">
+                            <div style={{ marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
                               {(() => {
                                 const query = addSearchQuery.toLowerCase().trim();
                                 if (!query || !paddlers) return null;
@@ -2152,7 +2152,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   const fullName = `${p.firstName} ${p.lastName || ''}`.toLowerCase();
                                   return fullName.includes(query);
                                 }).slice(0, 8);
-                                if (matches.length === 0) return <div className="text-xs text-slate-400 px-2 py-1">no matches</div>;
+                                if (matches.length === 0) return <div style={{ fontSize: '13px', color: '#6b7280', padding: '4px 8px' }}>no matches</div>;
                                 return matches.map((p: Paddler) => (
                                   <div
                                     key={p.id}
@@ -2161,7 +2161,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       setShowAddSearch(false);
                                       setAddSearchQuery('');
                                     }}
-                                    className="px-2 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded cursor-pointer"
+                                    style={{ padding: '6px 8px', fontSize: '14px', color: '#e0e0e0', borderRadius: '4px', cursor: 'pointer' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#222222'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                   >
                                     {p.firstName} {p.lastName ? p.lastName[0] + '.' : ''}
                                   </div>
