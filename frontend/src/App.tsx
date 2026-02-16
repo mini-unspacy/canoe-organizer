@@ -833,6 +833,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
   const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; date: string; time: string; location: string; eventType?: string } | null>(null);
+  const [showAllBoats, setShowAllBoats] = useState(false);
   const [showAddSearch, setShowAddSearch] = useState(false);
   const [addSearchQuery, setAddSearchQuery] = useState('');
   const addSearchInputRef = useRef<HTMLInputElement>(null);
@@ -1600,8 +1601,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
                     <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
-                  {isAdmin ? (<>
-                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
+                  {(isAdmin || showAllBoats) ? (<>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '6px' }}>
+                    <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
+                    {!isAdmin && <span
+                      onClick={() => setShowAllBoats(false)}
+                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                    >
+                      my boat
+                    </span>}
+                  </div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
@@ -1774,18 +1783,33 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const designation = myCanoe ? (canoeDesignations[myCanoe.id] || '???') : null;
                     const monoStyle = { fontFamily: "'Courier New', Courier, monospace", textTransform: 'uppercase' as const };
 
+                    const allBoatsBtn = (
+                      <span
+                        onClick={() => setShowAllBoats(true)}
+                        style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      >
+                        all boats
+                      </span>
+                    );
+
                     if (!myCanoe) {
                       return (
-                        <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#6b7280', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
-                          NO ASSIGNMENT
+                        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                          <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#6b7280', letterSpacing: '2px', marginBottom: '16px' }}>
+                            NO ASSIGNMENT
+                          </div>
+                          {allBoatsBtn}
                         </div>
                       );
                     }
 
                     return (
                       <div style={{ padding: '20px 0' }}>
-                        <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px', marginBottom: '20px' }}>
-                          BOAT: {designation}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                          <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px' }}>
+                            BOAT: {designation}
+                          </div>
+                          {allBoatsBtn}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
