@@ -1601,15 +1601,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
                     <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
-                    {!isAdmin && <span
+                  {!isAdmin && <div style={{ marginBottom: '6px' }}>
+                    <span
                       onClick={() => setShowAllBoats(!showAllBoats)}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                     >
                       {showAllBoats ? 'my boat' : 'all boats'}
-                    </span>}
-                  </div>
+                    </span>
+                  </div>}
+                  <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
                   {(isAdmin || showAllBoats) ? (<>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
