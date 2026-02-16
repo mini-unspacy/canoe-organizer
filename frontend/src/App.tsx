@@ -2134,7 +2134,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                   {showAddSearch && selectedEvent && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowAddSearch(false)} />
+                      <div className="fixed inset-0" style={{ zIndex: 29 }} onClick={() => setShowAddSearch(false)} />
                       <div style={{ position: 'absolute', left: '4px', right: '4px', zIndex: 30, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', marginTop: '4px' }}>
                         <input
                           ref={addSearchInputRef}
