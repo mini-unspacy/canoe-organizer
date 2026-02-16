@@ -836,8 +836,21 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [showAddSearch, setShowAddSearch] = useState(false);
   const [addSearchQuery, setAddSearchQuery] = useState('');
   const addSearchInputRef = useRef<HTMLInputElement>(null);
+  const addSearchMenuRef = useRef<HTMLDivElement>(null);
   const [showGoingList, setShowGoingList] = useState(false);
   const scheduleScrollPosRef = useRef(0);
+
+  // Close add-paddler search on outside click
+  useEffect(() => {
+    if (!showAddSearch) return;
+    const handler = (e: MouseEvent) => {
+      if (addSearchMenuRef.current && !addSearchMenuRef.current.contains(e.target as Node)) {
+        setShowAddSearch(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showAddSearch]);
 
   const eventAttendance = useQuery(
     api.attendance.getAttendanceForEvent,
@@ -2133,9 +2146,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                   </div>
                   {showAddSearch && selectedEvent && (
-                    <>
-                      <div className="fixed inset-0" style={{ zIndex: 29 }} onClick={() => setShowAddSearch(false)} />
-                      <div style={{ position: 'absolute', left: '4px', right: '4px', zIndex: 30, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', marginTop: '4px' }}>
+                      <div ref={addSearchMenuRef} style={{ position: 'absolute', left: '4px', right: '4px', zIndex: 30, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', marginTop: '4px' }}>
                         <input
                           ref={addSearchInputRef}
                           type="text"
@@ -2173,7 +2184,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           })()}
                         </div>
                       </div>
-                    </>
                   )}
                 </>
                 )}
