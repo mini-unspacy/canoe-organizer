@@ -1805,7 +1805,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
                     return (
                       <div style={{ padding: '20px 0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                           <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px' }}>
                             BOAT: {designation}
                           </div>
