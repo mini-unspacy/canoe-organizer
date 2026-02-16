@@ -1637,7 +1637,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               display: 'inline-block',
                               fontSize: '10px',
                               fontWeight: 800,
-                              color: '#94a3b8',
+                              color: '#ffffff',
                               backgroundColor: '#000000',
                               border: '1px solid #64748b',
                               borderRadius: '999px',
