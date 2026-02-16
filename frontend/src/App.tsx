@@ -108,12 +108,16 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
 
   const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
 
-  const firstInitial = paddler.firstName?.[0] || '?';
-  const lastInitial = paddler.lastName?.[0] || paddler.lastInitial || '?';
+  const firstInitial = (paddler.firstName?.[0] || '?').toUpperCase();
+  const lastName = paddler.lastName || paddler.lastInitial || '?';
   const maxFirstNameLen = 5;
   const truncatedFirst = paddler.firstName.length > maxFirstNameLen
-    ? paddler.firstName.slice(0, maxFirstNameLen)
-    : paddler.firstName;
+    ? paddler.firstName.slice(0, maxFirstNameLen).toUpperCase()
+    : paddler.firstName.toUpperCase();
+  const maxLastNameLen = 5;
+  const truncatedLast = lastName.length > maxLastNameLen
+    ? lastName.slice(0, maxLastNameLen).toUpperCase()
+    : lastName.toUpperCase();
 
   // Inner ability circle color: red (1) to green (5)
   const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
@@ -140,10 +144,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         touchAction: 'manipulation',
       }}
     >
-      {/* Name - two lines centered */}
-      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#e0e0e0' }}>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.3px' }}>{compact ? firstInitial : truncatedFirst}</span>
-        <span className="text-[10px] font-black" style={{ WebkitTextStroke: '0.3px' }}>{lastInitial}</span>
+      {/* Name - two lines centered, all caps */}
+      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#e0e0e0', textTransform: 'uppercase' }}>
+        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? firstInitial : truncatedFirst}</span>
+        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? lastName[0]?.toUpperCase() || '?' : truncatedLast}</span>
       </div>
       
       {/* Ability badge - small circle at bottom left (admin only) */}
@@ -155,7 +159,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
           width: '14px',
           height: '14px',
           fontSize: '8px',
-          bottom: '1px',
+          bottom: '-5px',
           left: '1px'
         }}
       >
@@ -172,7 +176,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
           width: '12px',
           height: '12px',
           fontSize: '6px',
-          bottom: '1px',
+          bottom: '-5px',
           right: '1px',
           borderRadius: '2px'
         }}
