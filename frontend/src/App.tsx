@@ -1600,6 +1600,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
                     <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
+                  {isAdmin ? (<>
                   <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '1px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>PADDLER ASSIGNMENT</div>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
@@ -1753,16 +1754,60 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       </div>
                     );
                   })}
-                  
+
                   {/* Add Canoe button when no canoes exist */}
                   {(!canoes || canoes.length === 0) && (
-                    <button 
+                    <button
                       onClick={() => addCanoe({ name: "Canoe 1" })}
                       className="w-full py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-center gap-2"
                     >
                       <span className="text-lg">+</span>
                       <span className="font-medium">Add Canoe</span>
                     </button>
+                  )}
+                  </>) : (
+                  /* Non-admin: show only the paddler's assigned canoe in military style */
+                  (() => {
+                    const myAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === currentUser.paddlerId);
+                    const myCanoe = myAssignment ? canoes?.find((c: Canoe) => c.id === myAssignment.canoeId) : null;
+                    const myCanoeAssignments = myCanoe ? (canoeAssignmentsByCanoe.get(myCanoe.id) || []) : [];
+                    const designation = myCanoe ? (canoeDesignations[myCanoe.id] || '???') : null;
+                    const monoStyle = { fontFamily: "'Courier New', Courier, monospace", textTransform: 'uppercase' as const };
+
+                    if (!myCanoe) {
+                      return (
+                        <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#6b7280', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
+                          NO ASSIGNMENT
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div style={{ padding: '20px 0' }}>
+                        <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px', marginBottom: '20px' }}>
+                          BOAT: {designation}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {Array.from({ length: 6 }).map((_, i) => {
+                            const seat = i + 1;
+                            const assignment = myCanoeAssignments.find((a: { seat: number }) => a.seat === seat);
+                            const assignedPaddler = assignment ? paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) : null;
+                            const isMe = assignedPaddler?.id === currentUser.paddlerId;
+                            return (
+                              <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222' }}>
+                                <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
+                                {assignedPaddler ? (
+                                  <span style={isMe ? { color: '#60a5fa' } : undefined}>{assignedPaddler.firstName} {assignedPaddler.lastName}</span>
+                                ) : (
+                                  <span>---</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()
                   )}
                 </div>
                 )}
