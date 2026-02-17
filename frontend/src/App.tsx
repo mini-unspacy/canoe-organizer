@@ -1667,12 +1667,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
                                   .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
                                   .map((p: Paddler) => (
-                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
+                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                       {p.firstName} {p.lastName || p.lastInitial}
                                     </div>
                                   ))}
                                 {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
+                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
                                   </div>
                                 ))}
