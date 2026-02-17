@@ -1735,13 +1735,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
                     </div>
                     {/* Right column: time/title, going */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px', position: 'relative' }}>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '1px', position: 'relative' }}>
                       <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
                           {selectedEvent.time} {selectedEvent.title}
                         </span>
                       </div>
-                      <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '-1px' }}>
+                      <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
                         <span onClick={() => setShowGoingList(!showGoingList)} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
                         {showGoingList && (
                           <div
@@ -1781,8 +1781,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                   </div>
                   {/* Y/N + all boats/my boats row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                     {selectedPaddlerId && (
+                      <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                       <div
                         onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
                         style={{
@@ -1796,6 +1797,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         }}
                       >
                         {_isAttending ? 'Y' : 'N'}
+                      </div>
                       </div>
                     )}
                     {!isAdmin && (
