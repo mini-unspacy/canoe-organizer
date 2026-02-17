@@ -452,7 +452,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 16px', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 4px', position: 'relative' }}
         className="scrollbar-hidden"
       >
         {/* Floating + event button (admin only) */}
@@ -755,7 +755,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    style={{ display: 'flex', gap: '6px', padding: '18px 0', borderBottom: '1px solid #4b5563' }}
+                    style={{ display: 'flex', gap: '6px', padding: '10px 0', borderBottom: '1px solid #4b5563' }}
                   >
                     {/* Left column: date + Y/N */}
                     <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
