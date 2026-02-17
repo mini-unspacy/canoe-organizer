@@ -388,7 +388,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
     const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
     if (el) {
       const container = scheduleScrollRef.current;
-      container.scrollTop = el.offsetTop - container.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
+      container.scrollTop = el.offsetTop - container.offsetTop;
     }
   }, [scrollToEventId, events]);
 
