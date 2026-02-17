@@ -804,16 +804,17 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                           data-guest-popup
                           onClick={(e) => { e.stopPropagation(); setGuestPopupEventId(guestPopupEventId === evt.id ? null : evt.id); setGuestNameInput(''); }}
                           style={{
-                            padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
+                            padding: '6px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
                             backgroundColor: guestPopupEventId === evt.id ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.1)',
                             color: '#f59e0b',
                             border: `1px solid ${guestPopupEventId === evt.id ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.25)'}`,
                             cursor: 'pointer', userSelect: 'none',
+                            marginLeft: 'auto',
                           }}
                         >
                           guest?
                         </span>
-                        {isAdmin && <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        {isAdmin && <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <svg
                           onClick={() => {
                             setEditingEventId(evt.id);
