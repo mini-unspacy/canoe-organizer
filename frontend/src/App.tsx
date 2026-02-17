@@ -452,7 +452,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 4px', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 2px', position: 'relative' }}
         className="scrollbar-hidden"
       >
         {/* Floating + event button (admin only) */}
