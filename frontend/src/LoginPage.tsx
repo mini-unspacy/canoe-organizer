@@ -40,7 +40,7 @@ export default function LoginPage() {
   });
 
   const inputStyle = {
-    backgroundColor: "#374151",
+    backgroundColor: "#000000",
     border: "1px solid #4b5563",
     borderRadius: "8px",
     padding: "10px 12px",
@@ -72,7 +72,7 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#111827",
+        backgroundColor: "#000000",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -81,7 +81,7 @@ export default function LoginPage() {
     >
       <div
         style={{
-          backgroundColor: "#1f2937",
+          backgroundColor: "#111111",
           borderRadius: "16px",
           padding: "40px 32px",
           width: "100%",

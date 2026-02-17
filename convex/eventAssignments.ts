@@ -124,9 +124,10 @@ export const assignOptimalForEvent = mutation({
       )
     ),
     excludeCanoeIds: v.optional(v.array(v.string())),
+    onlyReassignExisting: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { eventId, priority, excludeCanoeIds } = args;
+    const { eventId, priority, excludeCanoeIds, onlyReassignExisting } = args;
     const excludeSet = new Set(excludeCanoeIds || []);
 
     // Get attending paddlers for this event
@@ -141,7 +142,6 @@ export const assignOptimalForEvent = mutation({
     );
 
     const allPaddlers = await ctx.db.query("paddlers").collect();
-    let paddlers = allPaddlers.filter((p) => attendingPaddlerIds.has(p.id));
 
     const canoes = await ctx.db.query("canoes").collect();
 
@@ -157,7 +157,20 @@ export const assignOptimalForEvent = mutation({
         .filter((a) => excludeSet.has(a.canoeId))
         .map((a) => a.paddlerId)
     );
-    paddlers = paddlers.filter((p) => !lockedPaddlerIds.has(p.id));
+
+    let paddlers;
+    if (onlyReassignExisting) {
+      // Only re-sort paddlers already assigned to non-locked canoes
+      const assignedToUnlockedIds = new Set(
+        existingAssignments
+          .filter((a) => !excludeSet.has(a.canoeId))
+          .map((a) => a.paddlerId)
+      );
+      paddlers = allPaddlers.filter((p) => assignedToUnlockedIds.has(p.id));
+    } else {
+      paddlers = allPaddlers.filter((p) => attendingPaddlerIds.has(p.id));
+      paddlers = paddlers.filter((p) => !lockedPaddlerIds.has(p.id));
+    }
 
     // Clear non-locked assignments
     await Promise.all(

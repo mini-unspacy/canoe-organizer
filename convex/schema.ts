@@ -85,4 +85,10 @@ export default defineSchema({
   })
     .index("by_event_id", ["id"])
     .index("by_date", ["date"]),
+
+  eventGuests: defineTable({
+    eventId: v.string(),
+    name: v.string(),
+  })
+    .index("by_event", ["eventId"]),
 });
