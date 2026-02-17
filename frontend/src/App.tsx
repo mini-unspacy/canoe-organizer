@@ -1525,6 +1525,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                    <span style={{
+                      fontFamily: "'UnifrakturMaguntia', cursive",
+                      color: '#dc2626',
+                      WebkitTextStroke: '1.5px white',
+                      paintOrder: 'stroke fill',
+                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                      fontSize: leftSidebarOpen ? '24px' : '18px',
+                    }}>
+                      {leftSidebarOpen ? 'Lokahi' : 'L'}
+                    </span>
+                  </div>
                   <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: leftSidebarOpen ? 'flex-end' : 'center' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
@@ -1596,18 +1608,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Header */}
                 <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
-                  <span
-                    style={{
-                      fontFamily: "'UnifrakturMaguntia', cursive",
-                      color: '#dc2626',
-                      WebkitTextStroke: '1.5px white',
-                      paintOrder: 'stroke fill',
-                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                      fontSize: '28px',
-                    }}
-                  >
-                    Lokahi
-                  </span>
                   {activePage === 'today' && (selectedEvent ? (() => {
                     const d = new Date(selectedEvent.date + 'T00:00:00');
                     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
