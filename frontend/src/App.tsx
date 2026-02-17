@@ -1525,14 +1525,14 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
-                  <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                  <div style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 4px' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#dc2626',
                       WebkitTextStroke: '1.5px white',
                       paintOrder: 'stroke fill',
                       textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                      fontSize: leftSidebarOpen ? '24px' : '18px',
+                      fontSize: leftSidebarOpen ? '32px' : '22px',
                     }}>
                       {leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
