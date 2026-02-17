@@ -660,7 +660,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
         {/* Event list by month */}
         {allMonths.map(m => {
           const group = eventsByMonth.find(g => g.month === m.month);
-          const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
               <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
