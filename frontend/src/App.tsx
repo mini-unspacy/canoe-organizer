@@ -1736,9 +1736,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                     {/* Right column: time/title, going */}
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px', position: 'relative' }}>
-                      <div style={{ fontSize: '22px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
-                          <span style={{ fontWeight: 700 }}>{selectedEvent.time}</span> {selectedEvent.title}
+                          {selectedEvent.time} {selectedEvent.title}
                         </span>
                       </div>
                       <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '-1px' }}>
