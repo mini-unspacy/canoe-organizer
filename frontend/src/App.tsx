@@ -1620,7 +1620,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
                         <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
-                        {!sidebarOpen && <>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
                           style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
@@ -1661,7 +1660,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             )}
                           </div>
                         )}
-                        </>}
                       </span>
                     );
                   })() : (
@@ -1797,7 +1795,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       );
                     })()}
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
+                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
                   </div>
                   {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
                     <span
@@ -2041,7 +2039,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>gender</th>
                           {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>type</th>}
                           {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>ability</th>}
-                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>seat pref</th>}
+                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600, minWidth: '70px' }}>seat pref</th>}
                           {isAdmin && <th style={{ textAlign: 'center', padding: '8px 4px', color: '#9ca3af', fontSize: '12px', fontWeight: 600, width: '40px' }}>adm</th>}
                           <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>email</th>
                           {isAdmin && <th style={{ width: '32px' }}></th>}
@@ -2054,8 +2052,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               {p.firstName} {p.lastName}
                             </td>
                             <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                              <button
-                                onClick={() => isAdmin && updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' })}
+                              <span
                                 style={{
                                   padding: '4px 12px',
                                   borderRadius: '999px',
@@ -2065,11 +2062,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
                                   backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
                                   color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
-                                  cursor: isAdmin ? 'pointer' : 'default',
                                 }}
                               >
                                 {p.gender}
-                              </button>
+                              </span>
                             </td>
                             {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {windowWidth < 768 ? (
