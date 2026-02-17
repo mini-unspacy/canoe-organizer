@@ -1706,7 +1706,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     {!isAdmin && (
                       <span
                         onClick={() => setShowAllBoats(!showAllBoats)}
-                        style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                        style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '4px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                       >
                         {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
                       </span>
