@@ -2054,8 +2054,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               {p.firstName} {p.lastName}
                             </td>
                             <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                              <button
-                                onClick={() => isAdmin && updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' })}
+                              <span
                                 style={{
                                   padding: '4px 12px',
                                   borderRadius: '999px',
@@ -2065,11 +2064,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
                                   backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
                                   color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
-                                  cursor: isAdmin ? 'pointer' : 'default',
                                 }}
                               >
                                 {p.gender}
-                              </button>
+                              </span>
                             </td>
                             {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {windowWidth < 768 ? (
