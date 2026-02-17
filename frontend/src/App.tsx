@@ -1606,69 +1606,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               {/* MIDDLE COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                {/* Header */}
-                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
-                  {activePage === 'today' && (selectedEvent ? (() => {
-                    const d = new Date(selectedEvent.date + 'T00:00:00');
-                    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                    const dayName = dayNames[d.getDay()];
-                    const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
-                    const guestCount = eventGuests?.length || 0;
-                    const goingCount = goingPaddlers + guestCount;
-                    return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
-                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
-                        <span
-                          onClick={() => setShowGoingList(!showGoingList)}
-                          style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
-                        >
-                          ({goingCount} going)
-                        </span>
-                        {showGoingList && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
-                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                            }}
-                          >
-                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
-                              ATTENDING ({goingCount})
-                            </div>
-                            {goingCount === 0 ? (
-                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
-                            ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
-                                {paddlers
-                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                                  .map((p: Paddler) => (
-                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
-                                      {p.firstName} {p.lastName || p.lastInitial}
-                                    </div>
-                                  ))}
-                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
-                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </span>
-                    );
-                  })() : (
+                {/* Header — no-event fallback */}
+                {activePage === 'today' && !selectedEvent && (
+                  <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                     <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
                       const now = new Date();
                       const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                       return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
                     })()}</span>
-                  ))}
-                </div>
+                  </div>
+                )}
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
                 {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#000000', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
@@ -1769,41 +1716,97 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                 </div>}
 
-                {selectedEvent && (
-                <div style={{ width: '100%', maxWidth: '600px', margin: '20px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-                    {selectedPaddlerId && (() => {
-                      const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                {selectedEvent && (() => {
+                  const _d = new Date(selectedEvent.date + 'T00:00:00');
+                  const _dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                  const _dayName = _dayNames[_d.getDay()];
+                  const _dayNum = _d.getDate();
+                  const _isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
+                  const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
+                  const _guestCount = eventGuests?.length || 0;
+                  const _goingCount = _goingPaddlers + _guestCount;
+                  return (
+                <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0' }}>
+                  {/* Event info row — matches schedule list layout */}
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                    {/* Left column: date + day */}
+                    <div onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+                      <div style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{_dayNum}</div>
+                      <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
+                    </div>
+                    {/* Right column: time/title, going */}
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px', position: 'relative' }}>
+                      <div style={{ fontSize: '22px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
+                          <span style={{ fontWeight: 700 }}>{selectedEvent.time}</span> {selectedEvent.title}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '-1px' }}>
+                        <span onClick={() => setShowGoingList(!showGoingList)} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
+                        {showGoingList && (
                           <div
-                            onClick={() => selectedEvent && handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                            onClick={(e) => e.stopPropagation()}
                             style={{
-                              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              cursor: 'pointer', userSelect: 'none',
-                              border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
-                              backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                              color: isAttending ? '#22c55e' : '#ef4444',
-                              fontSize: '16px', fontWeight: 700,
+                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
+                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
+                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                             }}
                           >
-                            {isAttending ? 'Y' : 'N'}
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
+                              ATTENDING ({_goingCount})
+                            </div>
+                            {_goingCount === 0 ? (
+                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
+                                {paddlers
+                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
+                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                                  .map((p: Paddler) => (
+                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
+                                      {p.firstName} {p.lastName || p.lastInitial}
+                                    </div>
+                                  ))}
+                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
+                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
+                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      );
-                    })()}
-                    <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
-                    <span
-                      onClick={() => setShowAllBoats(!showAllBoats)}
-                      style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                    >
-                      {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
-                    </span>
-                  </div>}
+                  {/* Y/N + all boats/my boats row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    {selectedPaddlerId && (
+                      <div
+                        onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                        style={{
+                          width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', userSelect: 'none',
+                          border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
+                          backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                          color: _isAttending ? '#22c55e' : '#ef4444',
+                          fontSize: '16px', fontWeight: 700,
+                        }}
+                      >
+                        {_isAttending ? 'Y' : 'N'}
+                      </div>
+                    )}
+                    {!isAdmin && (
+                      <span
+                        onClick={() => setShowAllBoats(!showAllBoats)}
+                        style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      >
+                        {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
+                      </span>
+                    )}
+                  </div>
                   {(isAdmin || showAllBoats) ? (<>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
@@ -2020,7 +2023,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   })()
                   )}
                 </div>
-                )}
+                ); })()}
                 </>)}
 
                 {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} scrollToEventId={scrollToEventId} onSelectEvent={(evt) => {
