@@ -1532,7 +1532,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       WebkitTextStroke: '1.5px white',
                       paintOrder: 'stroke fill',
                       textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                      fontSize: leftSidebarOpen ? '32px' : '22px',
+                      fontSize: '32px',
                     }}>
                       {leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
