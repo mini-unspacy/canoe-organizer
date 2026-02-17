@@ -1781,7 +1781,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                   </div>
                   {/* Y/N + all boats/my boats row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '-4px', marginBottom: '8px' }}>
                     {selectedPaddlerId && (
                       <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                       <div
