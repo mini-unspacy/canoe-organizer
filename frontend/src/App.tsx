@@ -1617,104 +1617,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
                 )}
                 {activePage === 'today' && (<>
-                {/* Sort Widget (admin only) */}
-                {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#000000', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
-                    <div ref={sortPillRef} style={{ position: 'relative' }}>
-                      <span
-                        onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-                        style={{
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: 800,
-                          color: '#475569',
-                          userSelect: 'none',
-                          padding: '2px 8px',
-                          backgroundColor: '#e2e8f0',
-                          borderRadius: '999px',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {sidebarOpen && windowWidth < 768 ? 'sort:' : 'sort by:'}
-                      </span>
-                      {sortPillOpen && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
-                            <DragDropContext onDragEnd={(result) => {
-                              if (!result.destination) return;
-                              const newPriority = Array.from(tempPriority);
-                              const [reorderedItem] = newPriority.splice(result.source.index, 1);
-                              newPriority.splice(result.destination.index, 0, reorderedItem);
-                              setTempPriority(newPriority);
-                            }}>
-                            <Droppable droppableId="canoe-priority" direction="vertical">
-                              {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {tempPriority.map((item, index) => (
-                                    <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
-                                      {(provided, snapshot) => (
-                                        <div
-                                          ref={provided.innerRef}
-                                          {...provided.draggableProps}
-                                          {...provided.dragHandleProps}
-                                          style={{
-                                            ...provided.draggableProps.style,
-                                            touchAction: 'none',
-                                            padding: '8px 12px',
-                                            backgroundColor: snapshot.isDragging ? '#dbeafe' : '#f1f5f9',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            color: '#334155',
-                                            cursor: 'grab',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                          }}
-                                        >
-                                          <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
-                                          {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
-                                          <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '12px' }}>⠿</span>
-                                        </div>
-                                      )}
-                                    </Draggable>
-                                  ))}
-                                  {provided.placeholder}
-                                </div>
-                              )}
-                            </Droppable>
-                            </DragDropContext>
-                            <div
-                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
-                              style={{
-                                marginTop: '8px',
-                                padding: '6px 12px',
-                                backgroundColor: '#3b82f6',
-                                color: '#fff',
-                                borderRadius: '6px',
-                                fontSize: '13px',
-                                fontWeight: 700,
-                                textAlign: 'center',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              apply
-                            </div>
-                          </div>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }} />
-                    <span
-                      onClick={handleAssign}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                    >
-                      {sidebarOpen && windowWidth < 768 ? '←' : '←assign'}
-                    </span>
-                    <span
-                      onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                      style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                    >
-                      {sidebarOpen && windowWidth < 768 ? '→' : 'return→'}
-                    </span>
-                </div>}
+                {/* placeholder for removed sort widget - now in Y/N row */}
 
                 {selectedEvent && (() => {
                   const _d = new Date(selectedEvent.date + 'T00:00:00');
@@ -1808,6 +1711,82 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
                       </span>
                     )}
+                    {isAdmin && (<>
+                      <div ref={sortPillRef} style={{ position: 'relative' }}>
+                        <span
+                          onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
+                          style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                        >
+                          sort by:
+                        </span>
+                        {sortPillOpen && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
+                            <DragDropContext onDragEnd={(result) => {
+                              if (!result.destination) return;
+                              const newPriority = Array.from(tempPriority);
+                              const [reorderedItem] = newPriority.splice(result.source.index, 1);
+                              newPriority.splice(result.destination.index, 0, reorderedItem);
+                              setTempPriority(newPriority);
+                            }}>
+                            <Droppable droppableId="canoe-priority" direction="vertical">
+                              {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {tempPriority.map((item, index) => (
+                                    <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          style={{
+                                            ...provided.draggableProps.style,
+                                            touchAction: 'none',
+                                            padding: '8px 12px',
+                                            backgroundColor: snapshot.isDragging ? '#dbeafe' : '#f1f5f9',
+                                            borderRadius: '6px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            color: '#334155',
+                                            cursor: 'grab',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                          }}
+                                        >
+                                          <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
+                                          {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
+                                          <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '12px' }}>⠿</span>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                            </DragDropContext>
+                            <div
+                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
+                              style={{ marginTop: '8px', padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textAlign: 'center', cursor: 'pointer' }}
+                            >
+                              apply
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        onClick={handleAssign}
+                        style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      >
+                        ←assign
+                      </span>
+                      <span
+                        onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+                        style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      >
+                        return→
+                      </span>
+                    </>)}
                   </div>
                   {(isAdmin || showAllBoats) ? (<>
                   {canoes?.map((canoe: Canoe, index: number) => {
