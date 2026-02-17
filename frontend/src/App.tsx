@@ -40,6 +40,12 @@ const CANOE_SORT_OPTIONS: CanoeSortItem[] = [
   { id: "seatPreference", label: "seat", gradient: "from-orange-500 to-amber-500", icon: "💺" },
 ];
 
+// Get today's date in local time (YYYY-MM-DD)
+const getLocalToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 // Get primary seat preference
 const getPrimarySeatPreference = (pref: string | undefined): number | null => {
   if (!pref) return null;
@@ -187,6 +193,59 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   );
 };
 
+const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, sizeW, compact }) => {
+  const firstName = paddler.firstName;
+  const lastName = paddler.lastName || paddler.lastInitial || '';
+  const firstInitial = (firstName?.[0] || '?').toUpperCase();
+  const maxLen = 5;
+  const truncatedFirst = firstName.length > maxLen ? firstName.slice(0, maxLen).toUpperCase() : firstName.toUpperCase();
+  const truncatedLast = lastName.length > maxLen ? lastName.slice(0, maxLen).toUpperCase() : lastName.toUpperCase();
+
+  return (
+    <div
+      className={`relative flex-shrink-0 rounded-full shadow-md
+        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-amber-300/50' : ''}
+        cursor-grab active:cursor-grabbing`}
+      style={{
+        width: sizeW || CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
+        border: '3px dashed #f59e0b',
+        background: 'linear-gradient(to bottom right, #78350f, #92400e)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        touchAction: 'manipulation',
+      }}
+    >
+      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#fbbf24', textTransform: 'uppercase' }}>
+        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
+          {compact ? firstInitial : truncatedFirst}
+        </span>
+        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
+          {compact ? (lastName[0]?.toUpperCase() || '') : truncatedLast}
+        </span>
+      </div>
+      <div
+        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
+        style={{
+          backgroundColor: '#f59e0b',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          width: '14px',
+          height: '14px',
+          fontSize: '7px',
+          bottom: '-5px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }}
+      >
+        G
+      </div>
+    </div>
+  );
+};
+
 // Get view sections based on active view
 const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; label: string; paddlers: Paddler[] }[] => {
   switch (viewBy) {
@@ -255,7 +314,7 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
   });
 };
 
-function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number> }) {
+function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null }) {
   const events = useQuery(api.events.getEvents);
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const addEventMut = useMutation(api.events.addEvent);
@@ -304,20 +363,40 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
     repeatUntil: '',
   });
   const [activeMonth, setActiveMonth] = useState('');
+  const [guestPopupEventId, setGuestPopupEventId] = useState<string | null>(null);
+  const [guestNameInput, setGuestNameInput] = useState('');
+  const addGuestMut = useMutation(api.eventGuests.addGuest);
+  const removeGuestMut = useMutation(api.eventGuests.removeGuest);
+  const guestPopupGuests = useQuery(
+    api.eventGuests.getByEvent,
+    guestPopupEventId ? { eventId: guestPopupEventId } : "skip"
+  );
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
+    if (scrollToEventId) return; // skip restore if we're scrolling to a specific event
     if (scrollPosRef && scheduleScrollRef.current && scrollPosRef.current > 0) {
       scheduleScrollRef.current.scrollTop = scrollPosRef.current;
     }
   }, []);
 
+  // Jump to a specific event when navigating from boats page
+  useEffect(() => {
+    if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
+    const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
+    if (el) {
+      const container = scheduleScrollRef.current;
+      container.scrollTop = el.offsetTop - container.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
+    }
+  }, [scrollToEventId, events]);
+
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
-    const today = new Date().toISOString().slice(0, 10);
-    const upcoming = events.filter((e: { date: string }) => e.date >= today);
+    const today = getLocalToday();
+    const oneWeekAgo = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+    const upcoming = events.filter((e: { date: string }) => e.date >= oneWeekAgo);
     const grouped: Record<string, typeof upcoming> = {};
     for (const e of upcoming) {
       const monthKey = e.date.slice(0, 7);
@@ -360,6 +439,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
       {/* Event list */}
       <div
         ref={scheduleScrollRef}
+        onClick={(e) => { if (guestPopupEventId && !(e.target as HTMLElement).closest?.('[data-guest-popup]')) setGuestPopupEventId(null); }}
         onScroll={() => {
           const container = scheduleScrollRef.current;
           if (!container) return;
@@ -455,7 +535,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 {(['none', 'weekly', 'monthly'] as const).map(r => (
                   <button
                     key={r}
-                    onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [], repeatUntil: r !== 'none' && !f.repeatUntil ? new Date().toISOString().slice(0, 10) : f.repeatUntil }))}
+                    onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [], repeatUntil: r !== 'none' && !f.repeatUntil ? getLocalToday() : f.repeatUntil }))}
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
@@ -554,7 +634,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 <button
                   onClick={async () => {
                     if (!eventForm.title || !eventForm.time) return;
-                    const startDate = eventForm.date || new Date().toISOString().slice(0, 10);
+                    const startDate = eventForm.date || getLocalToday();
                     await addEventMut({
                       title: eventForm.title,
                       date: startDate,
@@ -675,42 +755,44 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                 }
                 const isAttending = attendingEventIds.has(evt.id);
                 return (
+                  <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    key={evt.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 0', borderBottom: '1px solid #4b5563' }}
+                    style={{ display: 'flex', gap: '6px', padding: '18px 0', borderBottom: '1px solid #4b5563' }}
                   >
-                    <div
-                      onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
-                      style={{ width: '48px', textAlign: 'center', flexShrink: 0, cursor: onSelectEvent ? 'pointer' : 'default' }}
-                    >
-                      <div style={{ fontSize: '24px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{dayNum}</div>
-                      <div style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 600 }}>{dayName}</div>
+                    {/* Left column: date + Y/N */}
+                    <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayNum}</div>
+                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayName}</div>
+                      {selectedPaddlerId && (
+                        <div
+                          onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
+                          style={{
+                            width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0, marginTop: '6px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', userSelect: 'none',
+                            border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
+                            backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                            color: isAttending ? '#22c55e' : '#ef4444',
+                            fontSize: '16px', fontWeight: 700,
+                          }}
+                        >
+                          {isAttending ? 'Y' : 'N'}
+                        </div>
+                      )}
                     </div>
-                    {selectedPaddlerId && (
-                      <div
-                        onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
-                        style={{
-                          width: '40px', height: '40px', borderRadius: '8px', flexShrink: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', userSelect: 'none',
-                          border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
-                          backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                          color: isAttending ? '#22c55e' : '#ef4444',
-                          fontSize: '18px', fontWeight: 700,
-                        }}
-                      >
-                        {isAttending ? 'Y' : 'N'}
+                    {/* Right column: time/title, location, badges */}
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px' }}>
+                      <div style={{ fontSize: '22px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span
+                          onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
+                          style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
+                        ><span style={{ fontWeight: 700 }}>{evt.time}</span> {evt.title}</span>
                       </div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                      <div
-                        onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
-                        style={{ fontSize: '20px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onSelectEvent ? 'pointer' : 'default' }}
-                      ><span style={{ fontWeight: 700 }}>{evt.time}</span> {evt.title}</div>
-                      <div style={{ fontSize: '16px', color: '#9ca3af', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {evt.location && <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
-                            padding: '2px 8px', borderRadius: '999px', fontSize: '13px', fontWeight: 600,
+                            padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
                             backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
                             color: evt.eventType === 'practice' ? '#60a5fa' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
                             border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
@@ -718,35 +800,99 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
                             {evt.eventType}
                           </span>
                         )}
-                        {evt.location && <span>{evt.location}</span>}
+                        <span
+                          data-guest-popup
+                          onClick={(e) => { e.stopPropagation(); setGuestPopupEventId(guestPopupEventId === evt.id ? null : evt.id); setGuestNameInput(''); }}
+                          style={{
+                            padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
+                            backgroundColor: guestPopupEventId === evt.id ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.1)',
+                            color: '#f59e0b',
+                            border: `1px solid ${guestPopupEventId === evt.id ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.25)'}`,
+                            cursor: 'pointer', userSelect: 'none',
+                          }}
+                        >
+                          guest?
+                        </span>
+                        {isAdmin && <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <svg
+                          onClick={() => {
+                            setEditingEventId(evt.id);
+                            setEventForm({
+                              title: evt.title, date: evt.date, time: evt.time, location: evt.location,
+                              eventType: (evt.eventType || 'practice') as 'practice' | 'race' | 'other',
+                              repeating: evt.repeating as 'none' | 'weekly' | 'monthly',
+                              weekdays: evt.weekdays || [],
+                              monthdays: evt.monthdays || [],
+                              repeatUntil: evt.repeatUntil || '',
+                            });
+                            setShowEventForm(true);
+                          }}
+                          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ cursor: 'pointer', padding: '4px', boxSizing: 'content-box' }}
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        <svg
+                          onClick={() => deleteEventMut({ eventId: evt.id })}
+                          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ cursor: 'pointer', padding: '4px', boxSizing: 'content-box' }}
+                        >
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                      </span>}
                       </div>
                     </div>
-                    {isAdmin && <svg
-                      onClick={() => {
-                        setEditingEventId(evt.id);
-                        setEventForm({
-                          title: evt.title, date: evt.date, time: evt.time, location: evt.location,
-                          eventType: (evt.eventType || 'practice') as 'practice' | 'race' | 'other',
-                          repeating: evt.repeating as 'none' | 'weekly' | 'monthly',
-                          weekdays: evt.weekdays || [],
-                          monthdays: evt.monthdays || [],
-                          repeatUntil: evt.repeatUntil || '',
-                        });
-                        setShowEventForm(true);
-                      }}
-                      width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ cursor: 'pointer', flexShrink: 0, padding: '6px', boxSizing: 'content-box' }}
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>}
-                    {isAdmin && <svg
-                      onClick={() => deleteEventMut({ eventId: evt.id })}
-                      width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ cursor: 'pointer', flexShrink: 0, padding: '6px', boxSizing: 'content-box' }}
-                    >
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>}
+                  </div>
+                  {/* Guest popup */}
+                  {guestPopupEventId === evt.id && (
+                    <div data-guest-popup onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, right: 0, padding: '4px 0 4px 62px', zIndex: 30 }}>
+                      <div style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '10px 12px', border: '1px solid rgba(245,158,11,0.3)', boxShadow: '0 4px 20px rgba(0,0,0,0.6)' }}>
+                        <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                          <input
+                            type="text"
+                            placeholder="guest name"
+                            value={guestNameInput}
+                            onChange={e => setGuestNameInput(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && guestNameInput.trim()) {
+                                addGuestMut({ eventId: evt.id, name: guestNameInput.trim() });
+                                setGuestNameInput('');
+                              }
+                            }}
+                            style={{ minWidth: 0, flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '5px 8px', color: '#c0c0c0', fontSize: '13px', outline: 'none' }}
+                          />
+                          <button
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              if (guestNameInput.trim()) {
+                                addGuestMut({ eventId: evt.id, name: guestNameInput.trim() });
+                                setGuestNameInput('');
+                              }
+                            }}
+                            style={{ flexShrink: 0, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, border: '1px solid rgba(245,158,11,0.4)', backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', cursor: 'pointer' }}
+                          >
+                            add
+                          </button>
+                        </div>
+                        {guestPopupGuests && guestPopupGuests.length > 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {guestPopupGuests.map(guest => (
+                              <div key={guest._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 0' }}>
+                                <span style={{ fontSize: '13px', color: '#d1d5db' }}>{guest.name}</span>
+                                <span
+                                  onClick={() => removeGuestMut({ guestId: guest._id })}
+                                  style={{ cursor: 'pointer', fontSize: '16px', fontWeight: 700, color: '#ef4444', lineHeight: 1, padding: '0 4px', userSelect: 'none' }}
+                                >
+                                  −
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   </div>
                 );
               }) : (
@@ -781,6 +927,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const updatePaddler = useMutation(api.paddlers.updatePaddler);
   const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
   const setAttendanceMut = useMutation(api.attendance.setAttendance);
+  const removeGuestMut = useMutation(api.eventGuests.removeGuest);
   const allEvents = useQuery(api.events.getEvents);
   const allUsers = useQuery(api.auth.getAllUsers);
   const userEmailByPaddlerId = useMemo(() => {
@@ -832,6 +979,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
+  const [scrollToEventId, setScrollToEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; date: string; time: string; location: string; eventType?: string } | null>(null);
   const [showAllBoats, setShowAllBoats] = useState(false);
   const [showAddSearch, setShowAddSearch] = useState(false);
@@ -867,6 +1015,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     selectedEvent ? { eventId: selectedEvent.id } : "skip"
   );
 
+  const eventGuests = useQuery(
+    api.eventGuests.getByEvent,
+    selectedEvent ? { eventId: selectedEvent.id } : "skip"
+  );
+
   const canoeAssignmentsByCanoe = useMemo(() => {
     const map = new Map<string, { seat: number; paddlerId: string }[]>();
     if (!eventAssignments) return map;
@@ -886,8 +1039,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // Find today's event, or the next upcoming event if none today
   const todayEvent = useMemo(() => {
     if (!allEvents) return undefined; // still loading
-    const today = new Date().toISOString().slice(0, 10);
-    const evt = allEvents.find((e: { date: string }) => e.date === today);
+    const today = getLocalToday();
+    const todaysEvents = allEvents.filter((e: { date: string }) => e.date === today);
+    const evt = todaysEvents.length > 0 ? todaysEvents.reduce((a: { time: string }, b: { time: string }) => a.time >= b.time ? a : b) : null;
     if (!evt) {
       // No event today — find the next upcoming event
       const upcoming = allEvents.filter((e: { date: string }) => e.date > today);
@@ -1061,6 +1215,35 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     return paddlers.filter((p: Paddler) => !assignedPaddlerIds.has(p.id) && eventAttendingPaddlerIds.has(p.id));
   }, [paddlers, selectedEvent, eventAttendingPaddlerIds, assignedPaddlerIds]);
 
+  // Synthetic paddler objects for guests (keyed by guest-${_id})
+  const guestPaddlerMap = useMemo(() => {
+    const map = new Map<string, Paddler>();
+    if (!eventGuests) return map;
+    for (const guest of eventGuests) {
+      const nameParts = guest.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || guest.name;
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      const guestId = `guest-${guest._id}`;
+      map.set(guestId, {
+        _id: guest._id,
+        _creationTime: 0,
+        id: guestId,
+        firstName,
+        lastInitial: lastName ? lastName[0] : firstName[0],
+        lastName: lastName || undefined,
+        gender: 'kane' as const,
+        type: 'casual' as const,
+        ability: 0,
+      } as Paddler);
+    }
+    return map;
+  }, [eventGuests]);
+
+  const unassignedGuests = useMemo(() => {
+    if (!eventGuests) return [];
+    return eventGuests.filter(g => !assignedPaddlerIds.has(`guest-${g._id}`));
+  }, [eventGuests, assignedPaddlerIds]);
+
   // Toggle attendance and unassign from canoe (even locked) when marking NO
   const handleToggleAttendance = useCallback(async (paddlerId: string, eventId: string) => {
     const wasAttending = eventAttendingPaddlerIds?.has(paddlerId);
@@ -1116,10 +1299,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
+    const isGuestDrag = draggableId.startsWith('guest-');
+
     // Handle trash can - mark absent for event, or just unassign if no event
     if (destination.droppableId === "trash-can") {
       if (!selectedEvent) return;
-      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
+      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
       if (draggedPaddler) {
         // Unassign from canoe if assigned in this event
         const paddlerAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
@@ -1131,14 +1316,20 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             seat: paddlerAssignment.seat,
           });
         }
-        // Set attendance to NO
-        await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
+        if (isGuestDrag) {
+          // Remove guest entirely from the event
+          await removeGuestMut({ guestId: draggedPaddler._id as any });
+        } else {
+          // Set attendance to NO
+          await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
+        }
       }
       return;
     }
 
-    // Handle edit area - open edit modal
+    // Handle edit area - open edit modal (not for guests)
     if (destination.droppableId === "edit-area") {
+      if (isGuestDrag) return;
       console.log('Edit area drop detected, looking for paddler:', draggableId);
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
       console.log('Found paddler:', draggedPaddler);
@@ -1163,7 +1354,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
     if (!selectedEvent) return;
 
-    const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
+    const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
     if (!draggedPaddler) return;
 
     // Look up current assignment from eventAssignments
@@ -1205,7 +1396,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
     // SWAP - handle seamlessly without going through staging
     if (existingPaddlerId && existingPaddlerId !== draggableId) {
-      const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId);
+      const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
       if (existingPaddler && oldCanoeId && oldSeat) {
         // Direct swap - both operations in parallel
         await Promise.all([
@@ -1363,7 +1554,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     ]).map(({ page, icon, label }) => (
                       <span
                         key={page}
-                        onClick={() => { setActivePage(page); if (page === 'today') setSelectedEvent(todayEvent || null); }}
+                        onClick={() => { setActivePage(page); setScrollToEventId(null); if (page === 'today') setSelectedEvent(todayEvent || null); }}
                         title={label}
                         className="cursor-pointer transition-colors"
                         style={{
@@ -1423,10 +1614,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const dayName = dayNames[d.getDay()];
                     const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const goingCount = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
+                    const goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
+                    const guestCount = eventGuests?.length || 0;
+                    const goingCount = goingPaddlers + guestCount;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
-                        <span style={{ overflow: 'hidden' }}>{dayName} {dayMonth}</span>
+                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
                         {!sidebarOpen && <>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
@@ -1459,6 +1652,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       {p.firstName} {p.lastName || p.lastInitial}
                                     </div>
                                   ))}
+                                {eventGuests && eventGuests.length > 0 && eventGuests.map(g => (
+                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
+                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
@@ -1599,7 +1797,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       );
                     })()}
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span style={{ overflow: 'hidden' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
+                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
                   </div>
                   {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
                     <span
@@ -1726,7 +1924,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoeEventAssignments.find(a => a.seat === seat);
-                            const assignedPaddler = assignment ? canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) : undefined;
+                            const assignedPaddler = assignment ? (canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId)) : undefined;
 
                             return (
                               <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
@@ -1747,7 +1945,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
                                         {(provided, snapshot) => (
                                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
-                                            <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} isAdmin={isAdmin} />
+                                            {assignedPaddler.id.startsWith('guest-')
+                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
+                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} isAdmin={isAdmin} />
+                                            }
                                           </div>
                                         )}
                                       </Draggable>
@@ -1799,13 +2000,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = myCanoeAssignments.find((a: { seat: number }) => a.seat === seat);
-                            const assignedPaddler = assignment ? paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) : null;
+                            const assignedPaddler = assignment ? (paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId) || null) : null;
                             const isMe = assignedPaddler?.id === currentUser.paddlerId;
+                            const isGuest = assignedPaddler?.id.startsWith('guest-');
                             return (
                               <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent' }}>
                                 <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
                                 {assignedPaddler ? (
-                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>{assignedPaddler.firstName} {assignedPaddler.lastName}</span>
+                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : isGuest ? { color: '#fbbf24' } : undefined}>
+                                    {assignedPaddler.firstName} {assignedPaddler.lastName}
+                                    {isGuest && <span style={{ fontSize: '14px', color: '#f59e0b', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
+                                  </span>
                                 ) : (
                                   <span>---</span>
                                 )}
@@ -1821,8 +2026,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 )}
                 </>)}
 
-                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} onSelectEvent={(evt) => {
+                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} scrollToEventId={scrollToEventId} onSelectEvent={(evt) => {
                   setSelectedEvent(evt);
+                  setScrollToEventId(null);
                   setActivePage('today');
                 }} />}
 
@@ -2338,6 +2544,47 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     );
                   }}
                 </Droppable>
+                {/* Guest paddler circles (draggable) */}
+                {unassignedGuests.length > 0 && (
+                  <Droppable droppableId="staging-guests" direction="horizontal" isDropDisabled={dragFromStaging}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        style={{ padding: '4px', marginTop: '8px' }}
+                      >
+                        <span className="font-semibold text-sm" style={{ color: '#f59e0b', display: 'block', padding: '4px 0 2px' }}>
+                          guests ({unassignedGuests.length})
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {unassignedGuests.map((guest, index) => {
+                            const guestId = `guest-${guest._id}`;
+                            const guestPaddler = guestPaddlerMap.get(guestId);
+                            if (!guestPaddler) return null;
+                            return (
+                              <Draggable draggableId={guestId} index={index} key={guestId} shouldRespectForcePress={false}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    tabIndex={-1}
+                                    role="none"
+                                    aria-roledescription=""
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                  >
+                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} />
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </div>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                )}
                 </div>
                 )}
                 {/* Bottom spacer to keep content above iOS browser bar */}
