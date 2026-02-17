@@ -1797,7 +1797,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       );
                     })()}
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time}{!sidebarOpen && ` ${selectedEvent?.title}`}</span>
+                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
                   </div>
                   {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
                     <span
