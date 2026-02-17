@@ -2007,9 +2007,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent' }}>
                                 <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
                                 {assignedPaddler ? (
-                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : isGuest ? { color: '#fb923c' } : undefined}>
+                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>
                                     {assignedPaddler.firstName} {assignedPaddler.lastName}
-                                    {isGuest && <span style={{ fontSize: '14px', color: '#f97316', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
+                                    {isGuest && <span style={{ fontSize: '14px', color: '#9ca3af', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
                                   </span>
                                 ) : (
                                   <span>---</span>
