@@ -394,7 +394,6 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
-    const today = getLocalToday();
     const oneWeekAgo = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
     const upcoming = events.filter((e: { date: string }) => e.date >= oneWeekAgo);
     const grouped: Record<string, typeof upcoming> = {};
@@ -878,7 +877,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                         </div>
                         {guestPopupGuests && guestPopupGuests.length > 0 && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {guestPopupGuests.map(guest => (
+                            {guestPopupGuests.map((guest: any) => (
                               <div key={guest._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 0' }}>
                                 <span style={{ fontSize: '13px', color: '#d1d5db' }}>{guest.name}</span>
                                 <span
@@ -1242,7 +1241,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
   const unassignedGuests = useMemo(() => {
     if (!eventGuests) return [];
-    return eventGuests.filter(g => !assignedPaddlerIds.has(`guest-${g._id}`));
+    return eventGuests.filter((g: any) => !assignedPaddlerIds.has(`guest-${g._id}`));
   }, [eventGuests, assignedPaddlerIds]);
 
   // Toggle attendance and unassign from canoe (even locked) when marking NO
@@ -1653,7 +1652,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       {p.firstName} {p.lastName || p.lastInitial}
                                     </div>
                                   ))}
-                                {eventGuests && eventGuests.length > 0 && eventGuests.map(g => (
+                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
                                   <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
                                     {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
                                   </div>
@@ -2558,7 +2557,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           guests ({unassignedGuests.length})
                         </span>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {unassignedGuests.map((guest, index) => {
+                          {unassignedGuests.map((guest: any, index: number) => {
                             const guestId = `guest-${guest._id}`;
                             const guestPaddler = guestPaddlerMap.get(guestId);
                             if (!guestPaddler) return null;
