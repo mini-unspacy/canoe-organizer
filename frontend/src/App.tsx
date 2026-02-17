@@ -376,19 +376,18 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
-    if (scrollToEventId) return; // skip restore if we're scrolling to a specific event
+    if (scrollToEventId) return;
     if (scrollPosRef && scheduleScrollRef.current && scrollPosRef.current > 0) {
       scheduleScrollRef.current.scrollTop = scrollPosRef.current;
     }
   }, []);
 
-  // Jump to a specific event when navigating from boats page
+  // Jump to a specific event at the top
   useEffect(() => {
     if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
     const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
     if (el) {
-      const container = scheduleScrollRef.current;
-      container.scrollTop = el.offsetTop - container.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
+      scheduleScrollRef.current.scrollTop = el.offsetTop - scheduleScrollRef.current.offsetTop;
     }
   }, [scrollToEventId, events]);
 
@@ -453,7 +452,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 16px', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 0', position: 'relative' }}
         className="scrollbar-hidden"
       >
         {/* Floating + event button (admin only) */}
@@ -661,7 +660,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
         {/* Event list by month */}
         {allMonths.map(m => {
           const group = eventsByMonth.find(g => g.month === m.month);
-          const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
               <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
@@ -756,7 +755,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    style={{ display: 'flex', gap: '6px', padding: '18px 0', borderBottom: '1px solid #4b5563' }}
+                    style={{ display: 'flex', gap: '6px', padding: '10px 0', borderBottom: '1px solid #4b5563' }}
                   >
                     {/* Left column: date + Y/N */}
                     <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -780,12 +779,12 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                       )}
                     </div>
                     {/* Right column: time/title, location, badges */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px' }}>
-                      <div style={{ fontSize: '22px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px' }}>
+                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span
                           onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
                           style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
-                        ><span style={{ fontWeight: 700 }}>{evt.time}</span> {evt.title}</span>
+                        >{evt.time} {evt.title}</span>
                       </div>
                       {evt.location && <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
@@ -1526,6 +1525,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
+                  <div onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 4px', cursor: 'pointer' }}>
+                    <span style={{
+                      fontFamily: "'UnifrakturMaguntia', cursive",
+                      color: '#dc2626',
+                      WebkitTextStroke: '1.5px white',
+                      paintOrder: 'stroke fill',
+                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                      fontSize: '32px',
+                    }}>
+                      {leftSidebarOpen ? 'Lokahi' : 'L'}
+                    </span>
+                  </div>
                   <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: leftSidebarOpen ? 'flex-end' : 'center' }}>
                     <span
                       onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
@@ -1546,15 +1557,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
                     {([
-                      { page: 'today' as const, icon: '⊞', label: 'event' },
+                      { page: 'today' as const, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /><circle cx="12" cy="15" r="2.5" /><path d="M10 17l-1.5 4 1.5-1 1.5 1L10 17" /><path d="M14 17l-1.5 4 1.5-1 1.5 1L14 17" /></svg>, label: 'event' },
                       { page: 'schedule' as const, icon: '☰', label: 'schedule' },
-                      { page: 'roster' as const, icon: '♱', label: 'roster' },
+                      { page: 'roster' as const, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></svg>, label: 'roster' },
                       { page: 'attendance' as const, icon: '✓', label: 'attendance' },
                       { page: 'crews' as const, icon: '⛵', label: 'crews' },
                     ]).map(({ page, icon, label }) => (
                       <span
                         key={page}
-                        onClick={() => { setActivePage(page); setScrollToEventId(null); if (page === 'today') setSelectedEvent(todayEvent || null); }}
+                        onClick={() => { setActivePage(page); if (page === 'today') setSelectedEvent(todayEvent || null); }}
                         title={label}
                         className="cursor-pointer transition-colors"
                         style={{
@@ -1595,81 +1606,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               {/* MIDDLE COLUMN - CANOES */}
               <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                {/* Header */}
-                <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
-                  <span
-                    style={{
-                      fontFamily: "'UnifrakturMaguntia', cursive",
-                      color: '#dc2626',
-                      WebkitTextStroke: '1.5px white',
-                      paintOrder: 'stroke fill',
-                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                      fontSize: '28px',
-                    }}
-                  >
-                    Lokahi
-                  </span>
-                  {activePage === 'today' && (selectedEvent ? (() => {
-                    const d = new Date(selectedEvent.date + 'T00:00:00');
-                    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                    const dayName = dayNames[d.getDay()];
-                    const dayMonth = `${d.getMonth() + 1}/${d.getDate()}`;
-                    const goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
-                    const guestCount = eventGuests?.length || 0;
-                    const goingCount = goingPaddlers + guestCount;
-                    return (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
-                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
-                        <span
-                          onClick={() => setShowGoingList(!showGoingList)}
-                          style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
-                        >
-                          ({goingCount} going)
-                        </span>
-                        {showGoingList && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
-                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                            }}
-                          >
-                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
-                              ATTENDING ({goingCount})
-                            </div>
-                            {goingCount === 0 ? (
-                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
-                            ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
-                                {paddlers
-                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                                  .map((p: Paddler) => (
-                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
-                                      {p.firstName} {p.lastName || p.lastInitial}
-                                    </div>
-                                  ))}
-                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
-                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </span>
-                    );
-                  })() : (
+                {/* Header — no-event fallback */}
+                {activePage === 'today' && !selectedEvent && (
+                  <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                     <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
                       const now = new Date();
                       const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                       return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
                     })()}</span>
-                  ))}
-                </div>
+                  </div>
+                )}
                 {activePage === 'today' && (<>
                 {/* Sort Widget (admin only) */}
                 {isAdmin && selectedEvent && <div className="flex items-center px-1 py-1 sticky z-20" style={{ top: 0, backgroundColor: '#000000', width: '100%', maxWidth: '600px', margin: '0 auto', gap: '8px' }}>
@@ -1770,41 +1716,99 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </span>
                 </div>}
 
-                {selectedEvent && (
-                <div style={{ width: '100%', maxWidth: '600px', margin: '20px auto 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', fontWeight: 800, color: '#e5e7eb', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-                    {selectedPaddlerId && (() => {
-                      const isAttending = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                {selectedEvent && (() => {
+                  const _d = new Date(selectedEvent.date + 'T00:00:00');
+                  const _dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                  const _dayName = _dayNames[_d.getDay()];
+                  const _dayNum = _d.getDate();
+                  const _isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
+                  const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
+                  const _guestCount = eventGuests?.length || 0;
+                  const _goingCount = _goingPaddlers + _guestCount;
+                  return (
+                <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0' }}>
+                  {/* Event info row — matches schedule list layout */}
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                    {/* Left column: date + day */}
+                    <div onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
+                      <div style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{_dayNum}</div>
+                      <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
+                    </div>
+                    {/* Right column: time/title, going */}
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px', position: 'relative' }}>
+                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
+                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
+                          {selectedEvent.time} {selectedEvent.title}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
+                        <span onClick={() => setShowGoingList(!showGoingList)} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
+                        {showGoingList && (
                           <div
-                            onClick={() => selectedEvent && handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                            onClick={(e) => e.stopPropagation()}
                             style={{
-                              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              cursor: 'pointer', userSelect: 'none',
-                              border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
-                              backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                              color: isAttending ? '#22c55e' : '#ef4444',
-                              fontSize: '16px', fontWeight: 700,
+                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
+                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
+                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                             }}
                           >
-                            {isAttending ? 'Y' : 'N'}
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
+                              ATTENDING ({_goingCount})
+                            </div>
+                            {_goingCount === 0 ? (
+                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
+                                {paddlers
+                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
+                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                                  .map((p: Paddler) => (
+                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
+                                      {p.firstName} {p.lastName || p.lastInitial}
+                                    </div>
+                                  ))}
+                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
+                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
+                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      );
-                    })()}
-                    <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
-                    <span
-                      onClick={() => setShowAllBoats(!showAllBoats)}
-                      style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                    >
-                      {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
-                    </span>
-                  </div>}
+                  {/* Y/N + all boats/my boats row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '-4px', marginBottom: '8px' }}>
+                    {selectedPaddlerId && (
+                      <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                      <div
+                        onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+                        style={{
+                          width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', userSelect: 'none',
+                          border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
+                          backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                          color: _isAttending ? '#22c55e' : '#ef4444',
+                          fontSize: '16px', fontWeight: 700,
+                        }}
+                      >
+                        {_isAttending ? 'Y' : 'N'}
+                      </div>
+                      </div>
+                    )}
+                    {!isAdmin && (
+                      <span
+                        onClick={() => setShowAllBoats(!showAllBoats)}
+                        style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '8px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+                      >
+                        {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
+                      </span>
+                    )}
+                  </div>
                   {(isAdmin || showAllBoats) ? (<>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
@@ -2021,7 +2025,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   })()
                   )}
                 </div>
-                )}
+                ); })()}
                 </>)}
 
                 {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} scrollToEventId={scrollToEventId} onSelectEvent={(evt) => {
