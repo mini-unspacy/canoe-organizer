@@ -226,7 +226,8 @@ button:focus-visible {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: #000000 !important;
+    color: #e5e7eb;
   }
 }
 
