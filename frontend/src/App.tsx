@@ -779,12 +779,12 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
                       )}
                     </div>
                     {/* Right column: time/title, location, badges */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '-2px' }}>
-                      <div style={{ fontSize: '22px', color: '#e0e0e0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px' }}>
+                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span
                           onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
                           style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
-                        ><span style={{ fontWeight: 700 }}>{evt.time}</span> {evt.title}</span>
+                        >{evt.time} {evt.title}</span>
                       </div>
                       {evt.location && <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
