@@ -1620,7 +1620,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
                         <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
-                        {!sidebarOpen && <>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
                           style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
@@ -1661,7 +1660,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             )}
                           </div>
                         )}
-                        </>}
                       </span>
                     );
                   })() : (
