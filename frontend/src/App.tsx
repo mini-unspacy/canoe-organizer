@@ -1735,7 +1735,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
                     </div>
                     {/* Right column: time/title, going */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '1px', position: 'relative' }}>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px', position: 'relative' }}>
                       <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
                           {selectedEvent.time} {selectedEvent.title}
