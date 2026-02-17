@@ -1525,7 +1525,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
-                  <div style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 4px' }}>
+                  <div onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 4px', cursor: 'pointer' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#dc2626',
