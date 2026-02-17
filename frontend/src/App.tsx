@@ -1742,7 +1742,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         </span>
                       </div>
                       <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
-                        <span onClick={() => setShowGoingList(!showGoingList)} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
+                        <span onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
                         {showGoingList && (
                           <div
                             onClick={(e) => e.stopPropagation()}
