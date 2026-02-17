@@ -1525,14 +1525,14 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
-                  <div onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 4px', cursor: 'pointer' }}>
+                  <div onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 2px', cursor: 'pointer' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#dc2626',
                       WebkitTextStroke: '1.5px white',
                       paintOrder: 'stroke fill',
                       textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
-                      fontSize: '32px',
+                      fontSize: '36px',
                     }}>
                       {leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
@@ -1684,7 +1684,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                   </div>
                   {/* Y/N + all boats/my boats row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '-4px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '-2px', marginBottom: '8px' }}>
                     {selectedPaddlerId && (
                       <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                       <div
@@ -1774,17 +1774,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           </div>
                         )}
                       </div>
+                      <div style={{ flex: 1 }} />
                       <span
                         onClick={handleAssign}
                         style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                       >
-                        ←assign
+                        {sidebarOpen ? '←' : '←assign'}
                       </span>
                       <span
                         onClick={() => { triggerAnimation(); handleUnassignAll(); }}
                         style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
                       >
-                        return→
+                        {sidebarOpen ? '→' : 'return→'}
                       </span>
                     </>)}
                   </div>
