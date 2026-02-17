@@ -314,7 +314,7 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
   });
 };
 
-function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number> }) {
+function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null }) {
   const events = useQuery(api.events.getEvents);
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const addEventMut = useMutation(api.events.addEvent);
@@ -376,10 +376,20 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef }: { onSelec
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
+    if (scrollToEventId) return;
     if (scrollPosRef && scheduleScrollRef.current && scrollPosRef.current > 0) {
       scheduleScrollRef.current.scrollTop = scrollPosRef.current;
     }
   }, []);
+
+  // Jump to a specific event at the top
+  useEffect(() => {
+    if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
+    const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
+    if (el) {
+      scheduleScrollRef.current.scrollTop = el.offsetTop - scheduleScrollRef.current.offsetTop;
+    }
+  }, [scrollToEventId, events]);
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
@@ -968,6 +978,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
+  const [scrollToEventId, setScrollToEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; date: string; time: string; location: string; eventType?: string } | null>(null);
   const [showAllBoats, setShowAllBoats] = useState(false);
   const [showAddSearch, setShowAddSearch] = useState(false);
@@ -1607,7 +1618,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     const goingCount = goingPaddlers + guestCount;
                     return (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', color: '#c0c0c0', fontWeight: 700, position: 'relative', whiteSpace: 'nowrap' }}>
-                        <span onClick={() => setActivePage('schedule')} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
+                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{dayName} {dayMonth}</span>
                         <span
                           onClick={() => setShowGoingList(!showGoingList)}
                           style={{ fontSize: '14px', color: '#3b82f6', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
@@ -1783,7 +1794,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       );
                     })()}
                     <span style={{ color: '#6b7280', flexShrink: 0 }}>-</span>
-                    <span onClick={() => setActivePage('schedule')} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
+                    <span onClick={() => { if (selectedEvent) { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); } }} style={{ overflow: 'hidden', cursor: 'pointer' }}>{selectedEvent?.time} {selectedEvent?.title}</span>
                   </div>
                   {!isAdmin && <div style={{ marginBottom: '6px', textAlign: 'center' }}>
                     <span
@@ -2012,8 +2023,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 )}
                 </>)}
 
-                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} onSelectEvent={(evt) => {
+                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} scrollToEventId={scrollToEventId} onSelectEvent={(evt) => {
                   setSelectedEvent(evt);
+                  setScrollToEventId(null);
                   setActivePage('today');
                 }} />}
 
