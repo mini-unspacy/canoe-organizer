@@ -1870,40 +1870,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             }
                           </svg>}
                         </div>
-                        {/* -/+ buttons on last canoe */}
-                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '6px', padding: '4px 4px 0' }}>
-                          <span
-                            onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                            className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#000000', border: '1px solid #64748b',
-                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
-                              color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
-                            }}
-                            title="Remove canoe"
-                          >
-                            −
-                          </span>
-                          <span
-                            onClick={() => handleAddCanoeAfter(index)}
-                            className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#000000', border: '1px solid #64748b',
-                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
-                              color: '#94a3b8',
-                            }}
-                            title="Add canoe"
-                          >
-                            +
-                          </span>
-                        </div>}
-
                         {/* 6 seats in a single vertical column */}
-                        <div style={{ flex: 1, padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px', flex: 1 }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -1936,7 +1904,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                         )}
                                       </Draggable>
                                     ) : (
-                                      <div style={{ fontSize: '9px', color: '#4b5563', padding: '0 2px' }}>{seat}</div>
+                                      <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '16px', fontWeight: 700, color: '#4b5563', padding: '0 4px' }}>{seat}.</div>
                                     )}
                                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
@@ -1945,6 +1913,37 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             );
                           })}
                         </div>
+                        {/* -/+ buttons on last canoe */}
+                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '6px', padding: '4px 4px 0' }}>
+                          <span
+                            onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
+                            className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              width: '18px', height: '18px', borderRadius: '50%',
+                              backgroundColor: '#000000', border: '1px solid #64748b',
+                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
+                              color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
+                            }}
+                            title="Remove canoe"
+                          >
+                            −
+                          </span>
+                          <span
+                            onClick={() => handleAddCanoeAfter(index)}
+                            className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              width: '18px', height: '18px', borderRadius: '50%',
+                              backgroundColor: '#000000', border: '1px solid #64748b',
+                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
+                              color: '#94a3b8',
+                            }}
+                            title="Add canoe"
+                          >
+                            +
+                          </span>
+                        </div>}
                       </div>
                     );
                   })}
