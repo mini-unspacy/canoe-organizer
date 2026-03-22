@@ -165,7 +165,6 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
         fontWeight: 700,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
         textTransform: 'uppercase',
         lineHeight: 1,
       }}>
@@ -209,7 +208,6 @@ const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; siz
         fontWeight: 700,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
         textTransform: 'uppercase',
         lineHeight: 1,
       }}>
