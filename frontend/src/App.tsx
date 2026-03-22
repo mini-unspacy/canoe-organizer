@@ -1812,11 +1812,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                             style={{
                               fontFamily: "'Courier New', Courier, monospace",
-                              fontSize: '14px',
+                              fontSize: '18px',
                               fontWeight: 900,
                               color: '#ffffff',
                               textTransform: 'uppercase',
-                              letterSpacing: '1px',
+                              letterSpacing: '2px',
                             }}
                           >
                             BOAT: {canoeDesignations[canoe.id] || '???'}
