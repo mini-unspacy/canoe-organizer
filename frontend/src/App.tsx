@@ -1365,35 +1365,38 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
-    // SWAP - handle seamlessly without going through staging
-    if (existingPaddlerId && existingPaddlerId !== draggableId) {
-      const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
-      if (existingPaddler && oldCanoeId && oldSeat) {
-        // Direct swap - all operations in parallel to avoid flicker
-        await Promise.all([
-          unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
-          unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat }),
-        ]);
-        await Promise.all([
-          assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat }),
-          assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat }),
-        ]);
-      } else {
-        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
-        await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-      }
-      return;
-    }
+    // Hide both paddlers from staging immediately to avoid flicker
+    const idsToHide = [draggableId];
+    if (existingPaddlerId && existingPaddlerId !== draggableId) idsToHide.push(existingPaddlerId);
+    setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.add(id)); return next; });
 
-    // Move to new seat - hide from staging immediately to avoid flicker
-    setPendingAssignIds(prev => new Set(prev).add(draggableId));
     try {
+      // SWAP - handle seamlessly without going through staging
+      if (existingPaddlerId && existingPaddlerId !== draggableId) {
+        const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
+        if (existingPaddler && oldCanoeId && oldSeat) {
+          await Promise.all([
+            unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
+            unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat }),
+          ]);
+          await Promise.all([
+            assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat }),
+            assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat }),
+          ]);
+        } else {
+          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
+          await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
+        }
+        return;
+      }
+
+      // Simple move
       await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
       if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
         await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
       }
     } finally {
-      setPendingAssignIds(prev => { const next = new Set(prev); next.delete(draggableId); return next; });
+      setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.delete(id)); return next; });
     }
   };
 
