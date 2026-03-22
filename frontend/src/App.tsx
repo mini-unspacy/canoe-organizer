@@ -1451,8 +1451,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const canoeMargin = 20;
   const gridPad = 32; // 16px each side
   const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
-  // Static height: 6 paddlers at 18px font + 4px gap each + 18px*2 vertical padding
-  const canoeRowHeight = 6 * 22 + 5 * 4 + 36; // 6 rows × 22px + 5 gaps × 4px + 36px padding = 188px
+  // Static height: 6 paddler rows + gaps, matching natural filled-boat height
+  const canoeRowHeight = 6 * 20 + 5 * 4 + 8; // 148px
   // Legacy sizing kept for compatibility
   const leftControlWidth = 36;
   const canoePadding = 16;
