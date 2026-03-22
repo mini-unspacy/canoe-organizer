@@ -1884,7 +1884,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    style={{ position: 'relative' }}
+                                    style={{ position: 'relative', height: '18px', minHeight: '18px' }}
                                   >
                                     {/* Empty seat / drag-over visual */}
                                     {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
