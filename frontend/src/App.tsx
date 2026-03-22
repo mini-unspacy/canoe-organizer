@@ -1905,7 +1905,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                         )}
                                       </Draggable>
                                     ) : (
-                                      <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '16px', fontWeight: 700, color: '#4b5563', padding: '0 4px' }}>{seat}.</div>
+                                      <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#4b5563', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
                                     )}
                                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
