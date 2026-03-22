@@ -81,12 +81,12 @@ const sortPaddlersByPriority = (paddlers: Paddler[], priority: CanoeSortItem[]):
 };
 
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin }) => {
-  const circleRef = useRef<HTMLDivElement>(null);
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin, variant = 'boat' }) => {
+  const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (animationKey === 0) return;
-    const el = circleRef.current;
+    const el = rowRef.current;
     if (!el) return;
 
     const anim = el.animate(
@@ -106,142 +106,115 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
     return () => anim.cancel();
   }, [animationKey, animationDelay]);
 
-  const abilityColor = paddler.ability === 5
-    ? 'from-emerald-400 to-emerald-600'
-    : paddler.ability >= 3
-      ? 'from-amber-400 to-amber-600'
-      : 'from-rose-400 to-rose-600';
+  const genderTextColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
 
-  const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
-
-  const firstInitial = (paddler.firstName?.[0] || '?').toUpperCase();
+  const firstName = paddler.firstName || '?';
   const lastName = paddler.lastName || paddler.lastInitial || '?';
-  const maxFirstNameLen = 5;
-  const truncatedFirst = paddler.firstName.length > maxFirstNameLen
-    ? paddler.firstName.slice(0, maxFirstNameLen).toUpperCase()
-    : paddler.firstName.toUpperCase();
-  const maxLastNameLen = 5;
-  const truncatedLast = lastName.length > maxLastNameLen
-    ? lastName.slice(0, maxLastNameLen).toUpperCase()
-    : lastName.toUpperCase();
+  const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
 
-  // Inner ability circle color: red (1) to green (5)
-  const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
-    paddler.ability === 4 ? '#84cc16' :
-    paddler.ability === 3 ? '#eab308' :
-    paddler.ability === 2 ? '#f97316' :
-    '#ef4444';
+  // Ability gradient color
+  const abilityGradient = paddler.ability === 5 ? '#059669'
+    : paddler.ability >= 3 ? '#d97706' : '#e11d48';
+
+  const isSidebar = variant === 'sidebar';
+  const fontSize = '18px';
+  const badgeFs = '10px';
+  const badgeSize = '12px';
+
+  // Type letter and color
+  const typeLetter = paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V';
+  const typeColor = paddler.type === 'racer' ? '#8b5cf6' : paddler.type === 'casual' ? '#3b82f6' : '#64748b';
 
   return (
     <div
-      ref={circleRef}
-      className={`relative flex-shrink-0 rounded-full border-[3px] shadow-md bg-gradient-to-br ${abilityColor}
-        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : ''}
+      ref={rowRef}
+      className={`flex items-center flex-shrink-0
+        ${isDragging ? 'opacity-80' : ''}
         cursor-grab active:cursor-grabbing`}
       style={{
-        width: sizeW || CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        borderColor: genderBorderColor,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        gap: '3px',
+        padding: '0 2px',
         touchAction: 'manipulation',
+        width: '100%',
+        lineHeight: 1,
       }}
     >
-      {/* Name - two lines centered, all caps */}
-      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#e0e0e0', textTransform: 'uppercase' }}>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? firstInitial : truncatedFirst}</span>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? lastName[0]?.toUpperCase() || '?' : truncatedLast}</span>
-      </div>
-      
-      {/* Ability badge - small circle at bottom left (admin only) */}
-      {isAdmin && <div
-        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: abilityInnerColor,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '14px',
-          height: '14px',
-          fontSize: '8px',
-          bottom: '-5px',
-          left: '1px'
-        }}
-      >
-        {paddler.ability}
-      </div>}
-
-      {/* Type badge - square at bottom right (admin only) */}
-      {isAdmin && <div
-        className="absolute flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: paddler.type === 'racer' ? '#8b5cf6' :
-                          paddler.type === 'casual' ? '#3b82f6' : '#64748b',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '12px',
-          height: '12px',
-          fontSize: '6px',
-          bottom: '-5px',
-          right: '1px',
-          borderRadius: '2px'
-        }}
-      >
-        {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
-      </div>}
+      {/* Inline badges: gradient dot, ability number, type letter */}
+      {isAdmin && (
+        <>
+          <span style={{
+            display: 'inline-block', width: badgeSize, height: badgeSize, borderRadius: '2px',
+            backgroundColor: abilityGradient, flexShrink: 0,
+          }} />
+          <span style={{ fontSize: badgeFs, fontWeight: 800, color: abilityGradient, flexShrink: 0 }}>
+            {paddler.ability}
+          </span>
+          <span style={{
+            fontSize: badgeFs, fontWeight: 800, color: '#fff', flexShrink: 0,
+            backgroundColor: typeColor, borderRadius: '2px',
+            padding: '0 2px', lineHeight: '1.3',
+          }}>
+            {typeLetter}
+          </span>
+        </>
+      )}
+      {/* Name */}
+      <span style={{
+        color: genderTextColor,
+        fontSize,
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}>
+        {displayName}
+      </span>
     </div>
   );
 };
 
-const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, sizeW, compact }) => {
+const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, sizeW, compact, variant = 'boat' }) => {
   const firstName = paddler.firstName;
   const lastName = paddler.lastName || paddler.lastInitial || '';
-  const firstInitial = (firstName?.[0] || '?').toUpperCase();
-  const maxLen = 5;
-  const truncatedFirst = firstName.length > maxLen ? firstName.slice(0, maxLen).toUpperCase() : firstName.toUpperCase();
-  const truncatedLast = lastName.length > maxLen ? lastName.slice(0, maxLen).toUpperCase() : lastName.toUpperCase();
+  const isSidebar = variant === 'sidebar';
+  const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
+  const fontSize = '18px';
+  const badgeFs = '10px';
 
   return (
     <div
-      className={`relative flex-shrink-0 rounded-full shadow-md
-        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-amber-300/50' : ''}
+      className={`flex items-center flex-shrink-0
+        ${isDragging ? 'opacity-80' : ''}
         cursor-grab active:cursor-grabbing`}
       style={{
-        width: sizeW || CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        border: '3px dashed #f59e0b',
-        background: 'linear-gradient(to bottom right, #78350f, #92400e)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        gap: '3px',
+        padding: '0 2px',
         touchAction: 'manipulation',
+        width: '100%',
+        lineHeight: 1,
       }}
     >
-      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#fbbf24', textTransform: 'uppercase' }}>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
-          {compact ? firstInitial : truncatedFirst}
-        </span>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
-          {compact ? (lastName[0]?.toUpperCase() || '') : truncatedLast}
-        </span>
-      </div>
-      <div
-        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: '#f59e0b',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '14px',
-          height: '14px',
-          fontSize: '7px',
-          bottom: '-5px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}
-      >
+      <span style={{
+        fontSize: badgeFs, fontWeight: 800, color: '#fff', flexShrink: 0,
+        backgroundColor: '#f59e0b', borderRadius: '2px',
+        padding: '0 2px', lineHeight: '1.3',
+      }}>
         G
-      </div>
+      </span>
+      <span style={{
+        color: '#fbbf24',
+        fontSize,
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}>
+        {displayName}
+      </span>
     </div>
   );
 };
@@ -1469,21 +1442,26 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const dataLoading = canoes === undefined || paddlers === undefined;
   const hasNoData = !dataLoading && canoes.length === 0 && paddlers.length === 0;
 
-  // Calculate dynamic horizontal sizing (no CSS transform)
-  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 176 : 24) : 0;
+  // Calculate layout sizing
+  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 170 : 24) : 0;
   const leftSidebarW = leftSidebarOpen ? 110 : 28;
   const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
+  // Static boat dimensions based on sidebar-closed layout
+  const sidebarClosedW = 24;
+  const containerWidthClosed = windowWidth - sidebarClosedW - leftSidebarW - flexGap - mainPad;
+  const canoeMargin = 20;
+  const boatWidth = Math.floor((containerWidthClosed - canoeMargin) / 2);
+  // Static height: 6 paddlers at 18px font + 4px gap each + 18px*2 vertical padding
+  const canoeRowHeight = 6 * 22 + 5 * 4 + 36; // 6 rows × 22px + 5 gaps × 4px + 36px padding = 188px
+  // Legacy sizing kept for compatibility
   const leftControlWidth = 36;
   const canoePadding = 16;
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
   const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
   const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6) - 2));
-  // Canoe row height: fit 6 rows in viewport minus sticky sort bar (~32px)
   const sortBarHeight = 32;
-  const canoeMargin = 20;
-  const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 7);
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
@@ -1818,14 +1796,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </>)}
                   </div>
                   {(isAdmin || showAllBoats) ? (<>
+                  <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 0`, justifyContent: 'center' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: 'transparent', padding: '8px 4px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
+                        className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex gap-0`}
+                        style={{ backgroundColor: 'transparent', padding: '20px 8px 10px 8px', position: 'relative', height: `${canoeRowHeight}px`, boxSizing: 'border-box', overflow: 'visible' }}
                       >
                         {/* Lock button - top right (admin only) */}
                         {isAdmin && <svg
@@ -1898,7 +1877,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           )}
                         </div>
                         {/* -/+ circle buttons — straddle bottom border */}
-                        {isAdmin && <div className="flex items-center" style={{ position: 'absolute', bottom: '-9px', left: '4px', zIndex: 5, gap: '6px' }}>
+                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ position: 'absolute', bottom: '-9px', left: '4px', zIndex: 5, gap: '6px' }}>
                           <span
                             onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
                             className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
@@ -1929,8 +1908,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           </span>
                         </div>}
 
-                        {/* 6 seats */}
-                        <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px' }}>
+                        {/* 6 seats in a single vertical column */}
+                        <div style={{ flex: 1, padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -1942,13 +1921,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    style={{ width: dynamicCircleW, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
+                                    style={{ position: 'relative' }}
                                   >
                                     {/* Empty seat / drag-over visual */}
                                     {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
                                       <div
-                                        className={`rounded-full transition-all ${snapshot.isDraggingOver ? 'scale-110 ring-2 ring-white' : 'border-2 border-dashed border-slate-400'}`}
-                                        style={{ position: 'absolute', top: 0, left: 0, backgroundColor: snapshot.isDraggingOver ? '#60a5fa' : '#9ca3af', width: dynamicCircleW, height: CIRCLE_SIZE, pointerEvents: 'none' }}
+                                        className={`transition-all ${snapshot.isDraggingOver ? 'ring-1 ring-white' : ''}`}
+                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
                                       />
                                     )}
                                     {assignedPaddler ? (
@@ -1956,13 +1935,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                         {(provided, snapshot) => (
                                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
                                             {assignedPaddler.id.startsWith('guest-')
-                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
-                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} isAdmin={isAdmin} />
+                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} />
+                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
                                             }
                                           </div>
                                         )}
                                       </Draggable>
-                                    ) : null}
+                                    ) : (
+                                      <div style={{ fontSize: '9px', color: '#4b5563', padding: '0 2px' }}>{seat}</div>
+                                    )}
                                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                   </div>
                                 )}
@@ -1973,6 +1954,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       </div>
                     );
                   })}
+                  </div>
 
                   {/* Add Canoe button when no canoes exist */}
                   {(!canoes || canoes.length === 0) && (
@@ -2280,7 +2262,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 176 : 24,
+                  width: sidebarOpen ? 170 : 24,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
@@ -2461,7 +2443,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 {sidebarOpen && (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {/* Staging - single drop zone */}
-                <Droppable droppableId="staging-all" direction="horizontal" isDropDisabled={dragFromStaging}>
+                <Droppable droppableId="staging-all" direction="vertical" isDropDisabled={dragFromStaging}>
                   {(provided, snapshot) => {
                     // Flatten all sections into one ordered list for draggable indices
                     const allPaddlers: Paddler[] = [];
@@ -2479,9 +2461,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`rounded-lg transition-colors flex flex-wrap content-start
+                        className={`rounded-lg transition-colors flex flex-col
                           ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : ''}`}
-                        style={{ padding: '4px', gap: '4px', marginTop: '8px', flex: 1, minHeight: '100px' }}
+                        style={{ padding: '4px 6px', marginTop: '8px', flex: 1, minHeight: '100px' }}
                       >
                         {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
                           const sectionBreak = sectionBreaks.find(b => b.index === index);
@@ -2538,9 +2520,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
                                   >
-                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} />
+                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} variant="sidebar" />
                                   </div>
                                 )}
                               </Draggable>
@@ -2556,17 +2538,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </Droppable>
                 {/* Guest paddler circles (draggable) */}
                 {unassignedGuests.length > 0 && (
-                  <Droppable droppableId="staging-guests" direction="horizontal" isDropDisabled={dragFromStaging}>
+                  <Droppable droppableId="staging-guests" direction="vertical" isDropDisabled={dragFromStaging}>
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        style={{ padding: '4px', marginTop: '8px' }}
+                        style={{ padding: '4px 6px', marginTop: '8px' }}
                       >
                         <span className="font-semibold text-sm" style={{ color: '#f59e0b', display: 'block', padding: '4px 0 2px' }}>
                           guests ({unassignedGuests.length})
                         </span>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
                           {unassignedGuests.map((guest: any, index: number) => {
                             const guestId = `guest-${guest._id}`;
                             const guestPaddler = guestPaddlerMap.get(guestId);
@@ -2581,9 +2563,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
                                   >
-                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} />
+                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} variant="sidebar" />
                                   </div>
                                 )}
                               </Draggable>
