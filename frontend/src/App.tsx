@@ -1815,9 +1815,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                               color: '#ffffff',
                               textTransform: 'uppercase',
                               letterSpacing: '2px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
                           >
-                            BOAT: {canoeDesignations[canoe.id] || '???'}
+                            {sidebarOpen ? '' : 'BOAT: '}{canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
