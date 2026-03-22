@@ -1448,11 +1448,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
-  // Static boat dimensions based on sidebar-closed layout
-  const sidebarClosedW = 24;
-  const containerWidthClosed = windowWidth - sidebarClosedW - leftSidebarW - flexGap - mainPad;
   const canoeMargin = 20;
-  const boatWidth = Math.floor((containerWidthClosed - canoeMargin) / 2);
+  const gridPad = 32; // 16px each side
+  const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
   // Static height: 6 paddlers at 18px font + 4px gap each + 18px*2 vertical padding
   const canoeRowHeight = 6 * 22 + 5 * 4 + 36; // 6 rows × 22px + 5 gaps × 4px + 36px padding = 188px
   // Legacy sizing kept for compatibility
