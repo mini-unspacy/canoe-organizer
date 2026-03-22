@@ -1803,53 +1803,29 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex gap-0`}
-                        style={{ backgroundColor: 'transparent', padding: '20px 8px 10px 8px', position: 'relative', height: `${canoeRowHeight}px`, boxSizing: 'border-box', overflow: 'visible' }}
+                        style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
                       >
-                        {/* Lock button - top right (admin only) */}
-                        {isAdmin && <svg
-                          onClick={() => setLockedCanoes(prev => {
-                            const next = new Set(prev);
-                            if (next.has(canoe.id)) next.delete(canoe.id);
-                            else next.add(canoe.id);
-                            return next;
-                          })}
-                          width="14" height="14" viewBox="0 0 24 24"
-                          fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
-                          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ position: 'absolute', top: '3px', right: '4px', cursor: 'pointer', zIndex: 5 }}
-                        >
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                          {lockedCanoes.has(canoe.id)
-                            ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                          }
-                        </svg>}
-                        {/* Canoe designation pill — straddles top border */}
-                        <div style={{ position: 'absolute', top: '-12px', left: '6px', zIndex: 5 }}>
+                        {/* Header row: BOAT: designation ... lock icon */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '2px', position: 'relative' }}>
                           <span
-                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
-                            style={{
-                              display: 'inline-block',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              color: '#ffffff',
-                              backgroundColor: '#000000',
-                              border: '1px solid #64748b',
-                              borderRadius: '999px',
-                              padding: '1px 7px',
-                              lineHeight: '14px',
-                              whiteSpace: 'nowrap',
-                            }}
+                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
                             onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                            style={{
+                              fontFamily: "'Courier New', Courier, monospace",
+                              fontSize: '14px',
+                              fontWeight: 900,
+                              color: '#ffffff',
+                              textTransform: 'uppercase',
+                              letterSpacing: '1px',
+                            }}
                           >
-                            {canoeDesignations[canoe.id] || '???'}
+                            BOAT: {canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
-                            <>
+                            <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20 }}>
                               <div className="fixed inset-0 z-10" onClick={() => setOpenDesignator(null)} />
-                              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px' }}>
+                              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px', position: 'relative', zIndex: 20 }}>
                                 {CANOE_DESIGNATIONS.map(d => (
                                   <button
                                     key={d}
@@ -1873,11 +1849,29 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   +
                                 </button>
                               </div>
-                            </>
+                            </div>
                           )}
+                          {isAdmin && <svg
+                            onClick={() => setLockedCanoes(prev => {
+                              const next = new Set(prev);
+                              if (next.has(canoe.id)) next.delete(canoe.id);
+                              else next.add(canoe.id);
+                              return next;
+                            })}
+                            width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
+                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ cursor: 'pointer', flexShrink: 0 }}
+                          >
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            {lockedCanoes.has(canoe.id)
+                              ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                            }
+                          </svg>}
                         </div>
-                        {/* -/+ circle buttons — straddle bottom border */}
-                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ position: 'absolute', bottom: '-9px', left: '4px', zIndex: 5, gap: '6px' }}>
+                        {/* -/+ buttons on last canoe */}
+                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '6px', padding: '4px 4px 0' }}>
                           <span
                             onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
                             className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
