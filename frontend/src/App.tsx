@@ -1103,6 +1103,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
 
   // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
   const dragSourceIdRef = useRef<string | null>(null);
@@ -1384,10 +1385,15 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       return;
     }
 
-    // Move to new seat - assign first, then unassign old to avoid staging flicker
-    await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-    if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
-      await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+    // Move to new seat - hide from staging immediately to avoid flicker
+    setPendingAssignIds(prev => new Set(prev).add(draggableId));
+    try {
+      await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
+      if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+      }
+    } finally {
+      setPendingAssignIds(prev => { const next = new Set(prev); next.delete(draggableId); return next; });
     }
   };
 
@@ -2448,7 +2454,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     if (viewSections.length > 0) {
                       viewSections.forEach((section) => {
                         const sectionSort = sectionSorts[section.id] || "gender";
-                        const sorted = sortPaddlers(section.paddlers, sectionSort);
+                        const sorted = sortPaddlers(section.paddlers, sectionSort).filter(p => !pendingAssignIds.has(p.id));
                         sectionBreaks.push({ index: allPaddlers.length, label: section.label, id: section.id });
                         allPaddlers.push(...sorted);
                       });
