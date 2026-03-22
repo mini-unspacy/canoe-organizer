@@ -1368,22 +1368,27 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     if (existingPaddlerId && existingPaddlerId !== draggableId) {
       const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
       if (existingPaddler && oldCanoeId && oldSeat) {
-        // Direct swap - both operations in parallel
+        // Direct swap - all operations in parallel to avoid flicker
         await Promise.all([
           unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
-          assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat })
+          unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat }),
+        ]);
+        await Promise.all([
+          assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat }),
+          assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat }),
         ]);
       } else {
         await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
+        await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
       }
+      return;
     }
 
-    // Only unassign if we're actually moving (not just swapping)
+    // Move to new seat - assign first, then unassign old to avoid staging flicker
+    await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
     if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
       await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
     }
-
-    await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
