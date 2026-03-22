@@ -1869,7 +1869,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           </svg>}
                         </div>
                         {/* 6 seats in a single vertical column */}
-                        <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px', flex: 1 }}>
+                        <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px', height: `${canoeRowHeight}px` }}>
                           {Array.from({ length: 6 }).map((_, i) => {
                             const seat = i + 1;
                             const assignment = canoeEventAssignments.find(a => a.seat === seat);
