@@ -1796,7 +1796,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </>)}
                   </div>
                   {(isAdmin || showAllBoats) ? (<>
-                  <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 0`, justifyContent: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 8px`, justifyContent: 'center' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
