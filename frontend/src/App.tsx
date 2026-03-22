@@ -1460,8 +1460,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const canoeMargin = 20;
   const gridPad = 32; // 16px each side
   const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
-  // Static height: 6 paddler rows at 22px each
-  const canoeRowHeight = 6 * 22; // 132px
+  // Static height: 6 paddler rows at 28px each
+  const canoeRowHeight = 6 * 28; // 168px
   // Legacy sizing kept for compatibility
   const leftControlWidth = 36;
   const canoePadding = 16;
@@ -1893,7 +1893,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    style={{ position: 'relative', height: '22px', minHeight: '22px', display: 'flex', alignItems: 'center' }}
+                                    style={{ position: 'relative', height: '28px', minHeight: '28px', display: 'flex', alignItems: 'center' }}
                                   >
                                     {/* Empty seat / drag-over visual */}
                                     {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
