@@ -81,12 +81,12 @@ const sortPaddlersByPriority = (paddlers: Paddler[], priority: CanoeSortItem[]):
 };
 
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin }) => {
-  const circleRef = useRef<HTMLDivElement>(null);
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin, variant = 'boat' }) => {
+  const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (animationKey === 0) return;
-    const el = circleRef.current;
+    const el = rowRef.current;
     if (!el) return;
 
     const anim = el.animate(
@@ -106,142 +106,113 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
     return () => anim.cancel();
   }, [animationKey, animationDelay]);
 
-  const abilityColor = paddler.ability === 5
-    ? 'from-emerald-400 to-emerald-600'
-    : paddler.ability >= 3
-      ? 'from-amber-400 to-amber-600'
-      : 'from-rose-400 to-rose-600';
+  const genderTextColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
 
-  const genderBorderColor = paddler.gender === 'kane' ? '#3b82f6' : '#ec4899';
-
-  const firstInitial = (paddler.firstName?.[0] || '?').toUpperCase();
+  const firstName = paddler.firstName || '?';
   const lastName = paddler.lastName || paddler.lastInitial || '?';
-  const maxFirstNameLen = 5;
-  const truncatedFirst = paddler.firstName.length > maxFirstNameLen
-    ? paddler.firstName.slice(0, maxFirstNameLen).toUpperCase()
-    : paddler.firstName.toUpperCase();
-  const maxLastNameLen = 5;
-  const truncatedLast = lastName.length > maxLastNameLen
-    ? lastName.slice(0, maxLastNameLen).toUpperCase()
-    : lastName.toUpperCase();
+  const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
 
-  // Inner ability circle color: red (1) to green (5)
-  const abilityInnerColor = paddler.ability === 5 ? '#10b981' :
-    paddler.ability === 4 ? '#84cc16' :
-    paddler.ability === 3 ? '#eab308' :
-    paddler.ability === 2 ? '#f97316' :
-    '#ef4444';
+  // Ability gradient color
+  const abilityGradient = paddler.ability === 5 ? '#059669'
+    : paddler.ability >= 3 ? '#d97706' : '#e11d48';
+
+  const isSidebar = variant === 'sidebar';
+  const fontSize = '18px';
+  const badgeFs = '10px';
+  const badgeSize = '12px';
+
+  // Type letter and color
+  const typeLetter = paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V';
+  const typeColor = paddler.type === 'racer' ? '#8b5cf6' : paddler.type === 'casual' ? '#3b82f6' : '#64748b';
 
   return (
     <div
-      ref={circleRef}
-      className={`relative flex-shrink-0 rounded-full border-[3px] shadow-md bg-gradient-to-br ${abilityColor}
-        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-white/50' : ''}
+      ref={rowRef}
+      className={`flex items-center flex-shrink-0
+        ${isDragging ? 'opacity-80' : ''}
         cursor-grab active:cursor-grabbing`}
       style={{
-        width: sizeW || CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        borderColor: genderBorderColor,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        gap: '3px',
+        padding: '0 2px',
         touchAction: 'manipulation',
+        width: '100%',
+        lineHeight: 1,
       }}
     >
-      {/* Name - two lines centered, all caps */}
-      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#e0e0e0', textTransform: 'uppercase' }}>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? firstInitial : truncatedFirst}</span>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>{compact ? lastName[0]?.toUpperCase() || '?' : truncatedLast}</span>
-      </div>
-      
-      {/* Ability badge - small circle at bottom left (admin only) */}
-      {isAdmin && <div
-        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: abilityInnerColor,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '14px',
-          height: '14px',
-          fontSize: '8px',
-          bottom: '-5px',
-          left: '1px'
-        }}
-      >
-        {paddler.ability}
-      </div>}
-
-      {/* Type badge - square at bottom right (admin only) */}
-      {isAdmin && <div
-        className="absolute flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: paddler.type === 'racer' ? '#8b5cf6' :
-                          paddler.type === 'casual' ? '#3b82f6' : '#64748b',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '12px',
-          height: '12px',
-          fontSize: '6px',
-          bottom: '-5px',
-          right: '1px',
-          borderRadius: '2px'
-        }}
-      >
-        {paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V'}
-      </div>}
+      {/* Inline badges: gradient dot, ability number, type letter */}
+      {isAdmin && (
+        <>
+          <span style={{
+            display: 'inline-block', width: badgeSize, height: badgeSize, borderRadius: '2px',
+            backgroundColor: abilityGradient, flexShrink: 0,
+          }} />
+          <span style={{ fontSize: badgeFs, fontWeight: 800, color: abilityGradient, flexShrink: 0 }}>
+            {paddler.ability}
+          </span>
+          <span style={{
+            fontSize: badgeFs, fontWeight: 800, color: '#fff', flexShrink: 0,
+            backgroundColor: typeColor, borderRadius: '2px',
+            padding: '0 2px', lineHeight: '1.3',
+          }}>
+            {typeLetter}
+          </span>
+        </>
+      )}
+      {/* Name */}
+      <span style={{
+        color: genderTextColor,
+        fontSize,
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}>
+        {displayName}
+      </span>
     </div>
   );
 };
 
-const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean }> = ({ paddler, isDragging, sizeW, compact }) => {
+const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, sizeW, compact, variant = 'boat' }) => {
   const firstName = paddler.firstName;
   const lastName = paddler.lastName || paddler.lastInitial || '';
-  const firstInitial = (firstName?.[0] || '?').toUpperCase();
-  const maxLen = 5;
-  const truncatedFirst = firstName.length > maxLen ? firstName.slice(0, maxLen).toUpperCase() : firstName.toUpperCase();
-  const truncatedLast = lastName.length > maxLen ? lastName.slice(0, maxLen).toUpperCase() : lastName.toUpperCase();
+  const isSidebar = variant === 'sidebar';
+  const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
+  const fontSize = '18px';
+  const badgeFs = '10px';
 
   return (
     <div
-      className={`relative flex-shrink-0 rounded-full shadow-md
-        ${isDragging ? 'scale-110 shadow-xl ring-2 ring-amber-300/50' : ''}
+      className={`flex items-center flex-shrink-0
+        ${isDragging ? 'opacity-80' : ''}
         cursor-grab active:cursor-grabbing`}
       style={{
-        width: sizeW || CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        border: '3px dashed #f59e0b',
-        background: 'linear-gradient(to bottom right, #78350f, #92400e)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        gap: '3px',
+        padding: '0 2px',
         touchAction: 'manipulation',
+        width: '100%',
+        lineHeight: 1,
       }}
     >
-      <div className="flex flex-col items-center justify-center leading-none text-center px-0.5 max-w-full" style={{ color: '#fbbf24', textTransform: 'uppercase' }}>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
-          {compact ? firstInitial : truncatedFirst}
-        </span>
-        <span className="text-[10px] font-black truncate max-w-full" style={{ WebkitTextStroke: '0.5px' }}>
-          {compact ? (lastName[0]?.toUpperCase() || '') : truncatedLast}
-        </span>
-      </div>
-      <div
-        className="absolute rounded-full flex items-center justify-center font-bold text-white border border-white/50"
-        style={{
-          backgroundColor: '#f59e0b',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          width: '14px',
-          height: '14px',
-          fontSize: '7px',
-          bottom: '-5px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}
-      >
+      <span style={{
+        fontSize: badgeFs, fontWeight: 800, color: '#fff', flexShrink: 0,
+        backgroundColor: '#f59e0b', borderRadius: '2px',
+        padding: '0 2px', lineHeight: '1.3',
+      }}>
         G
-      </div>
+      </span>
+      <span style={{
+        color: '#fbbf24',
+        fontSize,
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}>
+        {displayName}
+      </span>
     </div>
   );
 };
@@ -912,6 +883,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
   const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
+  const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers);
   const assignOptimal = useMutation(api.eventAssignments.assignOptimalForEvent);
   const unassignAllForEventMut = useMutation(api.eventAssignments.unassignAllForEvent);
   const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
@@ -1132,52 +1104,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
   const [isDragging, setIsDragging] = useState(false);
-
-  // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
-  const dragSourceIdRef = useRef<string | null>(null);
-  const swapStyleRef = useRef<HTMLStyleElement | null>(null);
+  const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
 
   const [dragFromStaging, setDragFromStaging] = useState(false);
 
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
-    dragSourceIdRef.current = start.source.droppableId;
-  }, []);
-
-  const handleDragUpdate = useCallback((update: DragUpdate) => {
-    const destId = update.destination?.droppableId || null;
-
-    // Always clean up previous swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-
-    // Only inject swap preview for canoe seat targets with an existing paddler
-    if (!destId || !dragSourceIdRef.current || destId === dragSourceIdRef.current || !destId.includes('-seat-')) {
-      return;
-    }
-
-    const targetDroppable = document.querySelector(`[data-rfd-droppable-id="${destId}"]`);
-    const sourceDroppable = document.querySelector(`[data-rfd-droppable-id="${dragSourceIdRef.current}"]`);
-    if (!targetDroppable || !sourceDroppable) return;
-
-    const targetDraggable = targetDroppable.querySelector('[data-rfd-draggable-id]');
-    if (!targetDraggable) return;
-
-    const draggableId = targetDraggable.getAttribute('data-rfd-draggable-id');
-    if (!draggableId) return;
-
-    const sr = sourceDroppable.getBoundingClientRect();
-    const tr = targetDroppable.getBoundingClientRect();
-    const dx = sr.left - tr.left;
-    const dy = sr.top - tr.top;
-
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `[data-rfd-draggable-id="${draggableId}"] { transform: translate(${dx}px, ${dy}px) !important; transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important; z-index: 100 !important; position: relative !important; }`;
-    document.head.appendChild(styleEl);
-    swapStyleRef.current = styleEl;
   }, []);
 
   // On any touchstart, blur focused elements to prevent iOS focus interference.
@@ -1288,52 +1221,34 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const onDragEnd = async (result: DropResult) => {
     setIsDragging(false);
     setDragFromStaging(false);
-    // Clean up swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-    dragSourceIdRef.current = null;
     const { source, destination, draggableId } = result;
-    console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
     const isGuestDrag = draggableId.startsWith('guest-');
 
-    // Handle trash can - mark absent for event, or just unassign if no event
+    // Handle trash can
     if (destination.droppableId === "trash-can") {
       if (!selectedEvent) return;
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
       if (draggedPaddler) {
-        // Unassign from canoe if assigned in this event
         const paddlerAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
         if (paddlerAssignment) {
-          await unassignPaddler({
-            eventId: selectedEvent.id,
-            paddlerId: draggableId,
-            canoeId: paddlerAssignment.canoeId,
-            seat: paddlerAssignment.seat,
-          });
+          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: paddlerAssignment.canoeId, seat: paddlerAssignment.seat });
         }
         if (isGuestDrag) {
-          // Remove guest entirely from the event
           await removeGuestMut({ guestId: draggedPaddler._id as any });
         } else {
-          // Set attendance to NO
           await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
         }
       }
       return;
     }
 
-    // Handle edit area - open edit modal (not for guests)
+    // Handle edit area
     if (destination.droppableId === "edit-area") {
       if (isGuestDrag) return;
-      console.log('Edit area drop detected, looking for paddler:', draggableId);
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
-      console.log('Found paddler:', draggedPaddler);
       if (draggedPaddler) {
-        console.log('Setting editing state...');
         setEditingPaddler(draggedPaddler);
         setEditForm({
           firstName: draggedPaddler.firstName,
@@ -1344,9 +1259,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
           seatPreference: draggedPaddler.seatPreference || '000000',
         });
         setIsEditModalOpen(true);
-        console.log('Modal should be open now, isEditModalOpen:', true);
-      } else {
-        console.log('Paddler not found!');
       }
       return;
     }
@@ -1356,14 +1268,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
     if (!draggedPaddler) return;
 
-    // Look up current assignment from eventAssignments
     const currentAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
     const oldCanoeId = currentAssignment?.canoeId;
     const oldSeat = currentAssignment?.seat;
 
-    // Block dragging from a locked canoe
     if (oldCanoeId && lockedCanoes.has(oldCanoeId)) return;
-
     if (source.droppableId === destination.droppableId) return;
 
     // Dropped to staging
@@ -1374,45 +1283,48 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       return;
     }
 
-    // Parse destination
+    // Parse destination seat
     const destParts = destination.droppableId.split("-");
     if (destParts.length !== 4 || destParts[0] !== "canoe" || destParts[2] !== "seat") return;
-
     const destCanoeId = destParts[1];
     const destSeat = parseInt(destParts[3]);
+    if (lockedCanoes.has(destCanoeId) || isNaN(destSeat)) return;
+    if (!canoes?.find((c: Canoe) => c.id === destCanoeId)) return;
 
-    // Block dragging into a locked canoe
-    if (lockedCanoes.has(destCanoeId)) return;
-    if (isNaN(destSeat)) return;
-
-    const targetCanoe = canoes?.find((c: Canoe) => c.id === destCanoeId);
-    if (!targetCanoe) return;
-
-    // Look up existing occupant from eventAssignments
+    // Check for existing occupant
     const destAssignments = canoeAssignmentsByCanoe.get(destCanoeId) || [];
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
-    // SWAP - handle seamlessly without going through staging
-    if (existingPaddlerId && existingPaddlerId !== draggableId) {
-      const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
-      if (existingPaddler && oldCanoeId && oldSeat) {
-        // Direct swap - both operations in parallel
-        await Promise.all([
-          unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
-          assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat })
-        ]);
-      } else {
+    // Hide paddlers from staging during mutation
+    const idsToHide = [draggableId];
+    if (existingPaddlerId && existingPaddlerId !== draggableId) idsToHide.push(existingPaddlerId);
+    setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.add(id)); return next; });
+
+    try {
+      // SWAP — atomic single mutation
+      if (existingPaddlerId && existingPaddlerId !== draggableId && oldCanoeId && oldSeat) {
+        await swapPaddlers({
+          eventId: selectedEvent.id,
+          paddlerA: draggableId, canoeA: oldCanoeId, seatA: oldSeat,
+          paddlerB: existingPaddlerId, canoeB: destCanoeId, seatB: destSeat,
+        });
+        return;
+      }
+
+      // Replace (occupied seat, but dragged from staging)
+      if (existingPaddlerId && existingPaddlerId !== draggableId) {
         await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
       }
-    }
 
-    // Only unassign if we're actually moving (not just swapping)
-    if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
-      await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+      // Simple assign
+      await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
+      if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+      }
+    } finally {
+      setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.delete(id)); return next; });
     }
-
-    await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
@@ -1469,24 +1381,28 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const dataLoading = canoes === undefined || paddlers === undefined;
   const hasNoData = !dataLoading && canoes.length === 0 && paddlers.length === 0;
 
-  // Calculate dynamic horizontal sizing (no CSS transform)
-  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 176 : 24) : 0;
+  // Calculate layout sizing
+  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 170 : 24) : 0;
   const leftSidebarW = leftSidebarOpen ? 110 : 28;
   const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
+  const canoeMargin = 20;
+  const gridPad = 32; // 16px each side
+  const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
+  // Static height: 6 paddler rows at 22px each
+  const seatHeight = 22;
+  const canoeRowHeight = 6 * seatHeight; // 132px
+  // Legacy sizing kept for compatibility
   const leftControlWidth = 36;
   const canoePadding = 16;
   const availableForSeats = containerWidth - leftControlWidth - canoePadding;
   const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
   const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6) - 2));
-  // Canoe row height: fit 6 rows in viewport minus sticky sort bar (~32px)
   const sortBarHeight = 32;
-  const canoeMargin = 20;
-  const canoeRowHeight = Math.floor((windowHeight - sortBarHeight - canoeMargin * 6) / 7);
 
   return (
-    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
+    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart}>
       <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
@@ -1818,59 +1734,39 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </>)}
                   </div>
                   {(isAdmin || showAllBoats) ? (<>
+                  <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 16px`, justifyContent: 'center' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
                     const isFull = canoeEventAssignments.length === 6;
                     return (
                       <div
                         key={canoe._id.toString()}
-                        className={`rounded-xl border ${lockedCanoes.has(canoe.id) ? 'border-red-400' : isFull ? 'border-emerald-300 dark:border-emerald-700' : 'border-slate-400'} shadow-sm flex items-center gap-0`}
-                        style={{ backgroundColor: 'transparent', padding: '8px 4px', marginBottom: `${canoeMargin}px`, height: `${canoeRowHeight}px`, boxSizing: 'border-box', position: 'relative' }}
+                        style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
                       >
-                        {/* Lock button - top right (admin only) */}
-                        {isAdmin && <svg
-                          onClick={() => setLockedCanoes(prev => {
-                            const next = new Set(prev);
-                            if (next.has(canoe.id)) next.delete(canoe.id);
-                            else next.add(canoe.id);
-                            return next;
-                          })}
-                          width="14" height="14" viewBox="0 0 24 24"
-                          fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
-                          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ position: 'absolute', top: '3px', right: '4px', cursor: 'pointer', zIndex: 5 }}
-                        >
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                          {lockedCanoes.has(canoe.id)
-                            ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                          }
-                        </svg>}
-                        {/* Canoe designation pill — straddles top border */}
-                        <div style={{ position: 'absolute', top: '-12px', left: '6px', zIndex: 5 }}>
+                        {/* Header row: BOAT: designation ... lock icon */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '2px', position: 'relative' }}>
                           <span
-                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-600' : 'cursor-default'}`}
-                            style={{
-                              display: 'inline-block',
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              color: '#ffffff',
-                              backgroundColor: '#000000',
-                              border: '1px solid #64748b',
-                              borderRadius: '999px',
-                              padding: '1px 7px',
-                              lineHeight: '14px',
-                              whiteSpace: 'nowrap',
-                            }}
+                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
                             onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                            style={{
+                              fontFamily: "'Courier New', Courier, monospace",
+                              fontSize: '18px',
+                              fontWeight: 900,
+                              color: '#ffffff',
+                              textTransform: 'uppercase',
+                              letterSpacing: '2px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
                           >
-                            {canoeDesignations[canoe.id] || '???'}
+                            {sidebarOpen ? '' : 'BOAT: '}{canoeDesignations[canoe.id] || '???'}
                           </span>
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
-                            <>
+                            <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20 }}>
                               <div className="fixed inset-0 z-10" onClick={() => setOpenDesignator(null)} />
-                              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px' }}>
+                              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px', position: 'relative', zIndex: 20 }}>
                                 {CANOE_DESIGNATIONS.map(d => (
                                   <button
                                     key={d}
@@ -1894,11 +1790,72 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   +
                                 </button>
                               </div>
-                            </>
+                            </div>
                           )}
+                          {isAdmin && <svg
+                            onClick={() => setLockedCanoes(prev => {
+                              const next = new Set(prev);
+                              if (next.has(canoe.id)) next.delete(canoe.id);
+                              else next.add(canoe.id);
+                              return next;
+                            })}
+                            width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
+                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ cursor: 'pointer', flexShrink: 0 }}
+                          >
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            {lockedCanoes.has(canoe.id)
+                              ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                            }
+                          </svg>}
                         </div>
-                        {/* -/+ circle buttons — straddle bottom border */}
-                        {isAdmin && <div className="flex items-center" style={{ position: 'absolute', bottom: '-9px', left: '4px', zIndex: 5, gap: '6px' }}>
+                        {/* 6 seats in a single vertical column */}
+                        <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0px', height: `${canoeRowHeight}px`, overflow: 'hidden' }}>
+                          {Array.from({ length: 6 }).map((_, i) => {
+                            const seat = i + 1;
+                            const assignment = canoeEventAssignments.find(a => a.seat === seat);
+                            const assignedPaddler = assignment ? (canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId)) : undefined;
+
+                            return (
+                              <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}
+                                  >
+                                    {/* Empty seat / drag-over visual */}
+                                    {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
+                                      <div
+                                        className="transition-all"
+                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
+                                      />
+                                    )}
+                                    {assignedPaddler ? (
+                                      <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
+                                        {(provided, dragSnapshot) => (
+                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
+                                            {assignedPaddler.id.startsWith('guest-')
+                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
+                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
+                                            }
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ) : (
+                                      <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#4b5563', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
+                                    )}
+                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                                  </div>
+                                )}
+                              </Droppable>
+                            );
+                          })}
+                        </div>
+                        {/* -/+ buttons on last canoe */}
+                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '6px', padding: '4px 4px 0' }}>
                           <span
                             onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
                             className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
@@ -1928,51 +1885,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             +
                           </span>
                         </div>}
-
-                        {/* 6 seats */}
-                        <div className="flex items-center justify-between" style={{ flex: 1, padding: '0 4px' }}>
-                          {Array.from({ length: 6 }).map((_, i) => {
-                            const seat = i + 1;
-                            const assignment = canoeEventAssignments.find(a => a.seat === seat);
-                            const assignedPaddler = assignment ? (canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId)) : undefined;
-
-                            return (
-                              <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    style={{ width: dynamicCircleW, height: CIRCLE_SIZE, position: 'relative', flexShrink: 0 }}
-                                  >
-                                    {/* Empty seat / drag-over visual */}
-                                    {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
-                                      <div
-                                        className={`rounded-full transition-all ${snapshot.isDraggingOver ? 'scale-110 ring-2 ring-white' : 'border-2 border-dashed border-slate-400'}`}
-                                        style={{ position: 'absolute', top: 0, left: 0, backgroundColor: snapshot.isDraggingOver ? '#60a5fa' : '#9ca3af', width: dynamicCircleW, height: CIRCLE_SIZE, pointerEvents: 'none' }}
-                                      />
-                                    )}
-                                    {assignedPaddler ? (
-                                      <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                                        {(provided, snapshot) => (
-                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
-                                            {assignedPaddler.id.startsWith('guest-')
-                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} />
-                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} sizeW={dynamicCircleW} compact={sidebarOpen && windowWidth < 768} isAdmin={isAdmin} />
-                                            }
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ) : null}
-                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                                  </div>
-                                )}
-                              </Droppable>
-                            );
-                          })}
-                        </div>
                       </div>
                     );
                   })}
+                  </div>
 
                   {/* Add Canoe button when no canoes exist */}
                   {(!canoes || canoes.length === 0) && (
@@ -2280,7 +2196,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: sidebarOpen ? 176 : 24,
+                  width: sidebarOpen ? 170 : 24,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
@@ -2461,7 +2377,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 {sidebarOpen && (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 {/* Staging - single drop zone */}
-                <Droppable droppableId="staging-all" direction="horizontal" isDropDisabled={dragFromStaging}>
+                <Droppable droppableId="staging-all" direction="vertical" isDropDisabled={dragFromStaging}>
                   {(provided, snapshot) => {
                     // Flatten all sections into one ordered list for draggable indices
                     const allPaddlers: Paddler[] = [];
@@ -2469,7 +2385,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     if (viewSections.length > 0) {
                       viewSections.forEach((section) => {
                         const sectionSort = sectionSorts[section.id] || "gender";
-                        const sorted = sortPaddlers(section.paddlers, sectionSort);
+                        const sorted = sortPaddlers(section.paddlers, sectionSort).filter(p => !pendingAssignIds.has(p.id));
                         sectionBreaks.push({ index: allPaddlers.length, label: section.label, id: section.id });
                         allPaddlers.push(...sorted);
                       });
@@ -2479,9 +2395,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`rounded-lg transition-colors flex flex-wrap content-start
+                        className={`rounded-lg transition-colors flex flex-col
                           ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : ''}`}
-                        style={{ padding: '4px', gap: '4px', marginTop: '8px', flex: 1, minHeight: '100px' }}
+                        style={{ padding: '4px 6px', marginTop: '8px', flex: 1, minHeight: '100px' }}
                       >
                         {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
                           const sectionBreak = sectionBreaks.find(b => b.index === index);
@@ -2538,9 +2454,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
                                   >
-                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} />
+                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} variant="sidebar" />
                                   </div>
                                 )}
                               </Draggable>
@@ -2556,17 +2472,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 </Droppable>
                 {/* Guest paddler circles (draggable) */}
                 {unassignedGuests.length > 0 && (
-                  <Droppable droppableId="staging-guests" direction="horizontal" isDropDisabled={dragFromStaging}>
+                  <Droppable droppableId="staging-guests" direction="vertical" isDropDisabled={dragFromStaging}>
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        style={{ padding: '4px', marginTop: '8px' }}
+                        style={{ padding: '4px 6px', marginTop: '8px' }}
                       >
                         <span className="font-semibold text-sm" style={{ color: '#f59e0b', display: 'block', padding: '4px 0 2px' }}>
                           guests ({unassignedGuests.length})
                         </span>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
                           {unassignedGuests.map((guest: any, index: number) => {
                             const guestId = `guest-${guest._id}`;
                             const guestPaddler = guestPaddlerMap.get(guestId);
@@ -2581,9 +2497,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
                                   >
-                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} />
+                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} variant="sidebar" />
                                   </div>
                                 )}
                               </Draggable>
