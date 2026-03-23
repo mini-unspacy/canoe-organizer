@@ -2063,9 +2063,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center', position: 'relative' }}>
                               <span
                                 onClick={() => { if (editingSeatPrefId !== p.id) { setEditingSeatPrefId(p.id); setTempSeatPref(p.seatPreference || '000000'); } }}
-                                style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563' }}
+                                style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563', whiteSpace: 'nowrap' }}
                               >
-                                {p.seatPreference?.split('').map(Number).filter((n: number) => n > 0).join(' > ') || '—'}
+                                {p.seatPreference?.split('').map(Number).filter((n: number) => n > 0).join('') || '—'}
                               </span>
                               {editingSeatPrefId === p.id && (
                                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#111111', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
