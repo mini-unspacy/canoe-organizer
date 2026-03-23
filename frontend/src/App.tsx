@@ -1597,6 +1597,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             {_goingCount === 0 ? (
                               <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
                             ) : (
+                              <>
                               <div
                                 ref={(el) => {
                                   if (!el) return;
@@ -1625,6 +1626,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 ))}
                               </div>
                               <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
+                              </>
                             )}
                           </div>
                         )}
