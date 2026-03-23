@@ -1597,7 +1597,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             {_goingCount === 0 ? (
                               <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
                             ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
+                              <div
+                                ref={(el) => {
+                                  if (!el) return;
+                                  const indicator = el.nextElementSibling as HTMLElement;
+                                  if (!indicator) return;
+                                  const check = () => { indicator.style.display = el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight < el.scrollHeight - 4 ? 'block' : 'none'; };
+                                  check();
+                                  el.onscroll = check;
+                                }}
+                                style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '390px', overflowY: 'auto' }}>
                                 {paddlers
                                   ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
                                   .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
@@ -1615,6 +1624,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   </div>
                                 ))}
                               </div>
+                              <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
                             )}
                           </div>
                         )}
