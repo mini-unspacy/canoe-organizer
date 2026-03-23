@@ -111,7 +111,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
 
   // Ability gradient color
   const abilityGradient = paddler.ability === 5 ? '#059669'
-    : paddler.ability >= 3 ? '#d97706' : '#e11d48';
+    : paddler.ability === 4 ? '#65a30d'
+    : paddler.ability === 3 ? '#d97706'
+    : paddler.ability === 2 ? '#ea580c'
+    : '#e11d48';
 
   const fontSize = '18px';
   const badgeFs = '10px';
