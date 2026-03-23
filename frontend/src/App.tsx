@@ -109,12 +109,7 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   const lastName = paddler.lastName || paddler.lastInitial || '?';
   const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
 
-  // Ability gradient color
-  const abilityGradient = paddler.ability === 5 ? '#e11d48'
-    : paddler.ability === 4 ? '#ea580c'
-    : paddler.ability === 3 ? '#d97706'
-    : paddler.ability === 2 ? '#65a30d'
-    : '#059669';
+  const abilityGradient = getAbilityColor(paddler.ability);
 
   const fontSize = '18px';
   const badgeFs = '10px';
@@ -213,6 +208,9 @@ const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; var
     </div>
   );
 };
+
+const getAbilityColor = (ability: number) =>
+  ability === 5 ? '#e11d48' : ability === 4 ? '#ea580c' : ability === 3 ? '#d97706' : ability === 2 ? '#65a30d' : '#059669';
 
 // Get view sections based on active view
 const getViewSections = (paddlers: Paddler[], viewBy: ViewBy): { id: string; label: string; paddlers: Paddler[] }[] => {
@@ -2023,7 +2021,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                             </td>}
                             {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                               {windowWidth < 768 ? (() => {
-                                const color = p.ability >= 4 ? '#10b981' : p.ability >= 3 ? '#eab308' : '#ef4444';
+                                const color = getAbilityColor(p.ability);
                                 return (
                                   <button
                                     onClick={() => updatePaddler({ paddlerId: p.id, ability: (p.ability % 5) + 1 })}
@@ -2031,7 +2029,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       width: '28px', height: '28px', borderRadius: '6px',
                                       fontSize: '12px', fontWeight: 700, border: '2px solid',
                                       borderColor: color, backgroundColor: `${color}26`, color,
-                                      cursor: 'pointer',
+                                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}
                                   >
                                     {p.ability}
@@ -2041,7 +2039,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                                   {[1, 2, 3, 4, 5].map((level) => {
                                     const isActive = p.ability === level;
-                                    const color = level >= 4 ? '#10b981' : level >= 3 ? '#eab308' : '#ef4444';
+                                    const color = getAbilityColor(level);
                                     return (
                                       <button
                                         key={level}
@@ -2052,7 +2050,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                           borderColor: isActive ? color : 'transparent',
                                           backgroundColor: isActive ? `${color}26` : 'transparent',
                                           color: isActive ? color : '#6b7280',
-                                          cursor: 'pointer',
+                                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         }}
                                       >
                                         {level}
