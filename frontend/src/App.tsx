@@ -139,10 +139,10 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
       {isAdmin && (
         <>
           <span style={{
-            display: 'inline-block', width: badgeSize, height: badgeSize, borderRadius: '2px',
-            backgroundColor: abilityGradient, flexShrink: 0,
-          }} />
-          <span style={{ fontSize: badgeFs, fontWeight: 800, color: abilityGradient, flexShrink: 0 }}>
+            fontSize: badgeFs, fontWeight: 800, color: '#fff', flexShrink: 0,
+            backgroundColor: abilityGradient, borderRadius: '2px',
+            padding: '0 2px', lineHeight: '1.3',
+          }}>
             {paddler.ability}
           </span>
           <span style={{
