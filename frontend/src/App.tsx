@@ -110,11 +110,11 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
 
   // Ability gradient color
-  const abilityGradient = paddler.ability === 5 ? '#059669'
-    : paddler.ability === 4 ? '#65a30d'
+  const abilityGradient = paddler.ability === 5 ? '#e11d48'
+    : paddler.ability === 4 ? '#ea580c'
     : paddler.ability === 3 ? '#d97706'
-    : paddler.ability === 2 ? '#ea580c'
-    : '#e11d48';
+    : paddler.ability === 2 ? '#65a30d'
+    : '#059669';
 
   const fontSize = '18px';
   const badgeFs = '10px';
