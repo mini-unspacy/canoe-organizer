@@ -118,7 +118,6 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
 
   const fontSize = '18px';
   const badgeFs = '10px';
-  const badgeSize = '12px';
 
   // Type letter and color
   const typeLetter = paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V';
