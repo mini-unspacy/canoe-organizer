@@ -1740,9 +1740,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           </span>
                           {/* Designation selector dropdown */}
                           {openDesignator === canoe.id && (
+                            <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 19 }} onClick={() => setOpenDesignator(null)} />
                             <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20 }}>
-                              <div className="fixed inset-0 z-10" onClick={() => setOpenDesignator(null)} />
-                              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 z-20 grid grid-cols-3 gap-1" style={{ minWidth: '110px', position: 'relative', zIndex: 20 }}>
+                              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 grid grid-cols-3 gap-1" style={{ minWidth: '110px' }}>
                                 {CANOE_DESIGNATIONS.map(d => (
                                   <button
                                     key={d}
@@ -1767,6 +1768,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                 </button>
                               </div>
                             </div>
+                            </>
                           )}
                           {isAdmin && <svg
                             onClick={() => setLockedCanoes(prev => {
