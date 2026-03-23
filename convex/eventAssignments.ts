@@ -81,6 +81,52 @@ export const unassignPaddler = mutation({
   },
 });
 
+export const swapPaddlers = mutation({
+  args: {
+    eventId: v.string(),
+    paddlerA: v.string(),
+    canoeA: v.string(),
+    seatA: v.number(),
+    paddlerB: v.string(),
+    canoeB: v.string(),
+    seatB: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { eventId, paddlerA, canoeA, seatA, paddlerB, canoeB, seatB } = args;
+
+    // Delete both existing assignments
+    const allAssignments = await ctx.db
+      .query("eventAssignments")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
+
+    const toDelete = allAssignments.filter(
+      (a) =>
+        (a.paddlerId === paddlerA) ||
+        (a.paddlerId === paddlerB)
+    );
+    await Promise.all(toDelete.map((a) => ctx.db.delete(a._id)));
+
+    // Insert swapped assignments: A goes to B's old seat, B goes to A's old seat
+    await Promise.all([
+      ctx.db.insert("eventAssignments", {
+        eventId,
+        canoeId: canoeB,
+        seat: seatB,
+        paddlerId: paddlerA,
+      }),
+      ctx.db.insert("eventAssignments", {
+        eventId,
+        canoeId: canoeA,
+        seat: seatA,
+        paddlerId: paddlerB,
+      }),
+    ]);
+
+    return { success: true };
+  },
+});
+
 export const unassignAllForEvent = mutation({
   args: {
     eventId: v.string(),

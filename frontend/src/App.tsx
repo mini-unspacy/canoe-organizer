@@ -883,6 +883,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
   const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
+  const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers);
   const assignOptimal = useMutation(api.eventAssignments.assignOptimalForEvent);
   const unassignAllForEventMut = useMutation(api.eventAssignments.unassignAllForEvent);
   const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
@@ -1105,51 +1106,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [isDragging, setIsDragging] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
 
-  // Drag tracking for swap preview (refs + CSS injection to bypass Draggable memo)
-  const dragSourceIdRef = useRef<string | null>(null);
-  const swapStyleRef = useRef<HTMLStyleElement | null>(null);
-
   const [dragFromStaging, setDragFromStaging] = useState(false);
 
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
-    dragSourceIdRef.current = start.source.droppableId;
-  }, []);
-
-  const handleDragUpdate = useCallback((update: DragUpdate) => {
-    const destId = update.destination?.droppableId || null;
-
-    // Always clean up previous swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-
-    // Only inject swap preview for canoe seat targets with an existing paddler
-    if (!destId || !dragSourceIdRef.current || destId === dragSourceIdRef.current || !destId.includes('-seat-')) {
-      return;
-    }
-
-    const targetDroppable = document.querySelector(`[data-rfd-droppable-id="${destId}"]`);
-    const sourceDroppable = document.querySelector(`[data-rfd-droppable-id="${dragSourceIdRef.current}"]`);
-    if (!targetDroppable || !sourceDroppable) return;
-
-    const targetDraggable = targetDroppable.querySelector('[data-rfd-draggable-id]');
-    if (!targetDraggable) return;
-
-    const draggableId = targetDraggable.getAttribute('data-rfd-draggable-id');
-    if (!draggableId) return;
-
-    const sr = sourceDroppable.getBoundingClientRect();
-    const tr = targetDroppable.getBoundingClientRect();
-    const dx = sr.left - tr.left;
-    const dy = sr.top - tr.top;
-
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `[data-rfd-draggable-id="${draggableId}"] { transform: translate(${dx}px, ${dy}px) !important; transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important; z-index: 100 !important; position: relative !important; }`;
-    document.head.appendChild(styleEl);
-    swapStyleRef.current = styleEl;
   }, []);
 
   // On any touchstart, blur focused elements to prevent iOS focus interference.
@@ -1260,52 +1221,34 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const onDragEnd = async (result: DropResult) => {
     setIsDragging(false);
     setDragFromStaging(false);
-    // Clean up swap preview
-    if (swapStyleRef.current) {
-      swapStyleRef.current.remove();
-      swapStyleRef.current = null;
-    }
-    dragSourceIdRef.current = null;
     const { source, destination, draggableId } = result;
-    console.log('onDragEnd:', { source: source.droppableId, destination: destination?.droppableId, draggableId });
     if (!destination) return;
 
     const isGuestDrag = draggableId.startsWith('guest-');
 
-    // Handle trash can - mark absent for event, or just unassign if no event
+    // Handle trash can
     if (destination.droppableId === "trash-can") {
       if (!selectedEvent) return;
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
       if (draggedPaddler) {
-        // Unassign from canoe if assigned in this event
         const paddlerAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
         if (paddlerAssignment) {
-          await unassignPaddler({
-            eventId: selectedEvent.id,
-            paddlerId: draggableId,
-            canoeId: paddlerAssignment.canoeId,
-            seat: paddlerAssignment.seat,
-          });
+          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: paddlerAssignment.canoeId, seat: paddlerAssignment.seat });
         }
         if (isGuestDrag) {
-          // Remove guest entirely from the event
           await removeGuestMut({ guestId: draggedPaddler._id as any });
         } else {
-          // Set attendance to NO
           await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
         }
       }
       return;
     }
 
-    // Handle edit area - open edit modal (not for guests)
+    // Handle edit area
     if (destination.droppableId === "edit-area") {
       if (isGuestDrag) return;
-      console.log('Edit area drop detected, looking for paddler:', draggableId);
       const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
-      console.log('Found paddler:', draggedPaddler);
       if (draggedPaddler) {
-        console.log('Setting editing state...');
         setEditingPaddler(draggedPaddler);
         setEditForm({
           firstName: draggedPaddler.firstName,
@@ -1316,9 +1259,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
           seatPreference: draggedPaddler.seatPreference || '000000',
         });
         setIsEditModalOpen(true);
-        console.log('Modal should be open now, isEditModalOpen:', true);
-      } else {
-        console.log('Paddler not found!');
       }
       return;
     }
@@ -1328,14 +1268,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
     if (!draggedPaddler) return;
 
-    // Look up current assignment from eventAssignments
     const currentAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
     const oldCanoeId = currentAssignment?.canoeId;
     const oldSeat = currentAssignment?.seat;
 
-    // Block dragging from a locked canoe
     if (oldCanoeId && lockedCanoes.has(oldCanoeId)) return;
-
     if (source.droppableId === destination.droppableId) return;
 
     // Dropped to staging
@@ -1346,51 +1283,41 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       return;
     }
 
-    // Parse destination
+    // Parse destination seat
     const destParts = destination.droppableId.split("-");
     if (destParts.length !== 4 || destParts[0] !== "canoe" || destParts[2] !== "seat") return;
-
     const destCanoeId = destParts[1];
     const destSeat = parseInt(destParts[3]);
+    if (lockedCanoes.has(destCanoeId) || isNaN(destSeat)) return;
+    if (!canoes?.find((c: Canoe) => c.id === destCanoeId)) return;
 
-    // Block dragging into a locked canoe
-    if (lockedCanoes.has(destCanoeId)) return;
-    if (isNaN(destSeat)) return;
-
-    const targetCanoe = canoes?.find((c: Canoe) => c.id === destCanoeId);
-    if (!targetCanoe) return;
-
-    // Look up existing occupant from eventAssignments
+    // Check for existing occupant
     const destAssignments = canoeAssignmentsByCanoe.get(destCanoeId) || [];
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);
     const existingPaddlerId = existingAssignment?.paddlerId;
 
-    // Hide both paddlers from staging immediately to avoid flicker
+    // Hide paddlers from staging during mutation
     const idsToHide = [draggableId];
     if (existingPaddlerId && existingPaddlerId !== draggableId) idsToHide.push(existingPaddlerId);
     setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.add(id)); return next; });
 
     try {
-      // SWAP - handle seamlessly without going through staging
-      if (existingPaddlerId && existingPaddlerId !== draggableId) {
-        const existingPaddler = paddlers?.find((p: Paddler) => p.id === existingPaddlerId) || guestPaddlerMap.get(existingPaddlerId);
-        if (existingPaddler && oldCanoeId && oldSeat) {
-          await Promise.all([
-            unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat }),
-            unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat }),
-          ]);
-          await Promise.all([
-            assignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: oldCanoeId, seat: oldSeat }),
-            assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat }),
-          ]);
-        } else {
-          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
-          await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-        }
+      // SWAP — atomic single mutation
+      if (existingPaddlerId && existingPaddlerId !== draggableId && oldCanoeId && oldSeat) {
+        await swapPaddlers({
+          eventId: selectedEvent.id,
+          paddlerA: draggableId, canoeA: oldCanoeId, seatA: oldSeat,
+          paddlerB: existingPaddlerId, canoeB: destCanoeId, seatB: destSeat,
+        });
         return;
       }
 
-      // Simple move
+      // Replace (occupied seat, but dragged from staging)
+      if (existingPaddlerId && existingPaddlerId !== draggableId) {
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
+      }
+
+      // Simple assign
       await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
       if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
         await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
@@ -1464,7 +1391,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const gridPad = 32; // 16px each side
   const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
   // Static height: 6 paddler rows at 22px each
-  const canoeRowHeight = 6 * 22; // 132px
+  const seatHeight = 22;
+  const canoeRowHeight = 6 * seatHeight; // 132px
   // Legacy sizing kept for compatibility
   const leftControlWidth = 36;
   const canoePadding = 16;
@@ -1474,7 +1402,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const sortBarHeight = 32;
 
   return (
-    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart} onDragUpdate={handleDragUpdate}>
+    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart}>
       <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
         {/* Header - compact */}
@@ -1896,22 +1824,22 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    style={{ position: 'relative', height: '22px', minHeight: '22px', display: 'flex', alignItems: 'center' }}
+                                    style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}
                                   >
                                     {/* Empty seat / drag-over visual */}
                                     {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
                                       <div
-                                        className={`transition-all ${snapshot.isDraggingOver ? 'ring-1 ring-white' : ''}`}
+                                        className="transition-all"
                                         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
                                       />
                                     )}
                                     {assignedPaddler ? (
                                       <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                                        {(provided, snapshot) => (
-                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}>
+                                        {(provided, dragSnapshot) => (
+                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
                                             {assignedPaddler.id.startsWith('guest-')
-                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} />
-                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
+                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
+                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
                                             }
                                           </div>
                                         )}
