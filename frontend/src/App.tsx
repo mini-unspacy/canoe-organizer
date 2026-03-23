@@ -2469,6 +2469,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         {...provided.droppableProps}
                         style={{ padding: '4px 6px', marginTop: '8px' }}
                       >
+                        <div style={{ borderTop: '1px solid #4b5563', margin: '4px 0' }} />
                         <span className="font-semibold text-sm" style={{ color: '#f59e0b', display: 'block', padding: '4px 0 2px' }}>
                           guests ({unassignedGuests.length})
                         </span>
