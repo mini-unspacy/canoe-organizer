@@ -2,7 +2,7 @@ import { useMutation, useQuery, Authenticated, Unauthenticated, AuthLoading } fr
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import type { DropResult, DragStart, DragUpdate } from "@hello-pangea/dnd";
+import type { DropResult, DragStart } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
 import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
 
@@ -26,10 +26,7 @@ interface CanoeSortItem {
   icon: string;
 }
 
-const CIRCLE_SIZE = 44;
 const TOOLBAR_SIZE = 34;
-const PADDING = 12;
-// Circle + padding space: (CIRCLE_SIZE + PADDING)
 
 const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
@@ -81,7 +78,7 @@ const sortPaddlersByPriority = (paddlers: Paddler[], priority: CanoeSortItem[]):
 };
 
 
-const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; sizeW?: number; compact?: boolean; isAdmin?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, sizeW, compact, isAdmin, variant = 'boat' }) => {
+const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animationKey?: number; animationDelay?: number; isAdmin?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, isAdmin }) => {
   const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -116,7 +113,6 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   const abilityGradient = paddler.ability === 5 ? '#059669'
     : paddler.ability >= 3 ? '#d97706' : '#e11d48';
 
-  const isSidebar = variant === 'sidebar';
   const fontSize = '18px';
   const badgeFs = '10px';
   const badgeSize = '12px';
@@ -174,10 +170,9 @@ const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; animatio
   );
 };
 
-const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; sizeW?: number; compact?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging, sizeW, compact, variant = 'boat' }) => {
+const GuestPaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; variant?: 'boat' | 'sidebar' }> = ({ paddler, isDragging }) => {
   const firstName = paddler.firstName;
   const lastName = paddler.lastName || paddler.lastInitial || '';
-  const isSidebar = variant === 'sidebar';
   const displayName = `${firstName} ${lastName[0]?.toUpperCase() || ''}.`;
   const fontSize = '18px';
   const badgeFs = '10px';
@@ -1062,7 +1057,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     return () => document.removeEventListener('mousedown', handler);
   }, [sortPillOpen, openSortMenu]);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
-  const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
+  const [, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1393,13 +1388,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // Static height: 6 paddler rows at 22px each
   const seatHeight = 22;
   const canoeRowHeight = 6 * seatHeight; // 132px
-  // Legacy sizing kept for compatibility
-  const leftControlWidth = 36;
-  const canoePadding = 16;
-  const availableForSeats = containerWidth - leftControlWidth - canoePadding;
-  const dynamicGap = Math.min(PADDING, Math.max(2, Math.floor((availableForSeats - CIRCLE_SIZE * 6) / 5)));
-  const dynamicCircleW = Math.min(CIRCLE_SIZE, Math.max(20, Math.floor((availableForSeats - dynamicGap * 5) / 6) - 2));
-  const sortBarHeight = 32;
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart}>
@@ -1737,7 +1725,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 16px`, justifyContent: 'center' }}>
                   {canoes?.map((canoe: Canoe, index: number) => {
                     const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
-                    const isFull = canoeEventAssignments.length === 6;
                     return (
                       <div
                         key={canoe._id.toString()}
