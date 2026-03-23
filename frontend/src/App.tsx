@@ -2441,7 +2441,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
                                   >
                                     <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} variant="sidebar" />
                                   </div>
@@ -2484,7 +2484,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                     tabIndex={-1}
                                     role="none"
                                     aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%' }}
+                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
                                   >
                                     <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} variant="sidebar" />
                                   </div>
