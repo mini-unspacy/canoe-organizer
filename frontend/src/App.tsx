@@ -1606,6 +1606,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                                       {p.firstName} {p.lastName || p.lastInitial}
                                     </div>
                                   ))}
+                                {eventGuests && eventGuests.length > 0 && (
+                                  <div style={{ borderTop: '1px solid #333', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#9ca3af', fontWeight: 700 }}>GUESTS</div>
+                                )}
                                 {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
                                   <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
                                     {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
