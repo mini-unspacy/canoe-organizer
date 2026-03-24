@@ -4,7 +4,7 @@ import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult, DragStart } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
-import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef, Fragment } from "react";
 
 import { useAnimationTrigger } from "./useAnimationTrigger";
 import LoginPage from "./LoginPage";
@@ -354,6 +354,8 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollSnapshotRef = useRef<{ scrollHeight: number; scrollTop: number } | null>(null);
+  const isLoadingPastRef = useRef(false);
 
   // Use IntersectionObserver to trigger loading past events when sentinel is visible
   useEffect(() => {
@@ -362,13 +364,15 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
     if (!sentinel || !container) return;
     if (pastStatus !== 'CanLoadMore') return;
 
-    let cooldown = false;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !cooldown) {
-          cooldown = true;
+        if (entries[0].isIntersecting && !isLoadingPastRef.current) {
+          isLoadingPastRef.current = true;
+          scrollSnapshotRef.current = {
+            scrollHeight: container.scrollHeight,
+            scrollTop: container.scrollTop,
+          };
           loadMorePast(20);
-          setTimeout(() => { cooldown = false; }, 500);
         }
       },
       { root: container, rootMargin: '200px 0px 0px 0px' }
@@ -376,6 +380,19 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [pastStatus, loadMorePast]);
+
+  // After past events load, adjust scroll so the view doesn't jump
+  useLayoutEffect(() => {
+    const container = scheduleScrollRef.current;
+    const snapshot = scrollSnapshotRef.current;
+    if (!container || !snapshot) return;
+    const heightDiff = container.scrollHeight - snapshot.scrollHeight;
+    if (heightDiff > 0) {
+      container.scrollTop = snapshot.scrollTop + heightDiff;
+    }
+    scrollSnapshotRef.current = null;
+    isLoadingPastRef.current = false;
+  }, [pastEventsDesc.length]);
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
@@ -672,21 +689,14 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
         </div>}
 
         {/* Sentinel for loading past events + scroll anchor */}
-        <div ref={sentinelRef} style={{ overflowAnchor: 'none', height: pastStatus === 'LoadingMore' ? 'auto' : '1px' }}>
-          {pastStatus === 'LoadingMore' && (
-            <div style={{ textAlign: 'center', padding: '12px 0', color: '#9ca3af', fontSize: '14px' }}>
-              loading past events...
-            </div>
-          )}
-        </div>
+        <div ref={sentinelRef} style={{ height: '1px' }} />
 
         {/* Event list by month */}
         {allMonths.map(m => {
           const group = eventsByMonth.find(g => g.month === m.month);
           const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-          const isPast = m.month < cutoffDate.slice(0, 7);
           return (
-            <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }} style={{ overflowAnchor: isPast ? 'none' : undefined }}>
+            <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
               <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
                 {m.label}
               </div>
