@@ -353,45 +353,22 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   );
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const scrollSnapshotRef = useRef<{ scrollHeight: number; scrollTop: number } | null>(null);
   const isLoadingPastRef = useRef(false);
+  const anchorRef = useRef<{ eventId: string; offsetFromTop: number } | null>(null);
+  const lastLoadTime = useRef(0);
 
-  // Use IntersectionObserver to trigger loading past events when sentinel is visible
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    const container = scheduleScrollRef.current;
-    if (!sentinel || !container) return;
-    if (pastStatus !== 'CanLoadMore') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingPastRef.current) {
-          isLoadingPastRef.current = true;
-          scrollSnapshotRef.current = {
-            scrollHeight: container.scrollHeight,
-            scrollTop: container.scrollTop,
-          };
-          loadMorePast(20);
-        }
-      },
-      { root: container, rootMargin: '200px 0px 0px 0px' }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [pastStatus, loadMorePast]);
-
-  // After past events load, adjust scroll so the view doesn't jump
+  // After past events load, scroll back to the element that was visible before
   useLayoutEffect(() => {
     const container = scheduleScrollRef.current;
-    const snapshot = scrollSnapshotRef.current;
-    if (!container || !snapshot) return;
-    const heightDiff = container.scrollHeight - snapshot.scrollHeight;
-    if (heightDiff > 0) {
-      container.scrollTop = snapshot.scrollTop + heightDiff;
+    const anchor = anchorRef.current;
+    if (!container || !anchor) return;
+    const el = container.querySelector(`[data-event-id="${anchor.eventId}"]`) as HTMLElement | null;
+    if (el) {
+      container.scrollTop = el.offsetTop - container.offsetTop - anchor.offsetFromTop;
     }
-    scrollSnapshotRef.current = null;
-    isLoadingPastRef.current = false;
+    anchorRef.current = null;
+    // Cooldown before allowing another load
+    setTimeout(() => { isLoadingPastRef.current = false; }, 500);
   }, [pastEventsDesc.length]);
 
   // Restore scroll position when returning to schedule page
@@ -474,6 +451,25 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           if (!container) return;
           const scrollTop = container.scrollTop;
           if (scrollPosRef) scrollPosRef.current = scrollTop;
+          // Load more past events when scrolled near the top
+          if (scrollTop < 100 && pastStatus === 'CanLoadMore' && !isLoadingPastRef.current && Date.now() - lastLoadTime.current > 1000) {
+            isLoadingPastRef.current = true;
+            lastLoadTime.current = Date.now();
+            // Find the first visible event to use as scroll anchor after load
+            const containerRect = container.getBoundingClientRect();
+            const eventEls = container.querySelectorAll('[data-event-id]');
+            for (const el of eventEls) {
+              const rect = (el as HTMLElement).getBoundingClientRect();
+              if (rect.top >= containerRect.top - 10) {
+                anchorRef.current = {
+                  eventId: (el as HTMLElement).getAttribute('data-event-id')!,
+                  offsetFromTop: rect.top - containerRect.top,
+                };
+                break;
+              }
+            }
+            loadMorePast(20);
+          }
           let found = monthList[0] || '';
           for (const m of monthList) {
             const el = monthRefs.current[m];
@@ -687,9 +683,6 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
             </>
           )}
         </div>}
-
-        {/* Sentinel for loading past events + scroll anchor */}
-        <div ref={sentinelRef} style={{ height: '1px' }} />
 
         {/* Event list by month */}
         {allMonths.map(m => {
