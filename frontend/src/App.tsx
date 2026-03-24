@@ -289,7 +289,7 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   const { results: pastEventsDesc, status: pastStatus, loadMore: loadMorePast } = usePaginatedQuery(
     api.events.getPastEvents,
     { beforeDate: cutoffDate },
-    { initialNumItems: 0 }
+    { initialNumItems: 1 }
   );
   const pastEvents = useMemo(() => [...pastEventsDesc].reverse(), [pastEventsDesc]);
   const events = useMemo(() => {
