@@ -353,22 +353,26 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   );
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const prevScrollHeightRef = useRef(0);
-  const prevPastLenRef = useRef(0);
-  const loadingPastRef = useRef(false);
+  const prevPastLenRef = useRef(pastEventsDesc.length);
+  const isAdjustingScrollRef = useRef(false);
+  const snapshotScrollHeightRef = useRef(0);
 
   // Preserve scroll position when past events are prepended
   useLayoutEffect(() => {
     const container = scheduleScrollRef.current;
     if (!container) return;
-    if (pastEvents.length > prevPastLenRef.current && prevPastLenRef.current > 0) {
-      const heightAdded = container.scrollHeight - prevScrollHeightRef.current;
+    const newLen = pastEventsDesc.length;
+    const oldLen = prevPastLenRef.current;
+    if (newLen > oldLen && oldLen > 0 && snapshotScrollHeightRef.current > 0) {
+      isAdjustingScrollRef.current = true;
+      const heightAdded = container.scrollHeight - snapshotScrollHeightRef.current;
       container.scrollTop += heightAdded;
+      // Let the programmatic scroll settle before allowing more loads
+      requestAnimationFrame(() => { isAdjustingScrollRef.current = false; });
     }
-    prevPastLenRef.current = pastEvents.length;
-    prevScrollHeightRef.current = container.scrollHeight;
-    loadingPastRef.current = false;
-  }, [pastEvents.length]);
+    prevPastLenRef.current = newLen;
+    snapshotScrollHeightRef.current = 0;
+  }, [pastEventsDesc.length]);
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
@@ -451,9 +455,8 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           const scrollTop = container.scrollTop;
           if (scrollPosRef) scrollPosRef.current = scrollTop;
           // Load more past events when scrolled near the top
-          if (scrollTop < 200 && pastStatus === 'CanLoadMore' && !loadingPastRef.current) {
-            loadingPastRef.current = true;
-            prevScrollHeightRef.current = container.scrollHeight;
+          if (scrollTop < 200 && pastStatus === 'CanLoadMore' && !isAdjustingScrollRef.current) {
+            snapshotScrollHeightRef.current = container.scrollHeight;
             loadMorePast(20);
           }
           let found = monthList[0] || '';
