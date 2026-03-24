@@ -1,4 +1,5 @@
 import { query, mutation } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { customAlphabet } from 'nanoid';
 
@@ -24,6 +25,30 @@ export const getEvents = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("events").withIndex("by_date").collect();
+  },
+});
+
+export const getUpcomingEvents = query({
+  args: { fromDate: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("events")
+      .withIndex("by_date", (q) => q.gte("date", args.fromDate))
+      .collect();
+  },
+});
+
+export const getPastEvents = query({
+  args: {
+    beforeDate: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("events")
+      .withIndex("by_date", (q) => q.lt("date", args.beforeDate))
+      .order("desc")
+      .paginate(args.paginationOpts);
   },
 });
 

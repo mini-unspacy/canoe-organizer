@@ -1,10 +1,10 @@
-import { useMutation, useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { useMutation, useQuery, usePaginatedQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult, DragStart } from "@hello-pangea/dnd";
 import type { Doc } from "./convex_generated/dataModel";
-import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef, Fragment } from "react";
 
 import { useAnimationTrigger } from "./useAnimationTrigger";
 import LoginPage from "./LoginPage";
@@ -281,7 +281,21 @@ const sortPaddlers = (paddlers: Paddler[], sortBy: SortBy): Paddler[] => {
 };
 
 function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null }) {
-  const events = useQuery(api.events.getEvents);
+  const cutoffDate = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+  const upcomingEvents = useQuery(api.events.getUpcomingEvents, { fromDate: cutoffDate });
+  const { results: pastEventsDesc, status: pastStatus, loadMore: loadMorePast } = usePaginatedQuery(
+    api.events.getPastEvents,
+    { beforeDate: cutoffDate },
+    { initialNumItems: 0 }
+  );
+  const pastEvents = useMemo(() => [...pastEventsDesc].reverse(), [pastEventsDesc]);
+  const events = useMemo(() => {
+    if (!upcomingEvents) return null;
+    return [...pastEvents, ...upcomingEvents];
+  }, [pastEvents, upcomingEvents]);
   const paddlers = useQuery(api.paddlers.getPaddlers);
   const addEventMut = useMutation(api.events.addEvent);
   const updateEventMut = useMutation(api.events.updateEvent);
@@ -339,6 +353,22 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   );
   const scheduleScrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const prevScrollHeightRef = useRef(0);
+  const prevPastLenRef = useRef(0);
+  const loadingPastRef = useRef(false);
+
+  // Preserve scroll position when past events are prepended
+  useLayoutEffect(() => {
+    const container = scheduleScrollRef.current;
+    if (!container) return;
+    if (pastEvents.length > prevPastLenRef.current && prevPastLenRef.current > 0) {
+      const heightAdded = container.scrollHeight - prevScrollHeightRef.current;
+      container.scrollTop += heightAdded;
+    }
+    prevPastLenRef.current = pastEvents.length;
+    prevScrollHeightRef.current = container.scrollHeight;
+    loadingPastRef.current = false;
+  }, [pastEvents.length]);
 
   // Restore scroll position when returning to schedule page
   useEffect(() => {
@@ -359,10 +389,8 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
-    const oneWeekAgo = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
-    const upcoming = events.filter((e: { date: string }) => e.date >= oneWeekAgo);
-    const grouped: Record<string, typeof upcoming> = {};
-    for (const e of upcoming) {
+    const grouped: Record<string, typeof events> = {};
+    for (const e of events) {
       const monthKey = e.date.slice(0, 7);
       if (!grouped[monthKey]) grouped[monthKey] = [];
       grouped[monthKey].push(e);
@@ -381,20 +409,33 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
   const allMonths = useMemo(() => {
     const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     const now = new Date();
-    const result: { month: string; label: string }[] = [];
+    const monthMap = new Map<string, { month: string; label: string }>();
+    // Future 12 months (always shown)
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      result.push({ month: key, label: `${monthNames[d.getMonth()]} ${d.getFullYear()}` });
+      monthMap.set(key, { month: key, label: `${monthNames[d.getMonth()]} ${d.getFullYear()}` });
     }
-    return result;
-  }, []);
+    // Past months from loaded past events
+    for (const e of pastEvents) {
+      const key = e.date.slice(0, 7);
+      if (!monthMap.has(key)) {
+        const [y, m] = key.split('-');
+        monthMap.set(key, { month: key, label: `${monthNames[parseInt(m) - 1]} ${y}` });
+      }
+    }
+    return Array.from(monthMap.values()).sort((a, b) => a.month.localeCompare(b.month));
+  }, [pastEvents]);
 
   const monthList = useMemo(() => allMonths.map(m => m.month), [allMonths]);
 
   useEffect(() => {
     if (!activeMonth && allMonths.length > 0) {
-      setActiveMonth(allMonths[0].month);
+      // Default to current month, not the first (which could be a past month)
+      const now = new Date();
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const match = allMonths.find(m => m.month >= currentMonthKey);
+      setActiveMonth(match ? match.month : allMonths[0].month);
     }
   }, [allMonths, activeMonth]);
 
@@ -409,6 +450,12 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
           if (!container) return;
           const scrollTop = container.scrollTop;
           if (scrollPosRef) scrollPosRef.current = scrollTop;
+          // Load more past events when scrolled near the top
+          if (scrollTop < 200 && pastStatus === 'CanLoadMore' && !loadingPastRef.current) {
+            loadingPastRef.current = true;
+            prevScrollHeightRef.current = container.scrollHeight;
+            loadMorePast(20);
+          }
           let found = monthList[0] || '';
           for (const m of monthList) {
             const el = monthRefs.current[m];
@@ -622,6 +669,18 @@ function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEve
             </>
           )}
         </div>}
+
+        {/* Past events loading indicator */}
+        {pastStatus === 'LoadingMore' && (
+          <div style={{ textAlign: 'center', padding: '12px 0', color: '#9ca3af', fontSize: '14px' }}>
+            loading past events...
+          </div>
+        )}
+        {pastStatus === 'CanLoadMore' && pastEvents.length > 0 && (
+          <div style={{ textAlign: 'center', padding: '8px 0', color: '#6b7280', fontSize: '13px' }}>
+            scroll up for more
+          </div>
+        )}
 
         {/* Event list by month */}
         {allMonths.map(m => {
