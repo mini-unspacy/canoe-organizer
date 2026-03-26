@@ -1,549 +1,34 @@
-import { useMutation, useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import type { DropResult, DragStart } from "@hello-pangea/dnd";
-import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from "react";
+import { DragDropContext } from "@hello-pangea/dnd";
 
-import { useAnimationTrigger } from "./useAnimationTrigger";
 import LoginPage from "./LoginPage";
 import OnboardingPage from "./OnboardingPage";
 import { SchedulePage } from "./SchedulePage";
-import { PaddlerCircle, GuestPaddlerCircle } from "./components/PaddlerCircle";
-import type { User, Paddler, Canoe, ViewBy, SortBy, CanoeSortItem } from "./types";
-import { TOOLBAR_SIZE, CANOE_DESIGNATIONS, CANOE_SORT_OPTIONS, getLocalToday, getPrimarySeatPreference, sortPaddlersByPriority, getAbilityColor, getViewSections, sortPaddlers } from "./utils";
+import { TodayView } from "./TodayView";
+import { RosterView } from "./RosterView";
+import { StagingSidebar } from "./StagingSidebar";
+import { EditPaddlerModal } from "./EditPaddlerModal";
+import { useCanoeAssignment } from "./useCanoeAssignment";
+import type { User } from "./types";
 
 function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () => void }) {
-  const isAdmin = currentUser.role === 'admin';
-  const canoes = useQuery(api.canoes.getCanoes);
-  const paddlers = useQuery(api.paddlers.getPaddlers);
-  const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
-  const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
-  const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers);
-  const assignOptimal = useMutation(api.eventAssignments.assignOptimalForEvent);
-  const unassignAllForEventMut = useMutation(api.eventAssignments.unassignAllForEvent);
-  const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
-  const populateCanoes = useMutation(api.canoes.populateSampleCanoes);
-  // Unused: clearPaddlers, clearCanoes
-  // const _clearPaddlers = useMutation(api.paddlers.clearAllPaddlers);
-  // const _clearCanoes = useMutation(api.canoes.clearAllCanoes);
-  const addCanoe = useMutation(api.canoes.addCanoe);
-  const removeCanoe = useMutation(api.canoes.removeCanoe);
-
-
-  const updatePaddler = useMutation(api.paddlers.updatePaddler);
-  const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
-  const setAttendanceMut = useMutation(api.attendance.setAttendance);
-  const removeGuestMut = useMutation(api.eventGuests.removeGuest);
-  const allEvents = useQuery(api.events.getEvents);
-  const allUsers = useQuery(api.auth.getAllUsers);
-  const userEmailByPaddlerId = useMemo(() => {
-    if (!allUsers) return new Map<string, string>();
-    return new Map<string, string>(allUsers.map((u: { paddlerId: string; email: string }) => [u.paddlerId, u.email]));
-  }, [allUsers]);
-  const userRoleByPaddlerId = useMemo(() => {
-    if (!allUsers) return new Map<string, string>();
-    return new Map<string, string>(allUsers.map((u: { paddlerId: string; role: string }) => [u.paddlerId, u.role]));
-  }, [allUsers]);
-  const toggleAdminMut = useMutation(api.auth.toggleAdmin);
-  const deleteUserByPaddlerIdMut = useMutation(api.auth.deleteUserByPaddlerId);
-  const deletePaddlerMut = useMutation(api.paddlers.deletePaddler);
-
-  // Read selectedPaddlerId from localStorage (persisted by SchedulePage), fallback to currentUser
-  const [selectedPaddlerId, setSelectedPaddlerId] = useState<string | null>(() => localStorage.getItem('selectedPaddlerId') || currentUser.paddlerId);
-  useEffect(() => {
-    const handler = () => setSelectedPaddlerId(localStorage.getItem('selectedPaddlerId'));
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
-
-
-
-  // Canoe sort priority (draggable) - persist to localStorage
-  const [canoePriority, setCanoePriority] = useState<CanoeSortItem[]>(() => {
-    const saved = localStorage.getItem('canoePriority');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Validate that all required IDs are present
-        const requiredIds = CANOE_SORT_OPTIONS.map(o => o.id);
-        const hasAllIds = requiredIds.every(id => parsed.some((p: CanoeSortItem) => p.id === id));
-        if (hasAllIds) return parsed;
-      } catch { /* fall through to default */ }
-    }
-    return CANOE_SORT_OPTIONS;
-  });
-  
-  // Persist canoePriority to localStorage
-  useEffect(() => {
-    localStorage.setItem('canoePriority', JSON.stringify(canoePriority));
-  }, [canoePriority]);
-
-  // Staging view and sort
-  const [viewBy, setViewBy] = useState<ViewBy>("ability");
-  const [sectionSorts, setSectionSorts] = useState<{ [sectionId: string]: SortBy }>({});
-  const [isReassigning, setIsReassigning] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
-  const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
-  const [scrollToEventId, setScrollToEventId] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; date: string; time: string; location: string; eventType?: string } | null>(null);
-  const [showAllBoats, setShowAllBoats] = useState(false);
-  const [showAddSearch, setShowAddSearch] = useState(false);
-  const [addSearchQuery, setAddSearchQuery] = useState('');
-  const addSearchInputRef = useRef<HTMLInputElement>(null);
-  const addSearchMenuRef = useRef<HTMLDivElement>(null);
-  const [showGoingList, setShowGoingList] = useState(false);
-  const scheduleScrollPosRef = useRef(0);
-
-  // Close add-paddler search on outside click
-  useEffect(() => {
-    if (!showAddSearch) return;
-    const handler = (e: MouseEvent) => {
-      if (addSearchMenuRef.current && !addSearchMenuRef.current.contains(e.target as Node)) {
-        setShowAddSearch(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showAddSearch]);
-
-  const eventAttendance = useQuery(
-    api.attendance.getAttendanceForEvent,
-    selectedEvent ? { eventId: selectedEvent.id } : "skip"
-  );
-  const eventAttendingPaddlerIds = useMemo(() => {
-    if (!eventAttendance) return null;
-    return new Set(eventAttendance.map((a: { paddlerId: string }) => a.paddlerId));
-  }, [eventAttendance]);
-
-  const eventAssignments = useQuery(
-    api.eventAssignments.getEventAssignments,
-    selectedEvent ? { eventId: selectedEvent.id } : "skip"
-  );
-
-  const eventGuests = useQuery(
-    api.eventGuests.getByEvent,
-    selectedEvent ? { eventId: selectedEvent.id } : "skip"
-  );
-
-  const canoeAssignmentsByCanoe = useMemo(() => {
-    const map = new Map<string, { seat: number; paddlerId: string }[]>();
-    if (!eventAssignments) return map;
-    for (const a of eventAssignments) {
-      const list = map.get(a.canoeId) || [];
-      list.push({ seat: a.seat, paddlerId: a.paddlerId });
-      map.set(a.canoeId, list);
-    }
-    return map;
-  }, [eventAssignments]);
-
-  const assignedPaddlerIds = useMemo(() => {
-    if (!eventAssignments) return new Set<string>();
-    return new Set(eventAssignments.map((a: { paddlerId: string }) => a.paddlerId));
-  }, [eventAssignments]);
-
-  // Find today's event, or the next upcoming event if none today
-  const todayEvent = useMemo(() => {
-    if (!allEvents) return undefined; // still loading
-    const today = getLocalToday();
-    const todaysEvents = allEvents.filter((e: { date: string }) => e.date === today);
-    const evt = todaysEvents.length > 0 ? todaysEvents.reduce((a: { time: string }, b: { time: string }) => a.time >= b.time ? a : b) : null;
-    if (!evt) {
-      // No event today — find the next upcoming event
-      const upcoming = allEvents.filter((e: { date: string }) => e.date > today);
-      if (upcoming.length === 0) return null;
-      const next = upcoming.reduce((a: { date: string }, b: { date: string }) => a.date <= b.date ? a : b);
-      return { id: next.id, title: next.title, date: next.date, time: next.time, location: next.location, eventType: next.eventType };
-    }
-    return { id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType };
-  }, [allEvents]);
-
-  // Auto-select today's event on load (once events are loaded and no event selected yet)
-  useEffect(() => {
-    if (todayEvent && !selectedEvent) {
-      setSelectedEvent(todayEvent);
-    }
-  }, [todayEvent]);
-
-  const [editingSeatPrefId, setEditingSeatPrefId] = useState<string | null>(null);
-  const [tempSeatPref, setTempSeatPref] = useState('000000');
-  const [lockedCanoes, setLockedCanoes] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('lockedCanoes');
-    if (saved) { try { return new Set(JSON.parse(saved)); } catch { /* default */ } }
-    return new Set();
-  });
-
-  useEffect(() => {
-    localStorage.setItem('lockedCanoes', JSON.stringify([...lockedCanoes]));
-  }, [lockedCanoes]);
-  const [openSortMenu, setOpenSortMenu] = useState<string | null>(null);
-  const [sortPillOpen, setSortPillOpen] = useState(false);
-  const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
-  const sortPillRef = useRef<HTMLDivElement>(null);
-  const openSortMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close sort menus on click outside
-  useEffect(() => {
-    if (!sortPillOpen && !openSortMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (sortPillOpen && sortPillRef.current && !sortPillRef.current.contains(e.target as Node)) {
-        setSortPillOpen(false);
-      }
-      if (openSortMenu && openSortMenuRef.current && !openSortMenuRef.current.contains(e.target as Node)) {
-        setOpenSortMenu(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [sortPillOpen, openSortMenu]);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1000);
-  const [, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-      setWindowHeight(window.innerHeight);
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, []);
-
-  // Canoe designations - read from DB, derive as a map
-  const updateDesignationMut = useMutation(api.canoes.updateDesignation);
-  const canoeDesignations = useMemo(() => {
-    if (!canoes) return {} as Record<string, string>;
-    const map: Record<string, string> = {};
-    for (const c of canoes) {
-      if (c.designation) map[c.id] = c.designation;
-    }
-    return map;
-  }, [canoes]);
-  const [openDesignator, setOpenDesignator] = useState<string | null>(null);
-  
-  // Edit modal state
-  const [editingPaddler, setEditingPaddler] = useState<Paddler | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    firstName: '',
-    lastName: '',
-    gender: 'kane' as 'kane' | 'wahine',
-    type: 'casual' as 'racer' | 'casual' | 'very-casual',
-    ability: 3,
-    seatPreference: '000000',
-  });
-
-  const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
-
-  const [dragFromStaging, setDragFromStaging] = useState(false);
-
-  const handleDragStart = useCallback((start: DragStart) => {
-    setIsDragging(true);
-    setDragFromStaging(start.source.droppableId.startsWith('staging-'));
-  }, []);
-
-  // On any touchstart, blur focused elements to prevent iOS focus interference.
-  // Do NOT call preventDefault — the library ignores events where defaultPrevented is true.
-  useEffect(() => {
-    const handler = () => {
-      if (document.activeElement && document.activeElement !== document.body) {
-        (document.activeElement as HTMLElement).blur();
-      }
-    };
-    document.addEventListener('touchstart', handler, { passive: true });
-    return () => document.removeEventListener('touchstart', handler);
-  }, []);
-
-  // Block native touchmove on the whole page during drag to prevent scroll interference
-  useEffect(() => {
-    if (!isDragging) return;
-    const handler = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-    document.addEventListener('touchmove', handler, { passive: false });
-    return () => document.removeEventListener('touchmove', handler);
-  }, [isDragging]);
-
-  // No auto canoe creation - assign button handles this
-
-  // Canoe sorted paddlers for display
-  const canoeSortedPaddlers = useMemo(() => 
-    paddlers ? sortPaddlersByPriority(paddlers, canoePriority) : [],
-  [paddlers, canoePriority]);
-
-  const unassignedPaddlers = useMemo(() => {
-    if (!paddlers || !selectedEvent || !eventAttendingPaddlerIds) return [];
-    return paddlers.filter((p: Paddler) => !assignedPaddlerIds.has(p.id) && eventAttendingPaddlerIds.has(p.id));
-  }, [paddlers, selectedEvent, eventAttendingPaddlerIds, assignedPaddlerIds]);
-
-  // Synthetic paddler objects for guests (keyed by guest-${_id})
-  const guestPaddlerMap = useMemo(() => {
-    const map = new Map<string, Paddler>();
-    if (!eventGuests) return map;
-    for (const guest of eventGuests) {
-      const nameParts = guest.name.trim().split(/\s+/);
-      const firstName = nameParts[0] || guest.name;
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-      const guestId = `guest-${guest._id}`;
-      map.set(guestId, {
-        _id: guest._id,
-        _creationTime: 0,
-        id: guestId,
-        firstName,
-        lastInitial: lastName ? lastName[0] : firstName[0],
-        lastName: lastName || undefined,
-        gender: 'kane' as const,
-        type: 'casual' as const,
-        ability: 0,
-      } as Paddler);
-    }
-    return map;
-  }, [eventGuests]);
-
-  const unassignedGuests = useMemo(() => {
-    if (!eventGuests) return [];
-    return eventGuests.filter((g: any) => !assignedPaddlerIds.has(`guest-${g._id}`));
-  }, [eventGuests, assignedPaddlerIds]);
-
-  // Toggle attendance and unassign from canoe (even locked) when marking NO
-  const handleToggleAttendance = useCallback(async (paddlerId: string, eventId: string) => {
-    const wasAttending = eventAttendingPaddlerIds?.has(paddlerId);
-    await toggleAttendanceMut({ paddlerId, eventId });
-    // If toggling from YES to NO, also unassign from their canoe seat
-    if (wasAttending) {
-      const assignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === paddlerId);
-      if (assignment) {
-        await unassignPaddler({ eventId, paddlerId, canoeId: assignment.canoeId, seat: assignment.seat });
-      }
-    }
-  }, [eventAttendingPaddlerIds, eventAssignments, toggleAttendanceMut, unassignPaddler]);
-
-  const viewSections = useMemo(() =>
-    getViewSections(unassignedPaddlers, viewBy),
-  [unassignedPaddlers, viewBy]);
-
-  // Auto-reassign canoes when canoe priority changes
-  const prevCanoePriorityRef = useRef<string>("");
-  useEffect(() => {
-    const priorityKey = canoePriority.map(p => p.id).join(",");
-    if (prevCanoePriorityRef.current && prevCanoePriorityRef.current !== priorityKey && !isReassigning) {
-      handleReassignCanoes();
-    }
-    prevCanoePriorityRef.current = priorityKey;
-  }, [canoePriority]);
-
-  const handleReassignCanoes = useCallback(async (onlyReassignExisting = true) => {
-    if (!paddlers || !canoes || isReassigning || !selectedEvent) return;
-    triggerAnimation();
-    setIsReassigning(true);
-
-    await assignOptimal({
-      eventId: selectedEvent.id,
-      priority: canoePriority,
-      excludeCanoeIds: [...lockedCanoes],
-      onlyReassignExisting,
-    });
-
-    setIsReassigning(false);
-  }, [paddlers, canoes, isReassigning, selectedEvent, canoePriority, lockedCanoes, triggerAnimation]);
-
-  const onDragEnd = async (result: DropResult) => {
-    setIsDragging(false);
-    setDragFromStaging(false);
-    const { source, destination, draggableId } = result;
-    if (!destination) return;
-
-    const isGuestDrag = draggableId.startsWith('guest-');
-
-    // Handle trash can
-    if (destination.droppableId === "trash-can") {
-      if (!selectedEvent) return;
-      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
-      if (draggedPaddler) {
-        const paddlerAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
-        if (paddlerAssignment) {
-          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: paddlerAssignment.canoeId, seat: paddlerAssignment.seat });
-        }
-        if (isGuestDrag) {
-          await removeGuestMut({ guestId: draggedPaddler._id as any });
-        } else {
-          await setAttendanceMut({ paddlerId: draggableId, eventId: selectedEvent.id, attending: false });
-        }
-      }
-      return;
-    }
-
-    // Handle edit area
-    if (destination.droppableId === "edit-area") {
-      if (isGuestDrag) return;
-      const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId);
-      if (draggedPaddler) {
-        setEditingPaddler(draggedPaddler);
-        setEditForm({
-          firstName: draggedPaddler.firstName,
-          lastName: draggedPaddler.lastName || '',
-          gender: draggedPaddler.gender,
-          type: draggedPaddler.type,
-          ability: draggedPaddler.ability,
-          seatPreference: draggedPaddler.seatPreference || '000000',
-        });
-        setIsEditModalOpen(true);
-      }
-      return;
-    }
-
-    if (!selectedEvent) return;
-
-    const draggedPaddler = paddlers?.find((p: Paddler) => p.id === draggableId) || guestPaddlerMap.get(draggableId);
-    if (!draggedPaddler) return;
-
-    const currentAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === draggableId);
-    const oldCanoeId = currentAssignment?.canoeId;
-    const oldSeat = currentAssignment?.seat;
-
-    if (oldCanoeId && lockedCanoes.has(oldCanoeId)) return;
-    if (source.droppableId === destination.droppableId) return;
-
-    // Dropped to staging
-    if (destination.droppableId.startsWith("staging-")) {
-      if (oldCanoeId && oldSeat) {
-        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
-      }
-      return;
-    }
-
-    // Parse destination seat
-    const destParts = destination.droppableId.split("-");
-    if (destParts.length !== 4 || destParts[0] !== "canoe" || destParts[2] !== "seat") return;
-    const destCanoeId = destParts[1];
-    const destSeat = parseInt(destParts[3]);
-    if (lockedCanoes.has(destCanoeId) || isNaN(destSeat)) return;
-    if (!canoes?.find((c: Canoe) => c.id === destCanoeId)) return;
-
-    // Check for existing occupant
-    const destAssignments = canoeAssignmentsByCanoe.get(destCanoeId) || [];
-    const existingAssignment = destAssignments.find(a => a.seat === destSeat);
-    const existingPaddlerId = existingAssignment?.paddlerId;
-
-    // Hide paddlers from staging during mutation
-    const idsToHide = [draggableId];
-    if (existingPaddlerId && existingPaddlerId !== draggableId) idsToHide.push(existingPaddlerId);
-    setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.add(id)); return next; });
-
-    try {
-      // SWAP — atomic single mutation
-      if (existingPaddlerId && existingPaddlerId !== draggableId && oldCanoeId && oldSeat) {
-        await swapPaddlers({
-          eventId: selectedEvent.id,
-          paddlerA: draggableId, canoeA: oldCanoeId, seatA: oldSeat,
-          paddlerB: existingPaddlerId, canoeB: destCanoeId, seatB: destSeat,
-        });
-        return;
-      }
-
-      // Replace (occupied seat, but dragged from staging)
-      if (existingPaddlerId && existingPaddlerId !== draggableId) {
-        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: existingPaddlerId, canoeId: destCanoeId, seat: destSeat });
-      }
-
-      // Simple assign
-      await assignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: destCanoeId, seat: destSeat });
-      if (oldCanoeId && oldSeat && (oldCanoeId !== destCanoeId || oldSeat !== destSeat)) {
-        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
-      }
-    } finally {
-      setPendingAssignIds(prev => { const next = new Set(prev); idsToHide.forEach(id => next.delete(id)); return next; });
-    }
-  };
-
-  const handleRemoveCanoe = (canoeId: string) => {
-    if (!canoes || canoes.length <= 1) return; // keep at least 1
-    removeCanoe({ canoeId });
-  };
-
-  const handleAddCanoeAfter = (_index: number) => {
-    const nextNum = (canoes?.length || 0) + 1;
-    addCanoe({ name: `Canoe ${nextNum}` });
-  };
-
-  const handleUnassignAll = async () => {
-    if (!selectedEvent) return;
-    await unassignAllForEventMut({
-      eventId: selectedEvent.id,
-      excludeCanoeIds: [...lockedCanoes],
-    });
-  };
-
-  const handleSectionSort = (sectionId: string, sortBy: SortBy) => {
-    setSectionSorts(prev => ({ ...prev, [sectionId]: sortBy }));
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingPaddler) return;
-    await updatePaddler({
-      paddlerId: editingPaddler.id,
-      ...editForm,
-    });
-    setIsEditModalOpen(false);
-    setEditingPaddler(null);
-  };
-
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingPaddler(null);
-  };
-
-  const handleAssign = async () => {
-    if (!paddlers || !canoes || !selectedEvent) return;
-    // Count attending paddlers for this event
-    const attendingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : paddlers.length;
-    const neededCanoes = Math.ceil(attendingCount / 6);
-    if (neededCanoes > canoes.length) {
-      for (let i = canoes.length; i < neededCanoes; i++) {
-        await addCanoe({ name: `Canoe ${i + 1}` });
-      }
-    }
-    triggerAnimation();
-    assignOptimal({ eventId: selectedEvent.id, priority: canoePriority, excludeCanoeIds: [...lockedCanoes] });
-  };
-
-  const dataLoading = canoes === undefined || paddlers === undefined;
-  const hasNoData = !dataLoading && canoes.length === 0 && paddlers.length === 0;
-
-  // Calculate layout sizing
-  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 170 : 24) : 0;
-  const leftSidebarW = leftSidebarOpen ? 110 : 28;
-  const mainPad = 4;
-  const flexGap = 8;
-  const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
-  const canoeMargin = 20;
-  const gridPad = 32; // 16px each side
-  const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);
-  // Static height: 6 paddler rows at 22px each
-  const seatHeight = 22;
-  const canoeRowHeight = 6 * seatHeight; // 132px
+  const ctx = useCanoeAssignment(currentUser);
 
   return (
-    <DragDropContext onDragEnd={onDragEnd} onDragStart={handleDragStart}>
-      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
+    <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
+      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-        {/* Header - compact */}
         <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
-          {dataLoading ? (
+          {ctx.dataLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
               <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
             </div>
-          ) : hasNoData ? (
+          ) : ctx.hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
-                onClick={() => { triggerAnimation(); populatePaddlers(); populateCanoes(); }}
+                onClick={() => { ctx.triggerAnimation(); ctx.populatePaddlers(); ctx.populateCanoes(); }}
                 className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
                 style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
               >
@@ -557,12 +42,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: leftSidebarOpen ? 110 : 28,
+                  width: ctx.leftSidebarOpen ? 110 : 28,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
-                  overflowY: leftSidebarOpen ? 'auto' : 'hidden',
+                  overflowY: ctx.leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: '#000000',
                   padding: '12px 4px 0 4px',
@@ -570,7 +55,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 }}
               >
                 <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
-                  <div onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{ textAlign: leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 2px', cursor: 'pointer' }}>
+                  <div onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)} style={{ textAlign: ctx.leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 2px', cursor: 'pointer' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#dc2626',
@@ -579,12 +64,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                       textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
                       fontSize: '36px',
                     }}>
-                      {leftSidebarOpen ? 'Lokahi' : 'L'}
+                      {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
                   </div>
-                  <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: leftSidebarOpen ? 'flex-end' : 'center' }}>
+                  <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: ctx.leftSidebarOpen ? 'flex-end' : 'center' }}>
                     <span
-                      onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                      onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)}
                       style={{
                         cursor: 'pointer',
                         fontSize: '13px',
@@ -596,7 +81,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         borderRadius: '999px',
                       }}
                     >
-                      {leftSidebarOpen ? '‹‹‹' : '›'}
+                      {ctx.leftSidebarOpen ? '‹‹‹' : '›'}
                     </span>
                   </div>
                 </div>
@@ -610,7 +95,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     ]).map(({ page, icon, label }) => (
                       <span
                         key={page}
-                        onClick={() => { setActivePage(page); if (page === 'today') setSelectedEvent(todayEvent || null); }}
+                        onClick={() => { ctx.setActivePage(page); if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null); }}
                         title={label}
                         className="cursor-pointer transition-colors"
                         style={{
@@ -619,20 +104,20 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           gap: '8px',
                           padding: '6px 0 6px 0',
                           borderRadius: '8px',
-                          color: activePage === page ? '#ffffff' : '#c0c0c0',
-                          backgroundColor: activePage === page ? '#4b5563' : 'transparent',
+                          color: ctx.activePage === page ? '#ffffff' : '#c0c0c0',
+                          backgroundColor: ctx.activePage === page ? '#4b5563' : 'transparent',
                           userSelect: 'none',
                           justifyContent: 'flex-start',
                         }}
-                        onMouseEnter={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = '#4b5563'; }}
-                        onMouseLeave={(e) => { if (activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = '#4b5563'; }}
+                        onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
                         <span style={{ fontSize: '22px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-                        {leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 500 }}>{label}</span>}
+                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 500 }}>{label}</span>}
                       </span>
                     ))}
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
-                      {leftSidebarOpen && (
+                      {ctx.leftSidebarOpen && (
                         <>
                           <div style={{ fontSize: '10px', color: '#9ca3af', padding: '0 8px', wordBreak: 'break-all' }}>
                             {currentUser.email}
@@ -650,1192 +135,114 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   </div>
               </div>
 
-              {/* MIDDLE COLUMN - CANOES */}
-              <div style={{ width: containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" onClick={() => showGoingList && setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                {/* Header — no-event fallback */}
-                {activePage === 'today' && !selectedEvent && (
-                  <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-                    <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
-                      const now = new Date();
-                      const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                      return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
-                    })()}</span>
-                  </div>
+              {/* MIDDLE COLUMN */}
+              <div style={{ width: ctx.containerWidth, minWidth: 0, flexShrink: 0, overflow: 'hidden', height: '100%' }}>
+              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                {ctx.activePage === 'today' && (
+                  <TodayView
+                    selectedEvent={ctx.selectedEvent}
+                    isAdmin={ctx.isAdmin}
+                    sidebarOpen={ctx.sidebarOpen}
+                    canoes={ctx.canoes}
+                    paddlers={ctx.paddlers}
+                    canoeSortedPaddlers={ctx.canoeSortedPaddlers}
+                    canoeAssignmentsByCanoe={ctx.canoeAssignmentsByCanoe}
+                    eventAssignments={ctx.eventAssignments}
+                    eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
+                    eventGuests={ctx.eventGuests}
+                    guestPaddlerMap={ctx.guestPaddlerMap}
+                    assignedPaddlerIds={ctx.assignedPaddlerIds}
+                    lockedCanoes={ctx.lockedCanoes}
+                    setLockedCanoes={ctx.setLockedCanoes}
+                    canoeDesignations={ctx.canoeDesignations}
+                    updateDesignationMut={ctx.updateDesignationMut}
+                    animationKey={ctx.animationKey}
+                    boatWidth={ctx.boatWidth}
+                    canoeRowHeight={ctx.canoeRowHeight}
+                    canoeMargin={ctx.canoeMargin}
+                    currentUser={currentUser}
+                    selectedPaddlerId={ctx.selectedPaddlerId}
+                    showAllBoats={ctx.showAllBoats}
+                    setShowAllBoats={ctx.setShowAllBoats}
+                    showGoingList={ctx.showGoingList}
+                    setShowGoingList={ctx.setShowGoingList}
+                    handleToggleAttendance={ctx.handleToggleAttendance}
+                    handleAssign={ctx.handleAssign}
+                    handleUnassignAll={ctx.handleUnassignAll}
+                    handleReassignCanoes={ctx.handleReassignCanoes}
+                    handleRemoveCanoe={ctx.handleRemoveCanoe}
+                    handleAddCanoeAfter={ctx.handleAddCanoeAfter}
+                    addCanoe={ctx.addCanoe}
+                    triggerAnimation={ctx.triggerAnimation}
+                    canoePriority={ctx.canoePriority}
+                    setCanoePriority={ctx.setCanoePriority}
+                    setScrollToEventId={ctx.setScrollToEventId}
+                    setActivePage={ctx.setActivePage}
+                  />
                 )}
-                {activePage === 'today' && (<>
-                {/* placeholder for removed sort widget - now in Y/N row */}
 
-                {selectedEvent && (() => {
-                  const _d = new Date(selectedEvent.date + 'T00:00:00');
-                  const _dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                  const _dayName = _dayNames[_d.getDay()];
-                  const _dayNum = _d.getDate();
-                  const _isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
-                  const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
-                  const _guestCount = eventGuests?.length || 0;
-                  const _goingCount = _goingPaddlers + _guestCount;
-                  return (
-                <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0' }}>
-                  {/* Event info row — matches schedule list layout */}
-                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                    {/* Left column: date + day */}
-                    <div onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-                      <div style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{_dayNum}</div>
-                      <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
-                    </div>
-                    {/* Right column: time/title, going */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'visible', marginTop: '0px', position: 'relative' }}>
-                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
-                        <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
-                          {selectedEvent.time} {selectedEvent.title}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
-                        <span onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
-                        {showGoingList && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                              backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
-                              padding: '12px 16px', minWidth: '220px', zIndex: 100,
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                            }}
-                          >
-                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
-                              ATTENDING ({_goingCount})
-                            </div>
-                            {_goingCount === 0 ? (
-                              <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
-                            ) : (
-                              <>
-                              <div
-                                ref={(el) => {
-                                  if (!el) return;
-                                  const indicator = el.nextElementSibling as HTMLElement;
-                                  if (!indicator) return;
-                                  const check = () => { indicator.style.display = el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight < el.scrollHeight - 4 ? 'block' : 'none'; };
-                                  check();
-                                  el.onscroll = check;
-                                }}
-                                style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '390px', overflowY: 'auto' }}>
-                                {paddlers
-                                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                                  .map((p: Paddler) => (
-                                    <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
-                                      {p.firstName} {p.lastName || p.lastInitial}
-                                    </div>
-                                  ))}
-                                {eventGuests && eventGuests.length > 0 && (
-                                  <div style={{ borderTop: '1px solid #333', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#9ca3af', fontWeight: 700 }}>GUESTS</div>
-                                )}
-                                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                                  <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
-                                    {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Y/N + all boats/my boats row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '-2px', marginBottom: '8px' }}>
-                    {selectedPaddlerId && (
-                      <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-                      <div
-                        onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
-                        style={{
-                          width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', userSelect: 'none',
-                          border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
-                          backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                          color: _isAttending ? '#22c55e' : '#ef4444',
-                          fontSize: '16px', fontWeight: 700,
-                        }}
-                      >
-                        {_isAttending ? 'Y' : 'N'}
-                      </div>
-                      </div>
-                    )}
-                    {!isAdmin && (
-                      <span
-                        onClick={() => setShowAllBoats(!showAllBoats)}
-                        style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '4px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                      >
-                        {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
-                      </span>
-                    )}
-                    {isAdmin && (<>
-                      <div ref={sortPillRef} style={{ position: 'relative' }}>
-                        <span
-                          onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-                          style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                        >
-                          sort by:
-                        </span>
-                        {sortPillOpen && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
-                            <DragDropContext onDragEnd={(result) => {
-                              if (!result.destination) return;
-                              const newPriority = Array.from(tempPriority);
-                              const [reorderedItem] = newPriority.splice(result.source.index, 1);
-                              newPriority.splice(result.destination.index, 0, reorderedItem);
-                              setTempPriority(newPriority);
-                            }}>
-                            <Droppable droppableId="canoe-priority" direction="vertical">
-                              {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {tempPriority.map((item, index) => (
-                                    <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
-                                      {(provided, snapshot) => (
-                                        <div
-                                          ref={provided.innerRef}
-                                          {...provided.draggableProps}
-                                          {...provided.dragHandleProps}
-                                          style={{
-                                            ...provided.draggableProps.style,
-                                            touchAction: 'none',
-                                            padding: '8px 12px',
-                                            backgroundColor: snapshot.isDragging ? '#dbeafe' : '#f1f5f9',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            color: '#334155',
-                                            cursor: 'grab',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                          }}
-                                        >
-                                          <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
-                                          {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
-                                          <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '12px' }}>⠿</span>
-                                        </div>
-                                      )}
-                                    </Draggable>
-                                  ))}
-                                  {provided.placeholder}
-                                </div>
-                              )}
-                            </Droppable>
-                            </DragDropContext>
-                            <div
-                              onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
-                              style={{ marginTop: '8px', padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textAlign: 'center', cursor: 'pointer' }}
-                            >
-                              apply
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ flex: 1 }} />
-                      <span
-                        onClick={handleAssign}
-                        style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                      >
-                        {sidebarOpen ? '←' : '←assign'}
-                      </span>
-                      <span
-                        onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-                        style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
-                      >
-                        {sidebarOpen ? '→' : 'return→'}
-                      </span>
-                    </>)}
-                  </div>
-                  {(isAdmin || showAllBoats) ? (<>
-                  <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 16px`, justifyContent: 'center' }}>
-                  {canoes?.map((canoe: Canoe, index: number) => {
-                    const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
-                    return (
-                      <div
-                        key={canoe._id.toString()}
-                        style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
-                      >
-                        {/* Header row: BOAT: designation ... lock icon */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '2px', position: 'relative' }}>
-                          <span
-                            className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
-                            onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
-                            style={{
-                              fontFamily: "'Courier New', Courier, monospace",
-                              fontSize: '18px',
-                              fontWeight: 900,
-                              color: '#ffffff',
-                              textTransform: 'uppercase',
-                              letterSpacing: '2px',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {sidebarOpen ? '' : 'BOAT: '}{canoeDesignations[canoe.id] || '???'}
-                          </span>
-                          {/* Designation selector dropdown */}
-                          {openDesignator === canoe.id && (
-                            <>
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 19 }} onClick={() => setOpenDesignator(null)} />
-                            <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20 }}>
-                              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 grid grid-cols-3 gap-1" style={{ minWidth: '110px' }}>
-                                {CANOE_DESIGNATIONS.map(d => (
-                                  <button
-                                    key={d}
-                                    onClick={(e) => { e.stopPropagation(); updateDesignationMut({ canoeId: canoe.id, designation: d }); setOpenDesignator(null); }}
-                                    className="px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-center transition-colors"
-                                  >
-                                    {d}
-                                  </button>
-                                ))}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const custom = prompt('Enter canoe number:');
-                                    if (custom && custom.trim()) {
-                                      updateDesignationMut({ canoeId: canoe.id, designation: custom.trim() });
-                                    }
-                                    setOpenDesignator(null);
-                                  }}
-                                  className="px-2 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded text-center transition-colors"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                            </>
-                          )}
-                          {isAdmin && <svg
-                            onClick={() => setLockedCanoes(prev => {
-                              const next = new Set(prev);
-                              if (next.has(canoe.id)) next.delete(canoe.id);
-                              else next.add(canoe.id);
-                              return next;
-                            })}
-                            width="14" height="14" viewBox="0 0 24 24"
-                            fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
-                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                            style={{ cursor: 'pointer', flexShrink: 0 }}
-                          >
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            {lockedCanoes.has(canoe.id)
-                              ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                              : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                            }
-                          </svg>}
-                        </div>
-                        {/* 6 seats in a single vertical column */}
-                        <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0px', height: `${canoeRowHeight}px`, overflow: 'hidden' }}>
-                          {Array.from({ length: 6 }).map((_, i) => {
-                            const seat = i + 1;
-                            const assignment = canoeEventAssignments.find(a => a.seat === seat);
-                            const assignedPaddler = assignment ? (canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId)) : undefined;
-
-                            return (
-                              <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}
-                                  >
-                                    {/* Empty seat / drag-over visual */}
-                                    {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
-                                      <div
-                                        className="transition-all"
-                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
-                                      />
-                                    )}
-                                    {assignedPaddler ? (
-                                      <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                                        {(provided, dragSnapshot) => (
-                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
-                                            {assignedPaddler.id.startsWith('guest-')
-                                              ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
-                                              : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
-                                            }
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ) : (
-                                      <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#4b5563', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
-                                    )}
-                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                                  </div>
-                                )}
-                              </Droppable>
-                            );
-                          })}
-                        </div>
-                        {/* -/+ buttons on last canoe */}
-                        {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '6px', padding: '4px 4px 0' }}>
-                          <span
-                            onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                            className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#000000', border: '1px solid #64748b',
-                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
-                              color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
-                            }}
-                            title="Remove canoe"
-                          >
-                            −
-                          </span>
-                          <span
-                            onClick={() => handleAddCanoeAfter(index)}
-                            className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: '#000000', border: '1px solid #64748b',
-                              fontSize: '13px', fontWeight: 700, lineHeight: 1,
-                              color: '#94a3b8',
-                            }}
-                            title="Add canoe"
-                          >
-                            +
-                          </span>
-                        </div>}
-                      </div>
-                    );
-                  })}
-                  </div>
-
-                  {/* Add Canoe button when no canoes exist */}
-                  {(!canoes || canoes.length === 0) && (
-                    <button
-                      onClick={() => addCanoe({ name: "Canoe 1" })}
-                      className="w-full py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-center gap-2"
-                    >
-                      <span className="text-lg">+</span>
-                      <span className="font-medium">Add Canoe</span>
-                    </button>
-                  )}
-                  </>) : (
-                  /* Non-admin: show only the paddler's assigned canoe in military style */
-                  (() => {
-                    const myAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === currentUser.paddlerId);
-                    const myCanoe = myAssignment ? canoes?.find((c: Canoe) => c.id === myAssignment.canoeId) : null;
-                    const myCanoeAssignments = myCanoe ? (canoeAssignmentsByCanoe.get(myCanoe.id) || []) : [];
-                    const designation = myCanoe ? (canoeDesignations[myCanoe.id] || '???') : null;
-                    const monoStyle = { fontFamily: "'Courier New', Courier, monospace", textTransform: 'uppercase' as const };
-
-                    if (!myCanoe) {
-                      return (
-                        <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#6b7280', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
-                          NO ASSIGNMENT
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div style={{ padding: '20px 0' }}>
-                        <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px', marginBottom: '20px' }}>
-                          BOAT: {designation}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {Array.from({ length: 6 }).map((_, i) => {
-                            const seat = i + 1;
-                            const assignment = myCanoeAssignments.find((a: { seat: number }) => a.seat === seat);
-                            const assignedPaddler = assignment ? (paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId) || null) : null;
-                            const isMe = assignedPaddler?.id === currentUser.paddlerId;
-                            const isGuest = assignedPaddler?.id.startsWith('guest-');
-                            return (
-                              <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
-                                {assignedPaddler ? (
-                                  <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>
-                                    {assignedPaddler.firstName} {assignedPaddler.lastName}
-                                    {isGuest && <span style={{ fontSize: '14px', color: '#9ca3af', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
-                                  </span>
-                                ) : (
-                                  <span>---</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()
-                  )}
-                </div>
-                ); })()}
-                </>)}
-
-                {activePage === 'schedule' && <SchedulePage isAdmin={isAdmin} scrollPosRef={scheduleScrollPosRef} scrollToEventId={scrollToEventId} onSelectEvent={(evt) => {
-                  setSelectedEvent(evt);
-                  setScrollToEventId(null);
-                  setActivePage('today');
+                {ctx.activePage === 'schedule' && <SchedulePage isAdmin={ctx.isAdmin} scrollPosRef={ctx.scheduleScrollPosRef} scrollToEventId={ctx.scrollToEventId} onSelectEvent={(evt) => {
+                  ctx.setSelectedEvent(evt);
+                  ctx.setScrollToEventId(null);
+                  ctx.setActivePage('today');
                 }} />}
 
-                {activePage === 'roster' && paddlers && (
-                  <div style={{ padding: '8px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    <table style={{ width: '100%', minWidth: isAdmin ? '500px' : '280px', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #4b5563' }}>
-                          <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>name</th>
-                          <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>gender</th>
-                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>type</th>}
-                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>ability</th>}
-                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600, minWidth: '70px' }}>seat pref</th>}
-                          {isAdmin && <th style={{ textAlign: 'center', padding: '8px 4px', color: '#9ca3af', fontSize: '12px', fontWeight: 600, width: '40px' }}>adm</th>}
-                          <th style={{ textAlign: 'left', padding: '8px 12px', color: '#9ca3af', fontSize: '12px', fontWeight: 600 }}>email</th>
-                          {isAdmin && <th style={{ width: '32px' }}></th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...paddlers].sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName)).map((p: Paddler) => (
-                          <tr key={p._id.toString()} style={{ borderBottom: '1px solid #4b5563' }}>
-                            <td style={{ padding: '8px 12px', color: '#c0c0c0', fontSize: '14px', fontWeight: 500 }}>
-                              {p.firstName} {p.lastName}
-                            </td>
-                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                              <span
-                                onClick={isAdmin ? () => updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' }) : undefined}
-                                style={{
-                                  padding: '4px 12px',
-                                  borderRadius: '999px',
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  border: '2px solid',
-                                  borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
-                                  backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
-                                  color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
-                                  cursor: isAdmin ? 'pointer' : 'default',
-                                }}
-                              >
-                                {p.gender}
-                              </span>
-                            </td>
-                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                              {windowWidth < 768 ? (
-                                <button
-                                  onClick={() => {
-                                    const types: Array<'racer' | 'casual' | 'very-casual'> = ['racer', 'casual', 'very-casual'];
-                                    const next = types[(types.indexOf(p.type) + 1) % 3];
-                                    updatePaddler({ paddlerId: p.id, type: next });
-                                  }}
-                                  style={{
-                                    padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                                    border: '2px solid',
-                                    borderColor: p.type === 'racer' ? '#8b5cf6' : p.type === 'casual' ? '#3b82f6' : '#64748b',
-                                    backgroundColor: p.type === 'racer' ? 'rgba(139,92,246,0.15)' : p.type === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)',
-                                    color: p.type === 'racer' ? '#a78bfa' : p.type === 'casual' ? '#60a5fa' : '#94a3b8',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  {p.type === 'very-casual' ? 'v-casual' : p.type}
-                                </button>
-                              ) : (
-                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                  {(['racer', 'casual', 'very-casual'] as const).map((t) => (
-                                    <button
-                                      key={t}
-                                      onClick={() => updatePaddler({ paddlerId: p.id, type: t })}
-                                      style={{
-                                        padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                                        border: '2px solid',
-                                        borderColor: p.type === t
-                                          ? t === 'racer' ? '#8b5cf6' : t === 'casual' ? '#3b82f6' : '#64748b'
-                                          : 'transparent',
-                                        backgroundColor: p.type === t
-                                          ? t === 'racer' ? 'rgba(139,92,246,0.15)' : t === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)'
-                                          : 'transparent',
-                                        color: p.type === t
-                                          ? t === 'racer' ? '#a78bfa' : t === 'casual' ? '#60a5fa' : '#94a3b8'
-                                          : '#6b7280',
-                                        cursor: 'pointer',
-                                      }}
-                                    >
-                                      {t === 'very-casual' ? 'v-casual' : t}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </td>}
-                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                              {windowWidth < 768 ? (() => {
-                                const color = getAbilityColor(p.ability);
-                                return (
-                                  <button
-                                    onClick={() => updatePaddler({ paddlerId: p.id, ability: (p.ability % 5) + 1 })}
-                                    style={{
-                                      width: '28px', height: '28px', borderRadius: '6px',
-                                      fontSize: '12px', fontWeight: 700, border: '2px solid',
-                                      borderColor: color, backgroundColor: `${color}26`, color,
-                                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    }}
-                                  >
-                                    {p.ability}
-                                  </button>
-                                );
-                              })() : (
-                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                  {[1, 2, 3, 4, 5].map((level) => {
-                                    const isActive = p.ability === level;
-                                    const color = getAbilityColor(level);
-                                    return (
-                                      <button
-                                        key={level}
-                                        onClick={() => updatePaddler({ paddlerId: p.id, ability: level })}
-                                        style={{
-                                          width: '28px', height: '28px', borderRadius: '6px',
-                                          fontSize: '12px', fontWeight: 700, border: '2px solid',
-                                          borderColor: isActive ? color : 'transparent',
-                                          backgroundColor: isActive ? `${color}26` : 'transparent',
-                                          color: isActive ? color : '#6b7280',
-                                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        }}
-                                      >
-                                        {level}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </td>}
-                            {isAdmin && <td style={{ padding: '8px 12px', textAlign: 'center', position: 'relative' }}>
-                              <span
-                                onClick={() => { if (editingSeatPrefId !== p.id) { setEditingSeatPrefId(p.id); setTempSeatPref(p.seatPreference || '000000'); } }}
-                                style={{ color: '#9ca3af', fontSize: '13px', cursor: 'pointer', borderBottom: editingSeatPrefId === p.id ? 'none' : '1px dashed #4b5563', whiteSpace: 'nowrap' }}
-                              >
-                                {p.seatPreference?.split('').map(Number).filter((n: number) => n > 0).join('') || '—'}
-                              </span>
-                              {editingSeatPrefId === p.id && (
-                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, backgroundColor: '#111111', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
-                                  <div style={{ display: 'flex', gap: '3px' }}>
-                                    {[1, 2, 3, 4, 5, 6].map((seat) => {
-                                      const prefs = tempSeatPref.split('').map(Number).filter(n => n > 0);
-                                      const isSelected = prefs.includes(seat);
-                                      const priority = prefs.indexOf(seat) + 1;
-                                      return (
-                                        <button
-                                          key={seat}
-                                          onClick={() => {
-                                            const currentPrefs = tempSeatPref.split('').map(Number).filter(n => n > 0);
-                                            let newPrefs;
-                                            if (currentPrefs.includes(seat)) {
-                                              newPrefs = currentPrefs.filter(s => s !== seat);
-                                            } else {
-                                              newPrefs = [...currentPrefs, seat];
-                                            }
-                                            setTempSeatPref([...newPrefs, ...Array(6 - newPrefs.length).fill(0)].join('').slice(0, 6));
-                                          }}
-                                          style={{
-                                            width: '20px', height: '20px', borderRadius: '4px',
-                                            fontSize: '10px', fontWeight: 700, border: '1.5px solid',
-                                            borderColor: isSelected ? '#f97316' : '#4b5563',
-                                            backgroundColor: isSelected ? 'rgba(249,115,22,0.15)' : 'transparent',
-                                            color: isSelected ? '#fb923c' : '#6b7280',
-                                            cursor: 'pointer', position: 'relative', padding: 0, lineHeight: 1,
-                                          }}
-                                        >
-                                          {seat}
-                                          {isSelected && (
-                                            <span style={{
-                                              position: 'absolute', top: '-3px', right: '-3px',
-                                              width: '10px', height: '10px', borderRadius: '50%',
-                                              backgroundColor: '#f97316', color: '#fff',
-                                              fontSize: '6px', fontWeight: 700,
-                                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            }}>
-                                              {priority}
-                                            </span>
-                                          )}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '4px' }}>
-                                    <button
-                                      onClick={() => setEditingSeatPrefId(null)}
-                                      style={{ padding: '1px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
-                                    >
-                                      ✕
-                                    </button>
-                                    <button
-                                      onClick={() => { updatePaddler({ paddlerId: p.id, seatPreference: tempSeatPref }); setEditingSeatPrefId(null); }}
-                                      style={{ padding: '1px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
-                                    >
-                                      ✓
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </td>}
-                            {isAdmin && <td style={{ padding: '8px 4px', textAlign: 'center', width: '40px' }}>
-                              <input
-                                type="checkbox"
-                                checked={userRoleByPaddlerId.get(p.id) === 'admin'}
-                                onChange={() => toggleAdminMut({ paddlerId: p.id })}
-                                style={{ cursor: 'pointer', accentColor: '#3b82f6' }}
-                              />
-                            </td>}
-                            <td style={{ padding: '8px 12px', color: '#9ca3af', fontSize: '13px' }}>
-                              {userEmailByPaddlerId.get(p.id) || '—'}
-                            </td>
-                            {isAdmin && <td style={{ padding: '8px 4px', textAlign: 'center', width: '32px' }}>
-                              <button
-                                onClick={() => {
-                                  if (window.confirm(`Delete ${p.firstName} ${p.lastName || p.lastInitial}? This removes their paddler profile and user account.`)) {
-                                    deleteUserByPaddlerIdMut({ paddlerId: p.id });
-                                    deletePaddlerMut({ paddlerId: p.id });
-                                  }
-                                }}
-                                style={{
-                                  background: 'none', border: 'none', color: '#6b7280', fontSize: '14px',
-                                  cursor: 'pointer', padding: '2px 4px', borderRadius: '4px', lineHeight: 1,
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.color = '#6b7280'; }}
-                              >
-                                ✕
-                              </button>
-                            </td>}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                {ctx.activePage === 'roster' && ctx.paddlers && (
+                  <RosterView
+                    paddlers={ctx.paddlers}
+                    isAdmin={ctx.isAdmin}
+                    windowWidth={ctx.windowWidth}
+                    updatePaddler={ctx.updatePaddler}
+                    toggleAdminMut={ctx.toggleAdminMut}
+                    deleteUserByPaddlerIdMut={ctx.deleteUserByPaddlerIdMut}
+                    deletePaddlerMut={ctx.deletePaddlerMut}
+                    userEmailByPaddlerId={ctx.userEmailByPaddlerId}
+                    userRoleByPaddlerId={ctx.userRoleByPaddlerId}
+                  />
                 )}
               </div>
               </div>
 
               {/* RIGHT COLUMN - STAGING SIDEBAR (admin only) */}
-              {activePage === 'today' && isAdmin && (
-              <div
-                className="scrollbar-hidden"
-                style={{
-                  width: sidebarOpen ? 170 : 24,
-                  height: '100%',
-                  flexShrink: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
-                  overflowX: 'hidden',
-                  touchAction: isDragging ? 'none' : 'auto',
-                  backgroundColor: sidebarOpen ? '#000000' : 'transparent',
-                  padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
-                  paddingBottom: 0,
-                  borderLeft: '1px solid #94a3b8',
-                }}
-              >
-                {/* Toolbar - sticky */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#000000' : 'transparent', padding: '12px 4px 0 4px' }} className="relative">
-                  {/* Top row: toggle + A button */}
-                  <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
-                    <span
-                      onClick={() => setSidebarOpen(!sidebarOpen)}
-                      style={{
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        color: '#475569',
-                        userSelect: 'none',
-                        padding: '2px 8px',
-                        backgroundColor: '#e2e8f0',
-                        borderRadius: '999px',
-                      }}
-                    >
-                      {sidebarOpen ? '›››' : '‹'}
-                    </span>
-
-                  {sidebarOpen && (
-                    <div ref={openSortMenu === 'viewby' ? openSortMenuRef : undefined} style={{ position: 'relative', marginLeft: 'auto' }}>
-                      <span
-                        onClick={() => setOpenSortMenu(openSortMenu === 'viewby' ? null : 'viewby')}
-                        style={{
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: 800,
-                          color: '#475569',
-                          userSelect: 'none',
-                          padding: '2px 8px',
-                          backgroundColor: '#e2e8f0',
-                          borderRadius: '999px',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {{ gender: 'gender', type: 'racer', seatPreference: 'seat', ability: 'ability' }[viewBy]}
-                      </span>
-                      {openSortMenu === 'viewby' && (
-                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
-                          {[
-                            { id: "gender", label: "gender" },
-                            { id: "type", label: "racer" },
-                            { id: "seatPreference", label: "seat" },
-                            { id: "ability", label: "ability" },
-                          ].map((opt) => (
-                            <div
-                              key={opt.id}
-                              onClick={() => { setViewBy(opt.id as ViewBy); setOpenSortMenu(null); }}
-                              style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#1e293b' : '#64748b', backgroundColor: viewBy === opt.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
-                            >
-                              {opt.label}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  </div>
-
-                {sidebarOpen && (
-                <>
-                  {/* Second row: Edit/Trash/+ icons */}
-                  <div className="flex items-center gap-1">
-                    <Droppable droppableId="edit-area">
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="rounded-full border-[3px] flex items-center justify-center transition-all"
-                          style={{
-                            width: TOOLBAR_SIZE,
-                            height: TOOLBAR_SIZE,
-                            backgroundColor: snapshot.isDraggingOver ? '#facc15' : '#000',
-                            borderColor: snapshot.isDraggingOver ? '#fde047' : '#9ca3af',
-                            transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
-                          }}
-                          title="Drag paddlers here to edit"
-                        >
-                          <span style={{ fontSize: '16px' }}>✏️</span>
-                          <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                        </div>
-                      )}
-                    </Droppable>
-                    <Droppable droppableId="trash-can">
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="rounded-full border-[3px] flex items-center justify-center transition-all"
-                          style={{
-                            width: TOOLBAR_SIZE,
-                            height: TOOLBAR_SIZE,
-                            backgroundColor: snapshot.isDraggingOver ? '#f87171' : '#000',
-                            borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#9ca3af',
-                            transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
-                          }}
-                          title="Drag paddlers here to mark absent"
-                        >
-                          <span style={{ fontSize: '16px' }}>🗑️</span>
-                          <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                        </div>
-                      )}
-                    </Droppable>
-                    <div style={{ position: 'relative' }}>
-                      <div
-                        onClick={() => {
-                          if (!selectedEvent) return;
-                          setShowAddSearch(!showAddSearch);
-                          setAddSearchQuery('');
-                          setTimeout(() => addSearchInputRef.current?.focus(), 50);
-                        }}
-                        className={`rounded-full border-[3px] flex items-center justify-center transition-all ${selectedEvent ? 'cursor-pointer hover:opacity-80' : 'opacity-40 cursor-not-allowed'}`}
-                        style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff' }}
-                        title={selectedEvent ? 'Add paddler to event' : 'Select an event first'}
-                      >
-                        +
-                      </div>
-                    </div>
-                  </div>
-                  {showAddSearch && selectedEvent && (
-                      <div ref={addSearchMenuRef} style={{ position: 'absolute', left: '4px', right: '4px', zIndex: 30, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '8px', marginTop: '4px' }}>
-                        <input
-                          ref={addSearchInputRef}
-                          type="text"
-                          value={addSearchQuery}
-                          onChange={(e) => setAddSearchQuery(e.target.value)}
-                          placeholder="search paddler..."
-                          style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f1f5f9', color: '#1e293b', outline: 'none', boxSizing: 'border-box' }}
-                          autoFocus
-                        />
-                        <div style={{ marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
-                          {(() => {
-                            const query = addSearchQuery.toLowerCase().trim();
-                            if (!query || !paddlers) return null;
-                            const matches = paddlers.filter((p: Paddler) => {
-                              if (eventAttendingPaddlerIds?.has(p.id)) return false;
-                              const fullName = `${p.firstName} ${p.lastName || ''}`.toLowerCase();
-                              return fullName.includes(query);
-                            }).slice(0, 8);
-                            if (matches.length === 0) return <div style={{ fontSize: '13px', color: '#64748b', padding: '4px 8px' }}>no matches</div>;
-                            return matches.map((p: Paddler) => (
-                              <div
-                                key={p.id}
-                                onClick={async () => {
-                                  await setAttendanceMut({ paddlerId: p.id, eventId: selectedEvent.id, attending: true });
-                                  setShowAddSearch(false);
-                                  setAddSearchQuery('');
-                                }}
-                                style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 500, color: '#64748b', backgroundColor: '#fff', borderRadius: '4px', cursor: 'pointer' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.fontWeight = '700'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.fontWeight = '500'; }}
-                              >
-                                {p.firstName} {p.lastName ? p.lastName[0] + '.' : ''}
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-                  )}
-                </>
-                )}
-                </div>
-
-                {sidebarOpen && (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                {/* Staging - single drop zone */}
-                <Droppable droppableId="staging-all" direction="vertical" isDropDisabled={dragFromStaging}>
-                  {(provided, snapshot) => {
-                    // Flatten all sections into one ordered list for draggable indices
-                    const allPaddlers: Paddler[] = [];
-                    const sectionBreaks: { index: number; label: string; id: string }[] = [];
-                    if (viewSections.length > 0) {
-                      viewSections.forEach((section) => {
-                        const sectionSort = sectionSorts[section.id] || "gender";
-                        const sorted = sortPaddlers(section.paddlers, sectionSort).filter(p => !pendingAssignIds.has(p.id));
-                        sectionBreaks.push({ index: allPaddlers.length, label: section.label, id: section.id });
-                        allPaddlers.push(...sorted);
-                      });
-                    }
-
-                    return (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`rounded-lg transition-colors flex flex-col
-                          ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : ''}`}
-                        style={{ padding: '4px 6px', marginTop: '8px', flex: 1, minHeight: '100px' }}
-                      >
-                        {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
-                          const sectionBreak = sectionBreaks.find(b => b.index === index);
-                          return (
-                            <Fragment key={paddler._id.toString()}>
-                              {sectionBreak && (
-                                <div className="flex items-center justify-between w-full" style={{ padding: '4px 0 2px' }}>
-                                  <span className="font-semibold text-sm" style={{ color: '#c0c0c0' }}>
-                                    {sectionBreak.label} ({viewSections.find(s => s.id === sectionBreak.id)?.paddlers.length})
-                                  </span>
-                                  <div ref={openSortMenu === sectionBreak.id ? openSortMenuRef : undefined} style={{ position: 'relative' }}>
-                                    <span
-                                      onClick={() => setOpenSortMenu(openSortMenu === sectionBreak.id ? null : sectionBreak.id)}
-                                      style={{
-                                        cursor: 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: 800,
-                                        color: '#475569',
-                                        userSelect: 'none',
-                                        padding: '2px 8px',
-                                        backgroundColor: '#e2e8f0',
-                                        borderRadius: '999px',
-                                      }}
-                                    >
-                                      {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[sectionSorts[sectionBreak.id] || 'gender']}
-                                    </span>
-                                    {openSortMenu === sectionBreak.id && (
-                                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50, overflow: 'hidden', minWidth: '100px' }}>
-                                        {[
-                                          { id: "gender", label: "gender" },
-                                          { id: "type", label: "racer" },
-                                          { id: "seatPreference", label: "seat" },
-                                          { id: "ability", label: "ability" },
-                                        ].map((sort) => (
-                                          <div
-                                            key={sort.id}
-                                            onClick={() => { handleSectionSort(sectionBreak.id, sort.id as SortBy); setOpenSortMenu(null); }}
-                                            style={{ padding: '8px 12px', fontSize: '13px', fontWeight: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? 700 : 500, color: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#1e293b' : '#64748b', backgroundColor: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
-                                          >
-                                            {sort.label}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              <Draggable draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    tabIndex={-1}
-                                    role="none"
-                                    aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
-                                  >
-                                    <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} variant="sidebar" />
-                                  </div>
-                                )}
-                              </Draggable>
-                            </Fragment>
-                          );
-                        }) : (
-                          <span className="text-sm w-full text-center mt-4" style={{ color: '#c0c0c0' }}>drag paddlers here to unassign</span>
-                        )}
-                        {provided.placeholder}
-                      </div>
-                    );
-                  }}
-                </Droppable>
-                {/* Guest paddler circles (draggable) */}
-                {unassignedGuests.length > 0 && (
-                  <Droppable droppableId="staging-guests" direction="vertical" isDropDisabled={dragFromStaging}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        style={{ padding: '4px 6px', marginTop: '8px' }}
-                      >
-                        <span className="font-semibold text-sm" style={{ color: '#f59e0b', display: 'block', padding: '4px 0 2px' }}>
-                          guests ({unassignedGuests.length})
-                        </span>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          {unassignedGuests.map((guest: any, index: number) => {
-                            const guestId = `guest-${guest._id}`;
-                            const guestPaddler = guestPaddlerMap.get(guestId);
-                            if (!guestPaddler) return null;
-                            return (
-                              <Draggable draggableId={guestId} index={index} key={guestId} shouldRespectForcePress={false}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    tabIndex={-1}
-                                    role="none"
-                                    aria-roledescription=""
-                                    style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
-                                  >
-                                    <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} variant="sidebar" />
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                        </div>
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                )}
-                </div>
-                )}
-                {/* Bottom spacer to keep content above iOS browser bar */}
-                <div style={{ flexShrink: 0, height: 80, minHeight: 80 }} />
-              </div>
+              {ctx.activePage === 'today' && ctx.isAdmin && (
+                <StagingSidebar
+                  sidebarOpen={ctx.sidebarOpen}
+                  setSidebarOpen={ctx.setSidebarOpen}
+                  isDragging={ctx.isDragging}
+                  dragFromStaging={ctx.dragFromStaging}
+                  viewBy={ctx.viewBy}
+                  setViewBy={ctx.setViewBy}
+                  unassignedPaddlers={ctx.unassignedPaddlers}
+                  unassignedGuests={ctx.unassignedGuests}
+                  guestPaddlerMap={ctx.guestPaddlerMap}
+                  pendingAssignIds={ctx.pendingAssignIds}
+                  animationKey={ctx.animationKey}
+                  isAdmin={ctx.isAdmin}
+                  selectedEvent={ctx.selectedEvent}
+                  showAddSearch={ctx.showAddSearch}
+                  setShowAddSearch={ctx.setShowAddSearch}
+                  addSearchQuery={ctx.addSearchQuery}
+                  setAddSearchQuery={ctx.setAddSearchQuery}
+                  addSearchInputRef={ctx.addSearchInputRef}
+                  addSearchMenuRef={ctx.addSearchMenuRef}
+                  paddlers={ctx.paddlers}
+                  eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
+                  setAttendanceMut={ctx.setAttendanceMut}
+                />
               )}
             </div>
           )}
         </main>
 
         {/* Edit Paddler Modal */}
-        {isEditModalOpen && editingPaddler && (
-          <div className="fixed flex" style={{ 
-            top: '80px', 
-            right: '20px', 
-            zIndex: 9999,
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            borderRadius: '16px',
-            padding: '8px'
-          }} onClick={handleCloseEditModal}>
-            <div
-              className="rounded-2xl shadow-2xl p-6 w-full max-w-md"
-              style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', minWidth: '380px' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: '#1e293b' }}>
-                  <span>✏️</span> edit paddler
-                </h2>
-                <button
-                  onClick={handleCloseEditModal}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                  style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Name fields */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>first name</label>
-                    <input
-                      type="text"
-                      value={editForm.firstName}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
-                      placeholder="First name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>last name</label>
-                    <input
-                      type="text"
-                      value={editForm.lastName}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
-                      placeholder="Last name"
-                    />
-                  </div>
-                </div>
-
-                {/* Gender */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">gender</label>
-                  <div className="flex gap-2">
-                    {[
-                      { id: 'kane', label: 'kane', icon: '♂️', color: 'blue' },
-                      { id: 'wahine', label: 'wahine', icon: '♀️', color: 'pink' },
-                    ].map((option) => (
-                      <button
-                        key={option.id}
-                        onClick={() => setEditForm(prev => ({ ...prev, gender: option.id as 'kane' | 'wahine' }))}
-                        className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all flex items-center justify-center gap-1.5
-                          ${editForm.gender === option.id
-                            ? option.color === 'blue'
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                              : 'border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                      >
-                        <span>{option.icon}</span>
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Type */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Type</label>
-                  <div className="flex gap-2">
-                    {[
-                      { id: 'racer', label: 'racer', color: 'violet' },
-                      { id: 'casual', label: 'casual', color: 'blue' },
-                      { id: 'very-casual', label: 'very casual', color: 'slate' },
-                    ].map((option) => (
-                      <button
-                        key={option.id}
-                        onClick={() => setEditForm(prev => ({ ...prev, type: option.id as 'racer' | 'casual' | 'very-casual' }))}
-                        className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all
-                          ${editForm.type === option.id
-                            ? option.color === 'violet'
-                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
-                              : option.color === 'blue'
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                : 'border-slate-500 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ability */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                    Ability <span className="text-slate-400">(1-5)</span>
-                  </label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setEditForm(prev => ({ ...prev, ability: level }))}
-                        className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all
-                          ${editForm.ability === level
-                            ? level >= 4
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                              : level >= 3
-                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                                : 'border-rose-500 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Seat Preference */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                    Seat Preference <span className="text-slate-400">(click seats in priority order)</span>
-                  </label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5, 6].map((seat) => {
-                      const prefs = editForm.seatPreference.split('').map(Number).filter(n => n > 0);
-                      const isSelected = prefs.includes(seat);
-                      const priority = prefs.indexOf(seat) + 1;
-                      return (
-                        <button
-                          key={seat}
-                          onClick={() => {
-                            const currentPrefs = editForm.seatPreference.split('').map(Number).filter(n => n > 0);
-                            let newPrefs;
-                            if (currentPrefs.includes(seat)) {
-                              newPrefs = currentPrefs.filter(s => s !== seat);
-                            } else {
-                              newPrefs = [...currentPrefs, seat];
-                            }
-                            const prefString = [...newPrefs, ...Array(6 - newPrefs.length).fill(0)].join('').slice(0, 6);
-                            setEditForm(prev => ({ ...prev, seatPreference: prefString }));
-                          }}
-                          className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all relative
-                            ${isSelected
-                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                              : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                        >
-                          {seat}
-                          {isSelected && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[8px] rounded-full flex items-center justify-center">
-                              {priority}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Selected: {editForm.seatPreference.split('').map(Number).filter(n => n > 0).join(' > ') || 'None'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleCloseEditModal}
-                  className="flex-1 px-4 py-2.5 rounded-lg border font-medium transition-colors"
-                  style={{ borderColor: '#e2e8f0', color: '#64748b' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-white font-medium shadow-lg"
-                  style={{ background: 'linear-gradient(to right, #3b82f6, #4f46e5)' }}
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
+        {ctx.isEditModalOpen && ctx.editingPaddler && (
+          <EditPaddlerModal
+            editingPaddler={ctx.editingPaddler}
+            editForm={ctx.editForm}
+            setEditForm={ctx.setEditForm}
+            onSave={ctx.handleSaveEdit}
+            onClose={ctx.handleCloseEditModal}
+          />
         )}
       </div>
     </DragDropContext>
@@ -1846,7 +253,6 @@ function AuthenticatedApp() {
   const { signOut } = useAuthActions();
   const convexUser = useQuery(api.auth.currentUser);
 
-  // Still loading user data
   if (convexUser === undefined) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
@@ -1856,17 +262,14 @@ function AuthenticatedApp() {
     );
   }
 
-  // User doc not found (shouldn't happen, but handle gracefully)
   if (!convexUser) {
     return <LoginPage />;
   }
 
-  // Onboarding not complete — show onboarding screen
   if (!convexUser.onboardingComplete || !convexUser.paddlerId) {
     return <OnboardingPage name={convexUser.name} />;
   }
 
-  // Sync paddlerId to localStorage for components that read it
   if (convexUser.paddlerId) {
     localStorage.setItem("selectedPaddlerId", convexUser.paddlerId);
   }
