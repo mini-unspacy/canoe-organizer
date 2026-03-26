@@ -151,7 +151,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
                     eventGuests={ctx.eventGuests}
                     guestPaddlerMap={ctx.guestPaddlerMap}
-                    assignedPaddlerIds={ctx.assignedPaddlerIds}
                     lockedCanoes={ctx.lockedCanoes}
                     setLockedCanoes={ctx.setLockedCanoes}
                     canoeDesignations={ctx.canoeDesignations}
@@ -237,7 +236,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
         {/* Edit Paddler Modal */}
         {ctx.isEditModalOpen && ctx.editingPaddler && (
           <EditPaddlerModal
-            editingPaddler={ctx.editingPaddler}
             editForm={ctx.editForm}
             setEditForm={ctx.setEditForm}
             onSave={ctx.handleSaveEdit}

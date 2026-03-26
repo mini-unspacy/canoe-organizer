@@ -106,7 +106,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   );
   const eventAttendingPaddlerIds = useMemo(() => {
     if (!eventAttendance) return null;
-    return new Set(eventAttendance.map((a: { paddlerId: string }) => a.paddlerId));
+    return new Set<string>(eventAttendance.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAttendance]);
 
   const eventAssignments = useQuery(
@@ -132,7 +132,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
 
   const assignedPaddlerIds = useMemo(() => {
     if (!eventAssignments) return new Set<string>();
-    return new Set(eventAssignments.map((a: { paddlerId: string }) => a.paddlerId));
+    return new Set<string>(eventAssignments.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAssignments]);
 
   const todayEvent = useMemo(() => {

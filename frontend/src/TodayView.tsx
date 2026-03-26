@@ -25,7 +25,6 @@ interface TodayViewProps {
   eventAttendingPaddlerIds: Set<string> | null;
   eventGuests: any[] | undefined;
   guestPaddlerMap: Map<string, Paddler>;
-  assignedPaddlerIds: Set<string>;
   lockedCanoes: Set<string>;
   setLockedCanoes: React.Dispatch<React.SetStateAction<Set<string>>>;
   canoeDesignations: Record<string, string>;
@@ -57,7 +56,7 @@ interface TodayViewProps {
 export function TodayView({
   selectedEvent, isAdmin, sidebarOpen, canoes, paddlers, canoeSortedPaddlers,
   canoeAssignmentsByCanoe, eventAssignments, eventAttendingPaddlerIds, eventGuests,
-  guestPaddlerMap, assignedPaddlerIds, lockedCanoes, setLockedCanoes,
+  guestPaddlerMap, lockedCanoes, setLockedCanoes,
   canoeDesignations, updateDesignationMut, animationKey, boatWidth, canoeRowHeight, canoeMargin,
   currentUser, selectedPaddlerId, showAllBoats, setShowAllBoats,
   showGoingList, setShowGoingList, handleToggleAttendance,

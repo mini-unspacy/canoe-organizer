@@ -1,5 +1,3 @@
-import type { Paddler } from "./types";
-
 export interface EditForm {
   firstName: string;
   lastName: string;
@@ -10,14 +8,13 @@ export interface EditForm {
 }
 
 interface EditPaddlerModalProps {
-  editingPaddler: Paddler;
   editForm: EditForm;
   setEditForm: React.Dispatch<React.SetStateAction<EditForm>>;
   onSave: () => void;
   onClose: () => void;
 }
 
-export function EditPaddlerModal({ editingPaddler, editForm, setEditForm, onSave, onClose }: EditPaddlerModalProps) {
+export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: EditPaddlerModalProps) {
   return (
     <div className="fixed flex" style={{
       top: '80px',
