@@ -23,24 +23,24 @@ export function RosterView({
   const [tempSeatPref, setTempSeatPref] = useState('000000');
 
   return (
-    <div style={{ padding: '8px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <table style={{ width: '100%', minWidth: isAdmin ? '500px' : '280px', borderCollapse: 'collapse' }}>
+    <div style={{ padding: '12px 8px', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <table style={{ width: '100%', minWidth: isAdmin ? '500px' : '280px', borderCollapse: 'collapse', backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)' }}>
         <thead>
-          <tr style={{ borderBottom: '2px solid rgba(0,0,0,.12)' }}>
-            <th style={{ textAlign: 'left', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600 }}>name</th>
-            <th style={{ textAlign: 'center', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600 }}>gender</th>
-            {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600 }}>type</th>}
-            {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600 }}>ability</th>}
-            {isAdmin && <th style={{ textAlign: 'center', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600, minWidth: '70px' }}>seat pref</th>}
-            {isAdmin && <th style={{ textAlign: 'center', padding: '8px 4px', color: '#717171', fontSize: '12px', fontWeight: 600, width: '40px' }}>adm</th>}
-            <th style={{ textAlign: 'left', padding: '8px 12px', color: '#717171', fontSize: '12px', fontWeight: 600 }}>email</th>
+          <tr style={{ borderBottom: '2px solid rgba(0,0,0,.08)', backgroundColor: '#faf9f7' }}>
+            <th style={{ textAlign: 'left', padding: '10px 16px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>name</th>
+            <th style={{ textAlign: 'center', padding: '10px 12px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>gender</th>
+            {isAdmin && <th style={{ textAlign: 'center', padding: '10px 12px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>type</th>}
+            {isAdmin && <th style={{ textAlign: 'center', padding: '10px 12px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>ability</th>}
+            {isAdmin && <th style={{ textAlign: 'center', padding: '10px 12px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', minWidth: '70px' }}>seat pref</th>}
+            {isAdmin && <th style={{ textAlign: 'center', padding: '10px 4px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', width: '40px' }}>adm</th>}
+            <th style={{ textAlign: 'left', padding: '10px 16px', color: '#717171', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>email</th>
             {isAdmin && <th style={{ width: '32px' }}></th>}
           </tr>
         </thead>
         <tbody>
-          {[...paddlers].sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName)).map((p: Paddler) => (
-            <tr key={p._id.toString()} style={{ borderBottom: '1px solid rgba(0,0,0,.08)' }}>
-              <td style={{ padding: '8px 12px', color: '#484848', fontSize: '14px', fontWeight: 500 }}>
+          {[...paddlers].sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName)).map((p: Paddler, idx: number) => (
+            <tr key={p._id.toString()} style={{ borderBottom: '1px solid rgba(0,0,0,.06)', backgroundColor: idx % 2 === 0 ? '#ffffff' : '#faf9f7' }}>
+              <td style={{ padding: '10px 16px', color: '#484848', fontSize: '14px', fontWeight: 500 }}>
                 {p.firstName} {p.lastName}
               </td>
               <td style={{ padding: '8px 12px', textAlign: 'center' }}>
