@@ -13,31 +13,40 @@ import { EditPaddlerModal } from "./EditPaddlerModal";
 import { useCanoeAssignment } from "./useCanoeAssignment";
 import type { User } from "./types";
 
+/* ── Shared loading / splash component ── */
+function LokahiSplash() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#ffffff', zIndex: 50 }}>
+      <div style={{ textAlign: 'center' }}>
+        <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#ed1c24', fontSize: '42px' }}>Lokahi</span>
+        <div style={{ fontSize: '13px', color: '#717171', marginTop: '4px', letterSpacing: '0.02em' }}>Outrigger Canoe Club</div>
+      </div>
+    </div>
+  );
+}
+
 function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () => void }) {
   const ctx = useCanoeAssignment(currentUser);
 
   return (
     <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
-      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#000000', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
+      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
           {ctx.dataLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
-              <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
-            </div>
+            <LokahiSplash />
           ) : ctx.hasNoData ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div
                 onClick={() => { ctx.triggerAnimation(); ctx.populatePaddlers(); ctx.populateCanoes(); }}
                 className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
-                style={{ width: 64, height: 64, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff', fontSize: '28px' }}
+                style={{ width: 64, height: 64, backgroundColor: '#faf9f7', borderColor: '#b0b0b0', color: '#222222', fontSize: '28px' }}
               >
                 🛶
               </div>
-              <p className="text-slate-500 dark:text-slate-400 text-center mt-4 text-sm">Tap to load sample data</p>
+              <p className="text-center mt-4 text-sm" style={{ color: '#717171' }}>Tap to load sample data</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', height: '100%', gap: '8px', width: '100%', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', height: '100%', gap: '0', width: '100%', overflow: 'hidden' }}>
               {/* LEFT SIDEBAR - NAVIGATION */}
               <div
                 className="scrollbar-hidden"
@@ -49,19 +58,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   flexDirection: 'column',
                   overflowY: ctx.leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
-                  backgroundColor: '#000000',
+                  backgroundColor: '#faf9f7',
                   padding: '12px 4px 0 4px',
-                  borderRight: '1px solid #4b5563',
+                  borderRight: '1px solid rgba(0,0,0,.08)',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#000000', padding: '12px 4px 0 4px' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#faf9f7', padding: '12px 4px 0 4px' }}>
                   <div onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)} style={{ textAlign: ctx.leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 2px', cursor: 'pointer' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
-                      color: '#dc2626',
-                      WebkitTextStroke: '1.5px white',
-                      paintOrder: 'stroke fill',
-                      textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
+                      color: '#ed1c24',
                       fontSize: '36px',
                     }}>
                       {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}
@@ -74,10 +80,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         cursor: 'pointer',
                         fontSize: '13px',
                         fontWeight: 800,
-                        color: '#475569',
+                        color: '#005280',
                         userSelect: 'none',
                         padding: '2px 8px',
-                        backgroundColor: '#e2e8f0',
+                        backgroundColor: 'rgba(0, 82, 128, 0.06)',
                         borderRadius: '999px',
                       }}
                     >
@@ -104,28 +110,31 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           gap: '8px',
                           padding: '6px 0 6px 0',
                           borderRadius: '8px',
-                          color: ctx.activePage === page ? '#ffffff' : '#c0c0c0',
-                          backgroundColor: ctx.activePage === page ? '#4b5563' : 'transparent',
+                          color: ctx.activePage === page ? '#005280' : '#484848',
+                          backgroundColor: ctx.activePage === page ? 'rgba(0, 82, 128, 0.06)' : 'transparent',
+                          fontWeight: ctx.activePage === page ? 600 : 400,
                           userSelect: 'none',
                           justifyContent: 'flex-start',
                         }}
-                        onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = '#4b5563'; }}
+                        onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
                         onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
                         <span style={{ fontSize: '22px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 500 }}>{label}</span>}
+                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 'inherit' }}>{label}</span>}
                       </span>
                     ))}
-                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #4b5563' }}>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,.08)' }}>
                       {ctx.leftSidebarOpen && (
                         <>
-                          <div style={{ fontSize: '10px', color: '#9ca3af', padding: '0 8px', wordBreak: 'break-all' }}>
+                          <div style={{ fontSize: '10px', color: '#717171', padding: '0 8px', wordBreak: 'break-all' }}>
                             {currentUser.email}
                           </div>
                           <span
                             onClick={onLogout}
-                            className="cursor-pointer hover:text-white transition-colors"
-                            style={{ fontSize: '13px', color: '#9ca3af', padding: '4px 8px', display: 'block' }}
+                            className="cursor-pointer transition-colors"
+                            style={{ fontSize: '13px', color: '#717171', padding: '4px 8px', display: 'block' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#005280'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = '#717171'; }}
                           >
                             log out
                           </span>
@@ -252,12 +261,7 @@ function AuthenticatedApp() {
   const convexUser = useQuery(api.auth.currentUser);
 
   if (convexUser === undefined) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-        <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
-      </div>
-    );
+    return <LokahiSplash />;
   }
 
   if (!convexUser) {
@@ -291,10 +295,7 @@ function App() {
   return (
     <>
       <AuthLoading>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000', zIndex: 50 }}>
-          <style>{`@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');`}</style>
-          <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#dc2626', WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white', fontSize: '36px' }}>Lokahi</span>
-        </div>
+        <LokahiSplash />
       </AuthLoading>
       <Unauthenticated>
         <LoginPage />

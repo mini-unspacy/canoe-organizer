@@ -203,7 +203,7 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
           <button
             onClick={onSave}
             className="flex-1 px-4 py-2.5 rounded-lg text-white font-medium shadow-lg"
-            style={{ background: 'linear-gradient(to right, #3b82f6, #4f46e5)' }}
+            style={{ background: '#005280' }}
           >
             Save Changes
           </button>

@@ -215,8 +215,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               setShowEventForm(!showEventForm);
             }}
             style={{
-              cursor: 'pointer', fontSize: '16px', fontWeight: 800, color: '#475569',
-              userSelect: 'none', padding: '4px 12px', backgroundColor: '#e2e8f0', borderRadius: '999px',
+              cursor: 'pointer', fontSize: '16px', fontWeight: 800, color: '#005280',
+              userSelect: 'none', padding: '4px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px',
             }}
           >
             + event
@@ -226,7 +226,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           {showEventForm && !editingEventId && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowEventForm(false)} />
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#111111', borderRadius: '8px', padding: '12px', border: '1px solid #4b5563', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#ffffff', borderRadius: '8px', padding: '12px', border: '1px solid rgba(0,0,0,.12)', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Event type selector */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -237,9 +237,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
-                      borderColor: eventForm.eventType === t ? (t === 'practice' ? '#3b82f6' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                      borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
                       backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
-                      color: eventForm.eventType === t ? (t === 'practice' ? '#60a5fa' : t === 'race' ? '#f87171' : '#94a3b8') : '#6b7280',
+                      color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#94a3b8') : '#717171',
                       cursor: 'pointer',
                     }}
                   >
@@ -252,14 +252,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 placeholder="title"
                 value={eventForm.title}
                 onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
-                style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
               />
               <input
                 type="text"
                 placeholder="location"
                 value={eventForm.location}
                 onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
-                style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
               />
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(editingEventId || eventForm.repeating === 'none') && (
@@ -267,20 +267,20 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     type="date"
                     value={eventForm.date}
                     onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                    style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                   />
                 )}
                 <input
                   type="time"
                   value={eventForm.time}
                   onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                  style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                  style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                 />
               </div>
               {!editingEventId && (<>
               {/* Repeating pills */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, marginRight: '2px' }}>repeat:</span>
+                <span style={{ fontSize: '12px', color: '#717171', fontWeight: 600, marginRight: '2px' }}>repeat:</span>
                 {(['none', 'weekly', 'monthly'] as const).map(r => (
                   <button
                     key={r}
@@ -288,9 +288,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
-                      borderColor: eventForm.repeating === r ? '#3b82f6' : 'transparent',
+                      borderColor: eventForm.repeating === r ? '#005280' : 'transparent',
                       backgroundColor: eventForm.repeating === r ? 'rgba(59,130,246,0.15)' : 'transparent',
-                      color: eventForm.repeating === r ? '#60a5fa' : '#6b7280',
+                      color: eventForm.repeating === r ? '#3387a2' : '#717171',
                       cursor: 'pointer',
                     }}
                   >
@@ -315,9 +315,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                         style={{
                           padding: '4px 0', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
                           border: '2px solid',
-                          borderColor: isSelected ? '#3b82f6' : '#4b5563',
+                          borderColor: isSelected ? '#005280' : '#b0b0b0',
                           backgroundColor: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
-                          color: isSelected ? '#60a5fa' : '#6b7280',
+                          color: isSelected ? '#3387a2' : '#717171',
                           cursor: 'pointer',
                           flex: 1,
                           textAlign: 'center',
@@ -346,9 +346,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                         style={{
                           padding: '3px 0', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
                           border: '1.5px solid',
-                          borderColor: isSelected ? '#3b82f6' : '#4b5563',
+                          borderColor: isSelected ? '#005280' : '#b0b0b0',
                           backgroundColor: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
-                          color: isSelected ? '#60a5fa' : '#6b7280',
+                          color: isSelected ? '#3387a2' : '#717171',
                           cursor: 'pointer',
                           textAlign: 'center',
                         }}
@@ -362,12 +362,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               {/* Till when */}
               {eventForm.repeating !== 'none' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, flexShrink: 0 }}>till when</span>
+                  <span style={{ fontSize: '12px', color: '#717171', fontWeight: 600, flexShrink: 0 }}>till when</span>
                   <input
                     type="date"
                     value={eventForm.repeatUntil}
                     onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                    style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -376,7 +376,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
-                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
+                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: 'transparent', color: '#717171', cursor: 'pointer' }}
                 >
                   cancel
                 </button>
@@ -397,7 +397,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     });
                     setShowEventForm(false);
                   }}
-                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
+                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#3387a2', cursor: 'pointer' }}
                 >
                   add
                 </button>
@@ -414,7 +414,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
-              <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
+              <div style={{ fontSize: '20px', color: '#717171', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
                 {m.label}
               </div>
               {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
@@ -423,7 +423,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 const dayName = dayNames[d.getDay()];
                 if (editingEventId === evt.id && showEventForm) {
                   return (
-                    <div key={evt.id} style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '12px', marginBottom: '4px', marginTop: '4px', border: '1px solid #4b5563' }}>
+                    <div key={evt.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '12px', marginBottom: '4px', marginTop: '4px', border: '1px solid rgba(0,0,0,.12)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {/* Event type selector */}
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -434,9 +434,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                               style={{
                                 padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                                 border: '2px solid',
-                                borderColor: eventForm.eventType === t ? (t === 'practice' ? '#3b82f6' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                                borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
                                 backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
-                                color: eventForm.eventType === t ? (t === 'practice' ? '#60a5fa' : t === 'race' ? '#f87171' : '#94a3b8') : '#6b7280',
+                                color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#94a3b8') : '#717171',
                                 cursor: 'pointer',
                               }}
                             >
@@ -449,33 +449,33 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           placeholder="title"
                           value={eventForm.title}
                           onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
-                          style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                         />
                         <input
                           type="text"
                           placeholder="location"
                           value={eventForm.location}
                           onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
-                          style={{ backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                          style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                         />
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <input
                             type="date"
                             value={eventForm.date}
                             onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                            style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                           />
                           <input
                             type="time"
                             value={eventForm.time}
                             onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '6px 10px', color: '#c0c0c0', fontSize: '14px', outline: 'none' }}
+                            style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                           />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
-                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #4b5563', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}
+                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: 'transparent', color: '#717171', cursor: 'pointer' }}
                           >
                             cancel
                           </button>
@@ -493,7 +493,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                               setShowEventForm(false);
                               setEditingEventId(null);
                             }}
-                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#60a5fa', cursor: 'pointer' }}
+                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#3387a2', cursor: 'pointer' }}
                           >
                             save
                           </button>
@@ -506,12 +506,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    style={{ display: 'flex', gap: '6px', padding: '10px 0', borderBottom: '1px solid #4b5563' }}
+                    style={{ display: 'flex', gap: '6px', padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,.08)' }}
                   >
                     {/* Left column: date + Y/N */}
                     <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayNum}</div>
-                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayName}</div>
+                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '20px', color: '#484848', fontWeight: 500, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayName}</div>
                       {selectedPaddlerId && (
                         <div
                           onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
@@ -537,13 +537,13 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
                         >{evt.time} {evt.title}</span>
                       </div>
-                      {evt.location && <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
+                      {evt.location && <div style={{ fontSize: '20px', color: '#484848', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
                             padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
                             backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
-                            color: evt.eventType === 'practice' ? '#60a5fa' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
+                            color: evt.eventType === 'practice' ? '#3387a2' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
                             border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
                           }}>
                             {evt.eventType}
@@ -597,7 +597,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   {/* Guest popup */}
                   {guestPopupEventId === evt.id && (
                     <div data-guest-popup onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, right: 0, padding: '4px 0 4px 62px', zIndex: 30 }}>
-                      <div style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '10px 12px', border: '1px solid rgba(245,158,11,0.3)', boxShadow: '0 4px 20px rgba(0,0,0,0.6)' }}>
+                      <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '10px 12px', border: '1px solid rgba(245,158,11,0.3)', boxShadow: '0 4px 20px rgba(0,0,0,0.6)' }}>
                         <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
                           <input
                             type="text"
@@ -610,7 +610,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                                 setGuestNameInput('');
                               }
                             }}
-                            style={{ minWidth: 0, flex: 1, backgroundColor: '#000000', border: '1px solid #4b5563', borderRadius: '6px', padding: '5px 8px', color: '#c0c0c0', fontSize: '13px', outline: 'none' }}
+                            style={{ minWidth: 0, flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '5px 8px', color: '#484848', fontSize: '13px', outline: 'none' }}
                           />
                           <button
                             onMouseDown={(e) => e.preventDefault()}
@@ -646,7 +646,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   </div>
                 );
               }) : (
-                <div style={{ padding: '12px 0', fontSize: '16px', color: '#4b5563' }}>—</div>
+                <div style={{ padding: '12px 0', fontSize: '16px', color: '#b0b0b0' }}>—</div>
               )}
             </div>
           );

@@ -74,7 +74,7 @@ export function TodayView({
     {/* Header — no-event fallback */}
     {!selectedEvent && (
       <div className="py-1" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-        <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>{(() => {
+        <span style={{ fontSize: '14px', color: '#717171', fontWeight: 500 }}>{(() => {
           const now = new Date();
           const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           return `${dayNames[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()} ---`;
@@ -96,32 +96,32 @@ export function TodayView({
       {/* Event info row */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
         <div onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1 }}>{_dayNum}</div>
-          <div style={{ fontSize: '20px', color: '#c0c0c0', fontWeight: 500 }}>{_dayName}</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#222222', lineHeight: 1.1 }}>{_dayNum}</div>
+          <div style={{ fontSize: '20px', color: '#717171', fontWeight: 500 }}>{_dayName}</div>
         </div>
         <div style={{ flex: 1, minWidth: 0, overflow: 'visible', marginTop: '0px', position: 'relative' }}>
-          <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '28px', color: '#222222', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
             <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
               {selectedEvent.time} {selectedEvent.title}
             </span>
           </div>
-          <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 600, marginTop: '4px' }}>
+          <div style={{ fontSize: '14px', color: '#005280', fontWeight: 600, marginTop: '4px' }}>
             <span onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
             {showGoingList && (
               <div
                 onClick={(e) => e.stopPropagation()}
                 style={{
                   position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                  backgroundColor: '#111111', border: '1px solid #222222', borderRadius: '12px',
+                  backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.08)', borderRadius: '12px',
                   padding: '12px 16px', minWidth: '220px', zIndex: 100,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#717171', marginBottom: '8px' }}>
                   ATTENDING ({_goingCount})
                 </div>
                 {_goingCount === 0 ? (
-                  <div style={{ fontSize: '14px', color: '#6b7280' }}>No one yet</div>
+                  <div style={{ fontSize: '14px', color: '#717171' }}>No one yet</div>
                 ) : (
                   <>
                   <div
@@ -138,12 +138,12 @@ export function TodayView({
                       ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
                       .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
                       .map((p: Paddler) => (
-                        <div key={p.id} style={{ fontSize: '14px', color: '#e5e7eb' }}>
+                        <div key={p.id} style={{ fontSize: '14px', color: '#484848' }}>
                           {p.firstName} {p.lastName || p.lastInitial}
                         </div>
                       ))}
                     {eventGuests && eventGuests.length > 0 && (
-                      <div style={{ borderTop: '1px solid #333', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#9ca3af', fontWeight: 700 }}>GUESTS</div>
+                      <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700 }}>GUESTS</div>
                     )}
                     {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
                       <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
@@ -151,7 +151,7 @@ export function TodayView({
                       </div>
                     ))}
                   </div>
-                  <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
+                  <div style={{ textAlign: 'center', color: '#717171', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
                   </>
                 )}
               </div>
@@ -182,7 +182,7 @@ export function TodayView({
         {!isAdmin && (
           <span
             onClick={() => setShowAllBoats(!showAllBoats)}
-            style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '4px 16px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+            style={{ cursor: 'pointer', fontSize: '18px', fontWeight: 800, color: '#005280', userSelect: 'none', padding: '4px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px', whiteSpace: 'nowrap' }}
           >
             {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
           </span>
@@ -191,7 +191,7 @@ export function TodayView({
           <div ref={sortPillRef} style={{ position: 'relative' }}>
             <span
               onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-              style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+              style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#005280', userSelect: 'none', padding: '2px 8px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px', whiteSpace: 'nowrap' }}
             >
               sort by:
             </span>
@@ -243,7 +243,7 @@ export function TodayView({
                 </DragDropContext>
                 <div
                   onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
-                  style={{ marginTop: '8px', padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textAlign: 'center', cursor: 'pointer' }}
+                  style={{ marginTop: '8px', padding: '6px 12px', backgroundColor: '#005280', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textAlign: 'center', cursor: 'pointer' }}
                 >
                   apply
                 </div>
@@ -253,13 +253,13 @@ export function TodayView({
           <div style={{ flex: 1 }} />
           <span
             onClick={handleAssign}
-            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#005280', userSelect: 'none', padding: '2px 8px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px', whiteSpace: 'nowrap' }}
           >
             {sidebarOpen ? '←' : '←assign'}
           </span>
           <span
             onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#475569', userSelect: 'none', padding: '2px 8px', backgroundColor: '#e2e8f0', borderRadius: '999px', whiteSpace: 'nowrap' }}
+            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, color: '#005280', userSelect: 'none', padding: '2px 8px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px', whiteSpace: 'nowrap' }}
           >
             {sidebarOpen ? '→' : 'return→'}
           </span>
@@ -283,7 +283,7 @@ export function TodayView({
                   fontFamily: "'Courier New', Courier, monospace",
                   fontSize: '18px',
                   fontWeight: 900,
-                  color: '#ffffff',
+                  color: '#222222',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
                   whiteSpace: 'nowrap',
@@ -333,7 +333,7 @@ export function TodayView({
                   return next;
                 })}
                 width="14" height="14" viewBox="0 0 24 24"
-                fill="none" stroke={lockedCanoes.has(canoe.id) ? '#dc2626' : '#94a3b8'}
+                fill="none" stroke={lockedCanoes.has(canoe.id) ? '#ed1c24' : '#b0b0b0'}
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                 style={{ cursor: 'pointer', flexShrink: 0 }}
               >
@@ -377,7 +377,7 @@ export function TodayView({
                             )}
                           </Draggable>
                         ) : (
-                          <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#4b5563', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
+                          <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#717171', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
                         )}
                         <div style={{ display: 'none' }}>{provided.placeholder}</div>
                       </div>
@@ -394,7 +394,7 @@ export function TodayView({
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: '18px', height: '18px', borderRadius: '50%',
-                  backgroundColor: '#000000', border: '1px solid #64748b',
+                  backgroundColor: '#ffffff', border: '1px solid #64748b',
                   fontSize: '13px', fontWeight: 700, lineHeight: 1,
                   color: lockedCanoes.has(canoe.id) ? '#cbd5e1' : '#94a3b8',
                 }}
@@ -408,7 +408,7 @@ export function TodayView({
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: '18px', height: '18px', borderRadius: '50%',
-                  backgroundColor: '#000000', border: '1px solid #64748b',
+                  backgroundColor: '#ffffff', border: '1px solid #64748b',
                   fontSize: '13px', fontWeight: 700, lineHeight: 1,
                   color: '#94a3b8',
                 }}
@@ -443,7 +443,7 @@ export function TodayView({
 
         if (!myCanoe) {
           return (
-            <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#6b7280', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
+            <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#717171', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
               NO ASSIGNMENT
             </div>
           );
@@ -451,7 +451,7 @@ export function TodayView({
 
         return (
           <div style={{ padding: '20px 0' }}>
-            <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#ffffff', letterSpacing: '3px', marginBottom: '20px' }}>
+            <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#222222', letterSpacing: '3px', marginBottom: '20px' }}>
               BOAT: {designation}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -462,12 +462,12 @@ export function TodayView({
                 const isMe = assignedPaddler?.id === currentUser.paddlerId;
                 const isGuest = assignedPaddler?.id.startsWith('guest-');
                 return (
-                  <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid #222222', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ color: '#6b7280', marginRight: '12px' }}>{seat}.</span>
+                  <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid rgba(0,0,0,.08)', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ color: '#717171', marginRight: '12px' }}>{seat}.</span>
                       {assignedPaddler ? (
                         <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>
                           {assignedPaddler.firstName} {assignedPaddler.lastName}
-                          {isGuest && <span style={{ fontSize: '14px', color: '#9ca3af', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
+                          {isGuest && <span style={{ fontSize: '14px', color: '#717171', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
                         </span>
                       ) : (
                         <span>---</span>

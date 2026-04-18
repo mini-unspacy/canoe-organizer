@@ -38,11 +38,11 @@ export default function OnboardingPage({ name }: { name?: string }) {
   };
 
   const inputStyle = {
-    backgroundColor: "#000000",
-    border: "1px solid #4b5563",
+    backgroundColor: "#ffffff",
+    border: "1px solid rgba(0, 0, 0, 0.12)",
     borderRadius: "8px",
     padding: "10px 12px",
-    color: "#e5e7eb",
+    color: "#222222",
     fontSize: "14px",
     outline: "none",
     width: "100%",
@@ -53,9 +53,9 @@ export default function OnboardingPage({ name }: { name?: string }) {
     flex: 1,
     padding: "10px",
     borderRadius: "8px",
-    border: selected ? "2px solid #3b82f6" : "2px solid #4b5563",
-    backgroundColor: selected ? "rgba(59,130,246,0.15)" : "#000000",
-    color: selected ? "#93c5fd" : "#9ca3af",
+    border: selected ? "2px solid #005280" : "2px solid rgba(0,0,0,.12)",
+    backgroundColor: selected ? "rgba(0, 82, 128, 0.06)" : "#ffffff",
+    color: selected ? "#005280" : "#717171",
     fontSize: "14px",
     fontWeight: 600 as const,
     cursor: "pointer",
@@ -66,7 +66,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#000000",
+        background: "linear-gradient(180deg, #faf9f7 0%, #ffffff 50%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -76,7 +76,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
       <form
         onSubmit={handleSubmit}
         style={{
-          backgroundColor: "#111111",
+          backgroundColor: "#ffffff",
           borderRadius: "16px",
           padding: "40px 32px",
           width: "100%",
@@ -84,23 +84,20 @@ export default function OnboardingPage({ name }: { name?: string }) {
           display: "flex",
           flexDirection: "column",
           gap: "16px",
+          boxShadow: "0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "4px" }}>
           <span
             style={{
               fontFamily: "'UnifrakturMaguntia', cursive",
-              color: "#dc2626",
-              WebkitTextStroke: "1.5px white",
-              paintOrder: "stroke fill",
-              textShadow:
-                "-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white",
-              fontSize: "36px",
+              color: "#ed1c24",
+              fontSize: "42px",
             }}
           >
             Lokahi
           </span>
-          <p style={{ color: "#9ca3af", fontSize: "14px", margin: "12px 0 0 0" }}>
+          <p style={{ color: "#717171", fontSize: "14px", margin: "12px 0 0 0" }}>
             welcome! tell us about yourself
           </p>
         </div>
@@ -124,7 +121,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
         />
 
         <div>
-          <div style={{ color: "#9ca3af", fontSize: "13px", marginBottom: "8px" }}>
+          <div style={{ color: "#717171", fontSize: "13px", marginBottom: "8px" }}>
             I am...
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
@@ -154,7 +151,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
         />
 
         {error && (
-          <div style={{ color: "#f87171", fontSize: "13px", textAlign: "center" }}>
+          <div style={{ color: "#ed1c24", fontSize: "13px", textAlign: "center" }}>
             {error}
           </div>
         )}
@@ -163,7 +160,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
           type="submit"
           disabled={loading || !firstName.trim() || !lastName.trim() || !gender}
           style={{
-            background: "linear-gradient(to right, #3b82f6, #4f46e5)",
+            background: "#ed1c24",
             color: "white",
             border: "none",
             borderRadius: "8px",
@@ -183,7 +180,7 @@ export default function OnboardingPage({ name }: { name?: string }) {
           style={{
             background: "none",
             border: "none",
-            color: "#6b7280",
+            color: "#717171",
             fontSize: "13px",
             cursor: "pointer",
             padding: "4px",

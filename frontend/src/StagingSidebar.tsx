@@ -70,14 +70,14 @@ export function StagingSidebar({
         overflowY: isDragging ? 'hidden' : sidebarOpen ? 'auto' : 'hidden',
         overflowX: 'hidden',
         touchAction: isDragging ? 'none' : 'auto',
-        backgroundColor: sidebarOpen ? '#000000' : 'transparent',
+        backgroundColor: sidebarOpen ? '#faf9f7' : 'transparent',
         padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
         paddingBottom: 0,
-        borderLeft: '1px solid #94a3b8',
+        borderLeft: '1px solid rgba(0,0,0,.08)',
       }}
     >
       {/* Toolbar - sticky */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#000000' : 'transparent', padding: '12px 4px 0 4px' }} className="relative">
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#faf9f7' : 'transparent', padding: '12px 4px 0 4px' }} className="relative">
         {/* Top row: toggle + A button */}
         <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
           <span
@@ -86,10 +86,10 @@ export function StagingSidebar({
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 800,
-              color: '#475569',
+              color: '#005280',
               userSelect: 'none',
               padding: '2px 8px',
-              backgroundColor: '#e2e8f0',
+              backgroundColor: 'rgba(0, 82, 128, 0.06)',
               borderRadius: '999px',
             }}
           >
@@ -104,10 +104,10 @@ export function StagingSidebar({
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: 800,
-                color: '#475569',
+                color: '#005280',
                 userSelect: 'none',
                 padding: '2px 8px',
-                backgroundColor: '#e2e8f0',
+                backgroundColor: 'rgba(0, 82, 128, 0.06)',
                 borderRadius: '999px',
                 whiteSpace: 'nowrap',
               }}
@@ -150,7 +150,7 @@ export function StagingSidebar({
                   width: TOOLBAR_SIZE,
                   height: TOOLBAR_SIZE,
                   backgroundColor: snapshot.isDraggingOver ? '#facc15' : '#000',
-                  borderColor: snapshot.isDraggingOver ? '#fde047' : '#9ca3af',
+                  borderColor: snapshot.isDraggingOver ? '#fde047' : '#b0b0b0',
                   transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
                 }}
                 title="Drag paddlers here to edit"
@@ -170,7 +170,7 @@ export function StagingSidebar({
                   width: TOOLBAR_SIZE,
                   height: TOOLBAR_SIZE,
                   backgroundColor: snapshot.isDraggingOver ? '#f87171' : '#000',
-                  borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#9ca3af',
+                  borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#b0b0b0',
                   transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
                 }}
                 title="Drag paddlers here to mark absent"
@@ -189,7 +189,7 @@ export function StagingSidebar({
                 setTimeout(() => addSearchInputRef.current?.focus(), 50);
               }}
               className={`rounded-full border-[3px] flex items-center justify-center transition-all ${selectedEvent ? 'cursor-pointer hover:opacity-80' : 'opacity-40 cursor-not-allowed'}`}
-              style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#000', borderColor: '#9ca3af', color: '#fff' }}
+              style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#faf9f7', borderColor: '#b0b0b0', color: '#222222' }}
               title={selectedEvent ? 'Add paddler to event' : 'Select an event first'}
             >
               +
@@ -281,10 +281,10 @@ export function StagingSidebar({
                               cursor: 'pointer',
                               fontSize: '13px',
                               fontWeight: 800,
-                              color: '#475569',
+                              color: '#005280',
                               userSelect: 'none',
                               padding: '2px 8px',
-                              backgroundColor: '#e2e8f0',
+                              backgroundColor: 'rgba(0, 82, 128, 0.06)',
                               borderRadius: '999px',
                             }}
                           >

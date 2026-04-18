@@ -36,19 +36,20 @@ export default function LoginPage() {
     cursor: "pointer",
     background: bg,
     color: "#ffffff",
-    transition: "opacity 0.15s",
+    transition: "opacity 0.15s, box-shadow 0.2s",
   });
 
   const inputStyle = {
-    backgroundColor: "#000000",
-    border: "1px solid #4b5563",
+    backgroundColor: "#ffffff",
+    border: "1px solid rgba(0, 0, 0, 0.12)",
     borderRadius: "8px",
     padding: "10px 12px",
-    color: "#e5e7eb",
+    color: "#222222",
     fontSize: "14px",
     outline: "none",
     width: "100%",
     boxSizing: "border-box" as const,
+    transition: "border-color 0.15s",
   };
 
   const handlePasswordAuth = async (e: React.FormEvent) => {
@@ -72,7 +73,7 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#000000",
+        background: "linear-gradient(180deg, #faf9f7 0%, #ffffff 50%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -81,7 +82,7 @@ export default function LoginPage() {
     >
       <div
         style={{
-          backgroundColor: "#111111",
+          backgroundColor: "#ffffff",
           borderRadius: "16px",
           padding: "40px 32px",
           width: "100%",
@@ -89,32 +90,32 @@ export default function LoginPage() {
           display: "flex",
           flexDirection: "column",
           gap: "14px",
+          boxShadow: "0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "8px" }}>
           <span
             style={{
               fontFamily: "'UnifrakturMaguntia', cursive",
-              color: "#dc2626",
-              WebkitTextStroke: "1.5px white",
-              paintOrder: "stroke fill",
-              textShadow:
-                "-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white",
-              fontSize: "36px",
+              color: "#ed1c24",
+              fontSize: "42px",
             }}
           >
             Lokahi
           </span>
+          <div style={{ fontSize: "13px", color: "#717171", marginTop: "2px", letterSpacing: "0.02em" }}>
+            Outrigger Canoe Club
+          </div>
         </div>
 
-        <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "14px", margin: "0 0 8px 0" }}>
+        <p style={{ textAlign: "center", color: "#717171", fontSize: "14px", margin: "0 0 8px 0" }}>
           sign in to continue
         </p>
 
         <button
           onClick={() => signIn("google", { redirectTo: "/" }).catch(console.error)}
-          style={buttonStyle("#4285F4")}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+          style={buttonStyle("#005280")}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -127,9 +128,9 @@ export default function LoginPage() {
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0" }}>
-          <div style={{ flex: 1, height: "1px", backgroundColor: "#4b5563" }} />
-          <span style={{ color: "#6b7280", fontSize: "12px" }}>or</span>
-          <div style={{ flex: 1, height: "1px", backgroundColor: "#4b5563" }} />
+          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(0,0,0,.08)" }} />
+          <span style={{ color: "#b0b0b0", fontSize: "12px" }}>or</span>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(0,0,0,.08)" }} />
         </div>
 
         <form onSubmit={handlePasswordAuth} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -140,6 +141,8 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#3387a2"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,.12)"; }}
           />
           <input
             type="password"
@@ -148,15 +151,17 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#3387a2"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,.12)"; }}
           />
           {error && (
-            <div style={{ color: "#f87171", fontSize: "13px", textAlign: "center" }}>{error}</div>
+            <div style={{ color: "#ed1c24", fontSize: "13px", textAlign: "center" }}>{error}</div>
           )}
           <button
             type="submit"
             disabled={loading}
             style={{
-              ...buttonStyle("#4b5563"),
+              ...buttonStyle("#ed1c24"),
               opacity: loading ? 0.7 : 1,
               cursor: loading ? "not-allowed" : "pointer",
             }}
@@ -166,7 +171,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
-            style={{ background: "none", border: "none", color: "#6b7280", fontSize: "12px", cursor: "pointer", padding: "2px" }}
+            style={{ background: "none", border: "none", color: "#717171", fontSize: "12px", cursor: "pointer", padding: "2px" }}
           >
             {isSignUp ? "already have an account? sign in" : "need an account? sign up"}
           </button>
