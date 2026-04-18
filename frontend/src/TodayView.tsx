@@ -167,13 +167,13 @@ export function TodayView({
           <div
             onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
             style={{
-              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
+              width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', userSelect: 'none',
               border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
               backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
               color: _isAttending ? '#22c55e' : '#ef4444',
-              fontSize: '16px', fontWeight: 700,
+              fontSize: '17px', fontWeight: 700, transition: 'all 0.15s',
             }}
           >
             {_isAttending ? 'Y' : 'N'}
@@ -183,7 +183,7 @@ export function TodayView({
         {!isAdmin && (
           <span
             onClick={() => setShowAllBoats(!showAllBoats)}
-            style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#005280', userSelect: 'none', padding: '8px 20px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)' }}
+            style={{ cursor: 'pointer', fontSize: '15px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '10px 24px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
           >
             {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
           </span>
@@ -192,9 +192,9 @@ export function TodayView({
           <div ref={sortPillRef} style={{ position: 'relative' }}>
             <span
               onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-              style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#005280', userSelect: 'none', padding: '6px 14px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)' }}
+              style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
             >
-              sort by:
+              Sort By
             </span>
             {sortPillOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
@@ -254,15 +254,19 @@ export function TodayView({
           <div style={{ flex: 1 }} />
           <span
             onClick={handleAssign}
-            style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#005280', userSelect: 'none', padding: '6px 14px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)' }}
+            style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
           >
-            {sidebarOpen ? '←' : '←assign'}
+            {sidebarOpen ? '← Assign' : '← Assign'}
           </span>
           <span
             onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-            style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 700, color: '#005280', userSelect: 'none', padding: '6px 14px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)' }}
+            style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
           >
-            {sidebarOpen ? '→' : 'return→'}
+            {sidebarOpen ? 'Return →' : 'Return →'}
           </span>
         </>)}
       </div>
@@ -283,12 +287,10 @@ export function TodayView({
                 className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
                 onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
                 style={{
-                  fontFamily: "'Courier New', Courier, monospace",
-                  fontSize: '18px',
-                  fontWeight: 900,
+                  fontSize: '16px',
+                  fontWeight: 700,
                   color: '#222222',
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
+                  letterSpacing: '1px',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -384,7 +386,7 @@ export function TodayView({
                             )}
                           </Draggable>
                         ) : (
-                          <div style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '18px', fontWeight: 700, color: '#717171', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
+                          <div style={{ fontSize: '15px', fontWeight: 600, color: '#b0b0b0', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
                         )}
                         <div style={{ display: 'none' }}>{provided.placeholder}</div>
                       </div>
@@ -400,10 +402,11 @@ export function TodayView({
                 className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '24px', height: '24px', borderRadius: '6px',
+                  width: '28px', height: '28px', borderRadius: '8px',
                   backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)',
-                  fontSize: '14px', fontWeight: 700, lineHeight: 1,
+                  fontSize: '16px', fontWeight: 600, lineHeight: 1,
                   color: lockedCanoes.has(canoe.id) ? '#b0b0b0' : '#717171',
+                  transition: 'all 0.15s',
                 }}
                 title="Remove canoe"
               >
@@ -414,10 +417,11 @@ export function TodayView({
                 className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '24px', height: '24px', borderRadius: '6px',
+                  width: '28px', height: '28px', borderRadius: '8px',
                   backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)',
-                  fontSize: '14px', fontWeight: 700, lineHeight: 1,
+                  fontSize: '16px', fontWeight: 600, lineHeight: 1,
                   color: '#717171',
+                  transition: 'all 0.15s',
                 }}
                 title="Add canoe"
               >
@@ -449,20 +453,18 @@ export function TodayView({
         const myCanoe = myAssignment ? canoes?.find((c: Canoe) => c.id === myAssignment.canoeId) : null;
         const myCanoeAssignments = myCanoe ? (canoeAssignmentsByCanoe.get(myCanoe.id) || []) : [];
         const designation = myCanoe ? (canoeDesignations[myCanoe.id] || '???') : null;
-        const monoStyle = { fontFamily: "'Courier New', Courier, monospace", textTransform: 'uppercase' as const };
-
         if (!myCanoe) {
           return (
-            <div style={{ ...monoStyle, fontSize: '28px', fontWeight: 900, color: '#717171', textAlign: 'center', padding: '40px 0', letterSpacing: '2px' }}>
-              NO ASSIGNMENT
+            <div style={{ fontSize: '22px', fontWeight: 700, color: '#717171', textAlign: 'center', padding: '40px 0', letterSpacing: '1px' }}>
+              No Assignment
             </div>
           );
         }
 
         return (
           <div style={{ padding: '20px 0' }}>
-            <div style={{ ...monoStyle, fontSize: '32px', fontWeight: 900, color: '#222222', letterSpacing: '3px', marginBottom: '20px' }}>
-              BOAT: {designation}
+            <div style={{ fontSize: '26px', fontWeight: 700, color: '#222222', letterSpacing: '1px', marginBottom: '20px' }}>
+              Boat: {designation}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {Array.from({ length: 6 }).map((_, i) => {
@@ -472,8 +474,8 @@ export function TodayView({
                 const isMe = assignedPaddler?.id === currentUser.paddlerId;
                 const isGuest = assignedPaddler?.id.startsWith('guest-');
                 return (
-                  <div key={seat} style={{ ...monoStyle, fontSize: '24px', fontWeight: 700, color: assignedPaddler ? '#ffffff' : '#6b7280', padding: '6px 0', borderBottom: '1px solid rgba(0,0,0,.08)', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.15)' : 'transparent', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ color: '#717171', marginRight: '12px' }}>{seat}.</span>
+                  <div key={seat} style={{ fontSize: '18px', fontWeight: 600, color: assignedPaddler ? '#484848' : '#b0b0b0', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,.06)', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.1)' : 'transparent', borderRadius: isMe ? '8px' : '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ color: '#b0b0b0', marginRight: '12px', fontWeight: 500 }}>{seat}.</span>
                       {assignedPaddler ? (
                         <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>
                           {assignedPaddler.firstName} {assignedPaddler.lastName}

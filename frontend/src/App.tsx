@@ -98,8 +98,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                           display: 'flex',
                           alignItems: 'center',
                           gap: '10px',
-                          padding: ctx.leftSidebarOpen ? '8px 10px' : '8px 0',
-                          borderRadius: '8px',
+                          padding: ctx.leftSidebarOpen ? '10px 12px' : '10px 0',
+                          borderRadius: '10px',
                           color: ctx.activePage === page ? '#005280' : '#484848',
                           backgroundColor: ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent',
                           fontWeight: ctx.activePage === page ? 600 : 400,
@@ -109,8 +109,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
                         onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent'; }}
                       >
-                        <span style={{ fontSize: '18px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-                        {ctx.leftSidebarOpen && <span style={{ fontSize: '14px', fontWeight: 'inherit' }}>{label}</span>}
+                        <span style={{ fontSize: '18px', lineHeight: 1, width: '22px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 'inherit', textTransform: 'capitalize' }}>{label}</span>}
                       </span>
                     ))}
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,.08)' }}>

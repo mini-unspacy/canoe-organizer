@@ -215,11 +215,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               setShowEventForm(!showEventForm);
             }}
             style={{
-              cursor: 'pointer', fontSize: '13px', fontWeight: 700, color: '#005280',
-              userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', border: '1px solid rgba(0,82,128,0.12)',
+              cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#ffffff',
+              userSelect: 'none', padding: '10px 20px', backgroundColor: '#005280', borderRadius: '10px', border: 'none',
+              boxShadow: '0 2px 8px rgba(0,82,128,0.25)', transition: 'opacity 0.15s',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
-            + event
+            + Event
           </span>
 
           {/* Inline event form */}
@@ -235,12 +238,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     key={t}
                     onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
                     style={{
-                      padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                      padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                       border: '2px solid',
                       borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#717171') : 'transparent',
-                      backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
+                      backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.1)' : t === 'race' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)') : 'transparent',
                       color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#b0b0b0') : '#717171',
-                      cursor: 'pointer',
+                      cursor: 'pointer', transition: 'all 0.15s',
                     }}
                   >
                     {t}
@@ -376,9 +379,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
-                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: 'transparent', color: '#717171', cursor: 'pointer' }}
+                  style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#ffffff', color: '#717171', cursor: 'pointer', transition: 'all 0.15s' }}
                 >
-                  cancel
+                  Cancel
                 </button>
                 <button
                   onClick={async () => {
@@ -397,9 +400,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     });
                     setShowEventForm(false);
                   }}
-                  style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#3387a2', cursor: 'pointer' }}
+                  style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: 'none', backgroundColor: '#005280', color: '#ffffff', cursor: 'pointer', transition: 'opacity 0.15s' }}
                 >
-                  add
+                  Add
                 </button>
               </div>
             </div>
@@ -432,12 +435,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                               key={t}
                               onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
                               style={{
-                                padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                                padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                                 border: '2px solid',
                                 borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#717171') : 'transparent',
-                                backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
+                                backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.1)' : t === 'race' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)') : 'transparent',
                                 color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#b0b0b0') : '#717171',
-                                cursor: 'pointer',
+                                cursor: 'pointer', transition: 'all 0.15s',
                               }}
                             >
                               {t}
@@ -475,9 +478,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
-                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: 'transparent', color: '#717171', cursor: 'pointer' }}
+                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#ffffff', color: '#717171', cursor: 'pointer', transition: 'all 0.15s' }}
                           >
-                            cancel
+                            Cancel
                           </button>
                           <button
                             onClick={async () => {
@@ -493,9 +496,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                               setShowEventForm(false);
                               setEditingEventId(null);
                             }}
-                            style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: '1px solid #3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', color: '#3387a2', cursor: 'pointer' }}
+                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: 'none', backgroundColor: '#005280', color: '#ffffff', cursor: 'pointer', transition: 'opacity 0.15s' }}
                           >
-                            save
+                            Save
                           </button>
                         </div>
                       </div>
@@ -516,13 +519,13 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                         <div
                           onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
                           style={{
-                            width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0, marginTop: '6px',
+                            width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0, marginTop: '6px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             cursor: 'pointer', userSelect: 'none',
                             border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
                             backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
                             color: isAttending ? '#22c55e' : '#ef4444',
-                            fontSize: '16px', fontWeight: 700,
+                            fontSize: '17px', fontWeight: 700, transition: 'all 0.15s',
                           }}
                         >
                           {isAttending ? 'Y' : 'N'}
@@ -541,10 +544,10 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                         {evt.eventType && (
                           <span style={{
-                            padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
-                            backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
+                            padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                            backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.1)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)',
                             color: evt.eventType === 'practice' ? '#3387a2' : evt.eventType === 'race' ? '#f87171' : '#b0b0b0',
-                            border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
+                            border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.2)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.2)' : 'rgba(100,116,139,0.2)'}`,
                           }}>
                             {evt.eventType}
                           </span>
@@ -553,10 +556,10 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           data-guest-popup
                           onClick={(e) => { e.stopPropagation(); setGuestPopupEventId(guestPopupEventId === evt.id ? null : evt.id); setGuestNameInput(''); }}
                           style={{
-                            padding: '6px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
-                            backgroundColor: guestPopupEventId === evt.id ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.1)',
+                            padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                            backgroundColor: guestPopupEventId === evt.id ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.08)',
                             color: '#f59e0b',
-                            border: `1px solid ${guestPopupEventId === evt.id ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.25)'}`,
+                            border: `1px solid ${guestPopupEventId === evt.id ? 'rgba(245,158,11,0.4)' : 'rgba(245,158,11,0.2)'}`,
                             cursor: 'pointer', userSelect: 'none',
                             marginLeft: 'auto',
                           }}
