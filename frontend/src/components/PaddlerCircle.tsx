@@ -39,7 +39,7 @@ export const PaddlerCircle: React.FC<{ paddler: Paddler; isDragging?: boolean; a
   const badgeFs = '10px';
 
   const typeLetter = paddler.type === 'racer' ? 'R' : paddler.type === 'casual' ? 'C' : 'V';
-  const typeColor = paddler.type === 'racer' ? '#8b5cf6' : paddler.type === 'casual' ? '#3b82f6' : '#64748b';
+  const typeColor = paddler.type === 'racer' ? '#8b5cf6' : paddler.type === 'casual' ? '#3b82f6' : '#717171';
 
   return (
     <div

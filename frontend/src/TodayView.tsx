@@ -197,7 +197,7 @@ export function TodayView({
               sort by:
             </span>
             {sortPillOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
                 <DragDropContext onDragEnd={(result) => {
                   if (!result.destination) return;
                   const newPriority = Array.from(tempPriority);
@@ -219,20 +219,20 @@ export function TodayView({
                                 ...provided.draggableProps.style,
                                 touchAction: 'none',
                                 padding: '8px 12px',
-                                backgroundColor: snapshot.isDragging ? '#dbeafe' : '#f1f5f9',
-                                borderRadius: '6px',
-                                fontSize: '14px',
+                                backgroundColor: snapshot.isDragging ? 'rgba(0,82,128,0.08)' : '#faf9f7',
+                                borderRadius: '8px',
+                                fontSize: '13px',
                                 fontWeight: 600,
-                                color: '#334155',
+                                color: '#484848',
                                 cursor: 'grab',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
                               }}
                             >
-                              <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
+                              <span style={{ color: '#b0b0b0', fontSize: '11px' }}>{index + 1}.</span>
                               {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
-                              <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '12px' }}>⠿</span>
+                              <span style={{ marginLeft: 'auto', color: '#b0b0b0', fontSize: '11px' }}>⠿</span>
                             </div>
                           )}
                         </Draggable>
@@ -244,7 +244,7 @@ export function TodayView({
                 </DragDropContext>
                 <div
                   onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
-                  style={{ marginTop: '8px', padding: '6px 12px', backgroundColor: '#005280', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textAlign: 'center', cursor: 'pointer' }}
+                  style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: '#005280', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.15s' }}
                 >
                   apply
                 </div>
@@ -269,7 +269,7 @@ export function TodayView({
       </div>{/* end event info card */}
       {(isAdmin || showAllBoats) ? (<>
       <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)', marginBottom: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: `${boatWidth}px ${boatWidth}px`, gap: `${canoeMargin}px`, padding: `${canoeMargin}px 0`, justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: `${canoeMargin}px`, padding: `${canoeMargin}px 0` }}>
       {canoes?.map((canoe: Canoe, index: number) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         return (

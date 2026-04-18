@@ -446,9 +446,10 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // Layout sizing
   const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 180 : 32) : 0;
   const leftSidebarW = leftSidebarOpen ? 120 : 36;
-  const mainPad = 4;
-  const flexGap = 8;
-  const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
+  const mainPad = 4; // main element padding: 0 2px (2px * 2)
+  const maxLayoutWidth = 1152; // max-w-6xl = 72rem
+  const effectiveWidth = Math.min(windowWidth, maxLayoutWidth);
+  const containerWidth = effectiveWidth - sidebarW - leftSidebarW - mainPad;
   const canoeMargin = 20;
   const gridPad = 32;
   const boatWidth = Math.floor((containerWidth - canoeMargin - gridPad) / 2);

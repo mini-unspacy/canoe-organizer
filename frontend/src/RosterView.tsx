@@ -72,7 +72,7 @@ export function RosterView({
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
-                      borderColor: p.type === 'racer' ? '#8b5cf6' : p.type === 'casual' ? '#3b82f6' : '#64748b',
+                      borderColor: p.type === 'racer' ? '#8b5cf6' : p.type === 'casual' ? '#3b82f6' : '#717171',
                       backgroundColor: p.type === 'racer' ? 'rgba(139,92,246,0.15)' : p.type === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)',
                       color: p.type === 'racer' ? '#a78bfa' : p.type === 'casual' ? '#60a5fa' : '#b0b0b0',
                       cursor: 'pointer',
@@ -90,7 +90,7 @@ export function RosterView({
                           padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                           border: '2px solid',
                           borderColor: p.type === t
-                            ? t === 'racer' ? '#8b5cf6' : t === 'casual' ? '#3b82f6' : '#64748b'
+                            ? t === 'racer' ? '#8b5cf6' : t === 'casual' ? '#3b82f6' : '#717171'
                             : 'transparent',
                           backgroundColor: p.type === t
                             ? t === 'racer' ? 'rgba(139,92,246,0.15)' : t === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)'

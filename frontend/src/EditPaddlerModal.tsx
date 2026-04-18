@@ -14,106 +14,142 @@ interface EditPaddlerModalProps {
   onClose: () => void;
 }
 
+function getAbilityColor(level: number): string {
+  if (level >= 4) return '#22c55e';
+  if (level >= 3) return '#f59e0b';
+  return '#ef4444';
+}
+
 export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: EditPaddlerModalProps) {
+  const labelStyle = { display: 'block', fontSize: '11px', fontWeight: 700 as const, color: '#717171', marginBottom: '6px', textTransform: 'uppercase' as const, letterSpacing: '0.04em' };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid rgba(0,0,0,.12)',
+    backgroundColor: '#ffffff',
+    color: '#222222',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 0.15s',
+  };
+
+  const toggleBtnStyle = (selected: boolean, activeColor: string, activeBg: string) => ({
+    flex: 1,
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: `2px solid ${selected ? activeColor : 'rgba(0,0,0,.12)'}`,
+    backgroundColor: selected ? activeBg : '#ffffff',
+    color: selected ? activeColor : '#717171',
+    fontSize: '13px',
+    fontWeight: 600 as const,
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+  });
+
   return (
-    <div className="fixed flex" style={{
-      top: '80px',
-      right: '20px',
-      zIndex: 9999,
-      backgroundColor: 'rgba(0,0,0,0.3)',
-      borderRadius: '16px',
-      padding: '8px'
-    }} onClick={onClose}>
+    <div
+      style={{
+        position: 'fixed', top: '80px', right: '20px', zIndex: 9999,
+        backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '16px', padding: '8px',
+      }}
+      onClick={onClose}
+    >
       <div
-        className="rounded-2xl shadow-2xl p-6 w-full max-w-md"
-        style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', minWidth: '380px' }}
+        style={{
+          backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px',
+          minWidth: '380px', maxWidth: '420px',
+          boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: '#1e293b' }}>
-            <span>✏️</span> edit paddler
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#222222', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            edit paddler
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-            style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+            style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: '#faf9f7', color: '#717171', border: 'none',
+              cursor: 'pointer', fontSize: '14px', transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0efed'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#faf9f7'; }}
           >
             ✕
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Name fields */}
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>first name</label>
+              <label style={labelStyle}>first name</label>
               <input
                 type="text"
                 value={editForm.firstName}
                 onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
+                style={inputStyle}
                 placeholder="First name"
+                onFocus={(e) => { e.currentTarget.style.borderColor = '#3387a2'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.12)'; }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748b' }}>last name</label>
+              <label style={labelStyle}>last name</label>
               <input
                 type="text"
                 value={editForm.lastName}
                 onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff', color: '#1e293b' }}
+                style={inputStyle}
                 placeholder="Last name"
+                onFocus={(e) => { e.currentTarget.style.borderColor = '#3387a2'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.12)'; }}
               />
             </div>
           </div>
 
           {/* Gender */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">gender</label>
-            <div className="flex gap-2">
-              {[
-                { id: 'kane', label: 'kane', icon: '♂️', color: 'blue' },
-                { id: 'wahine', label: 'wahine', icon: '♀️', color: 'pink' },
-              ].map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => setEditForm(prev => ({ ...prev, gender: option.id as 'kane' | 'wahine' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all flex items-center justify-center gap-1.5
-                    ${editForm.gender === option.id
-                      ? option.color === 'blue'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                        : 'border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                >
-                  <span>{option.icon}</span>
-                  {option.label}
-                </button>
-              ))}
+            <label style={labelStyle}>gender</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setEditForm(prev => ({ ...prev, gender: 'kane' }))}
+                style={toggleBtnStyle(editForm.gender === 'kane', '#3b82f6', 'rgba(59,130,246,0.12)')}
+              >
+                <span>♂️</span> kane
+              </button>
+              <button
+                onClick={() => setEditForm(prev => ({ ...prev, gender: 'wahine' }))}
+                style={toggleBtnStyle(editForm.gender === 'wahine', '#ec4899', 'rgba(236,72,153,0.12)')}
+              >
+                <span>♀️</span> wahine
+              </button>
             </div>
           </div>
 
           {/* Type */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Type</label>
-            <div className="flex gap-2">
-              {[
-                { id: 'racer', label: 'racer', color: 'violet' },
-                { id: 'casual', label: 'casual', color: 'blue' },
-                { id: 'very-casual', label: 'very casual', color: 'slate' },
-              ].map((option) => (
+            <label style={labelStyle}>type</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {([
+                { id: 'racer' as const, label: 'racer', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+                { id: 'casual' as const, label: 'casual', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+                { id: 'very-casual' as const, label: 'very casual', color: '#717171', bg: 'rgba(100,116,139,0.12)' },
+              ]).map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => setEditForm(prev => ({ ...prev, type: option.id as 'racer' | 'casual' | 'very-casual' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all
-                    ${editForm.type === option.id
-                      ? option.color === 'violet'
-                        ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
-                        : option.color === 'blue'
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                          : 'border-slate-500 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                  onClick={() => setEditForm(prev => ({ ...prev, type: option.id }))}
+                  style={toggleBtnStyle(editForm.type === option.id, option.color, option.bg)}
                 >
                   {option.label}
                 </button>
@@ -123,35 +159,36 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
 
           {/* Ability */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-              Ability <span className="text-slate-400">(1-5)</span>
-            </label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setEditForm(prev => ({ ...prev, ability: level }))}
-                  className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all
-                    ${editForm.ability === level
-                      ? level >= 4
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                        : level >= 3
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                          : 'border-rose-500 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
-                >
-                  {level}
-                </button>
-              ))}
+            <label style={labelStyle}>ability <span style={{ color: '#b0b0b0', fontWeight: 400 }}>(1-5)</span></label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {[1, 2, 3, 4, 5].map((level) => {
+                const isActive = editForm.ability === level;
+                const color = getAbilityColor(level);
+                return (
+                  <button
+                    key={level}
+                    onClick={() => setEditForm(prev => ({ ...prev, ability: level }))}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '8px',
+                      border: `2px solid ${isActive ? color : 'rgba(0,0,0,.12)'}`,
+                      backgroundColor: isActive ? `${color}1a` : '#ffffff',
+                      color: isActive ? color : '#717171',
+                      fontSize: '14px', fontWeight: 700,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Seat Preference */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-              Seat Preference <span className="text-slate-400">(click seats in priority order)</span>
-            </label>
-            <div className="flex gap-2">
+            <label style={labelStyle}>seat preference <span style={{ color: '#b0b0b0', fontWeight: 400 }}>(click in priority order)</span></label>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {[1, 2, 3, 4, 5, 6].map((seat) => {
                 const prefs = editForm.seatPreference.split('').map(Number).filter(n => n > 0);
                 const isSelected = prefs.includes(seat);
@@ -170,14 +207,26 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
                       const prefString = [...newPrefs, ...Array(6 - newPrefs.length).fill(0)].join('').slice(0, 6);
                       setEditForm(prev => ({ ...prev, seatPreference: prefString }));
                     }}
-                    className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all relative
-                      ${isSelected
-                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '8px',
+                      border: `2px solid ${isSelected ? '#f97316' : 'rgba(0,0,0,.12)'}`,
+                      backgroundColor: isSelected ? 'rgba(249,115,22,0.12)' : '#ffffff',
+                      color: isSelected ? '#f97316' : '#717171',
+                      fontSize: '14px', fontWeight: 700,
+                      cursor: 'pointer', position: 'relative',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                    }}
                   >
                     {seat}
                     {isSelected && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[8px] rounded-full flex items-center justify-center">
+                      <span style={{
+                        position: 'absolute', top: '-4px', right: '-4px',
+                        width: '16px', height: '16px', borderRadius: '50%',
+                        backgroundColor: '#f97316', color: '#fff',
+                        fontSize: '9px', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
                         {priority}
                       </span>
                     )}
@@ -185,27 +234,40 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
                 );
               })}
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p style={{ fontSize: '12px', color: '#b0b0b0', marginTop: '4px' }}>
               Selected: {editForm.seatPreference.split('').map(Number).filter(n => n > 0).join(' > ') || 'None'}
             </p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 mt-6">
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-lg border font-medium transition-colors"
-            style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: '8px',
+              border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#ffffff',
+              color: '#717171', fontSize: '14px', fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.12)'; }}
           >
-            Cancel
+            cancel
           </button>
           <button
             onClick={onSave}
-            className="flex-1 px-4 py-2.5 rounded-lg text-white font-medium shadow-lg"
-            style={{ background: '#005280' }}
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: '8px',
+              border: 'none', backgroundColor: '#005280',
+              color: '#ffffff', fontSize: '14px', fontWeight: 600,
+              cursor: 'pointer', transition: 'opacity 0.15s',
+              boxShadow: '0 2px 8px rgba(0,82,128,0.3)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
-            Save Changes
+            save changes
           </button>
         </div>
       </div>

@@ -237,9 +237,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     style={{
                       padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                       border: '2px solid',
-                      borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                      borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#717171') : 'transparent',
                       backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
-                      color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#94a3b8') : '#717171',
+                      color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#b0b0b0') : '#717171',
                       cursor: 'pointer',
                     }}
                   >
@@ -434,9 +434,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                               style={{
                                 padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                                 border: '2px solid',
-                                borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#64748b') : 'transparent',
+                                borderColor: eventForm.eventType === t ? (t === 'practice' ? '#005280' : t === 'race' ? '#ef4444' : '#717171') : 'transparent',
                                 backgroundColor: eventForm.eventType === t ? (t === 'practice' ? 'rgba(59,130,246,0.15)' : t === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)') : 'transparent',
-                                color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#94a3b8') : '#717171',
+                                color: eventForm.eventType === t ? (t === 'practice' ? '#3387a2' : t === 'race' ? '#f87171' : '#b0b0b0') : '#717171',
                                 cursor: 'pointer',
                               }}
                             >
@@ -543,7 +543,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           <span style={{
                             padding: '2px 8px', borderRadius: '999px', fontSize: '14px', fontWeight: 600,
                             backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.15)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
-                            color: evt.eventType === 'practice' ? '#3387a2' : evt.eventType === 'race' ? '#f87171' : '#94a3b8',
+                            color: evt.eventType === 'practice' ? '#3387a2' : evt.eventType === 'race' ? '#f87171' : '#b0b0b0',
                             border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.3)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.3)' : 'rgba(100,116,139,0.3)'}`,
                           }}>
                             {evt.eventType}

@@ -125,7 +125,7 @@ export function StagingSidebar({
                   <div
                     key={opt.id}
                     onClick={() => { setViewBy(opt.id as ViewBy); setOpenSortMenu(null); }}
-                    style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#1e293b' : '#64748b', backgroundColor: viewBy === opt.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
+                    style={{ padding: '8px 12px', fontSize: '13px', fontWeight: viewBy === opt.id ? 700 : 500, color: viewBy === opt.id ? '#222222' : '#717171', backgroundColor: viewBy === opt.id ? '#faf9f7' : '#fff', cursor: 'pointer' }}
                   >
                     {opt.label}
                   </div>
@@ -204,7 +204,7 @@ export function StagingSidebar({
                 value={addSearchQuery}
                 onChange={(e) => setAddSearchQuery(e.target.value)}
                 placeholder="search paddler..."
-                style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f1f5f9', color: '#1e293b', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#faf9f7', color: '#222222', outline: 'none', boxSizing: 'border-box' }}
                 autoFocus
               />
               <div style={{ marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
@@ -216,7 +216,7 @@ export function StagingSidebar({
                     const fullName = `${p.firstName} ${p.lastName || ''}`.toLowerCase();
                     return fullName.includes(query);
                   }).slice(0, 8);
-                  if (matches.length === 0) return <div style={{ fontSize: '13px', color: '#64748b', padding: '4px 8px' }}>no matches</div>;
+                  if (matches.length === 0) return <div style={{ fontSize: '13px', color: '#717171', padding: '4px 8px' }}>no matches</div>;
                   return matches.map((p: Paddler) => (
                     <div
                       key={p.id}
@@ -225,9 +225,9 @@ export function StagingSidebar({
                         setShowAddSearch(false);
                         setAddSearchQuery('');
                       }}
-                      style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 500, color: '#64748b', backgroundColor: '#fff', borderRadius: '4px', cursor: 'pointer' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.fontWeight = '700'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.fontWeight = '500'; }}
+                      style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 500, color: '#717171', backgroundColor: '#fff', borderRadius: '4px', cursor: 'pointer' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#faf9f7'; e.currentTarget.style.color = '#222222'; e.currentTarget.style.fontWeight = '700'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.color = '#717171'; e.currentTarget.style.fontWeight = '500'; }}
                     >
                       {p.firstName} {p.lastName ? p.lastName[0] + '.' : ''}
                     </div>
@@ -262,7 +262,7 @@ export function StagingSidebar({
               ref={provided.innerRef}
               {...provided.droppableProps}
               className={`rounded-lg transition-colors flex flex-col
-                ${snapshot.isDraggingOver ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-400/50' : ''}`}
+                ${snapshot.isDraggingOver ? 'bg-amber-50 ring-2 ring-amber-400/50' : ''}`}
               style={{ padding: '4px 6px', marginTop: '8px', flex: 1, minHeight: '100px' }}
             >
               {allPaddlers.length > 0 ? allPaddlers.map((paddler: Paddler, index: number) => {
@@ -301,7 +301,7 @@ export function StagingSidebar({
                                 <div
                                   key={sort.id}
                                   onClick={() => { handleSectionSort(sectionBreak.id, sort.id as SortBy); setOpenSortMenu(null); }}
-                                  style={{ padding: '8px 12px', fontSize: '13px', fontWeight: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? 700 : 500, color: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#1e293b' : '#64748b', backgroundColor: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#f1f5f9' : '#fff', cursor: 'pointer' }}
+                                  style={{ padding: '8px 12px', fontSize: '13px', fontWeight: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? 700 : 500, color: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#222222' : '#717171', backgroundColor: (sectionSorts[sectionBreak.id] || 'gender') === sort.id ? '#faf9f7' : '#fff', cursor: 'pointer' }}
                                 >
                                   {sort.label}
                                 </div>
