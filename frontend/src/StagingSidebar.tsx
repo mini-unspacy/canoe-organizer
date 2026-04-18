@@ -62,7 +62,7 @@ export function StagingSidebar({
     <div
       className="scrollbar-hidden"
       style={{
-        width: sidebarOpen ? 170 : 24,
+        width: sidebarOpen ? 180 : 32,
         height: '100%',
         flexShrink: 0,
         display: 'flex',
@@ -71,13 +71,13 @@ export function StagingSidebar({
         overflowX: 'hidden',
         touchAction: isDragging ? 'none' : 'auto',
         backgroundColor: sidebarOpen ? '#faf9f7' : 'transparent',
-        padding: sidebarOpen ? '12px 4px 0 4px' : '12px 0 0 0',
+        padding: sidebarOpen ? '16px 10px 0 10px' : '16px 4px 0 4px',
         paddingBottom: 0,
         borderLeft: '1px solid rgba(0,0,0,.08)',
       }}
     >
       {/* Toolbar - sticky */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#faf9f7' : 'transparent', padding: '12px 4px 0 4px' }} className="relative">
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: sidebarOpen ? '#faf9f7' : 'transparent', padding: sidebarOpen ? '0 0 8px' : '0', borderBottom: sidebarOpen ? '1px solid rgba(0,0,0,.08)' : 'none', marginBottom: sidebarOpen ? '8px' : 0 }} className="relative">
         {/* Top row: toggle + A button */}
         <div className="flex items-center" style={{ marginBottom: sidebarOpen ? '4px' : 0 }}>
           <span
@@ -149,8 +149,8 @@ export function StagingSidebar({
                 style={{
                   width: TOOLBAR_SIZE,
                   height: TOOLBAR_SIZE,
-                  backgroundColor: snapshot.isDraggingOver ? '#facc15' : '#000',
-                  borderColor: snapshot.isDraggingOver ? '#fde047' : '#b0b0b0',
+                  backgroundColor: snapshot.isDraggingOver ? '#facc15' : '#faf9f7',
+                  borderColor: snapshot.isDraggingOver ? '#fde047' : 'rgba(0,0,0,.12)',
                   transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
                 }}
                 title="Drag paddlers here to edit"
@@ -169,8 +169,8 @@ export function StagingSidebar({
                 style={{
                   width: TOOLBAR_SIZE,
                   height: TOOLBAR_SIZE,
-                  backgroundColor: snapshot.isDraggingOver ? '#f87171' : '#000',
-                  borderColor: snapshot.isDraggingOver ? '#fca5a5' : '#b0b0b0',
+                  backgroundColor: snapshot.isDraggingOver ? '#f87171' : '#faf9f7',
+                  borderColor: snapshot.isDraggingOver ? '#fca5a5' : 'rgba(0,0,0,.12)',
                   transform: snapshot.isDraggingOver ? 'scale(1.1)' : 'scale(1)',
                 }}
                 title="Drag paddlers here to mark absent"
@@ -189,7 +189,7 @@ export function StagingSidebar({
                 setTimeout(() => addSearchInputRef.current?.focus(), 50);
               }}
               className={`rounded-full border-[3px] flex items-center justify-center transition-all ${selectedEvent ? 'cursor-pointer hover:opacity-80' : 'opacity-40 cursor-not-allowed'}`}
-              style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#faf9f7', borderColor: '#b0b0b0', color: '#222222' }}
+              style={{ width: TOOLBAR_SIZE, height: TOOLBAR_SIZE, fontSize: '26px', lineHeight: 1, backgroundColor: '#faf9f7', borderColor: 'rgba(0,0,0,.12)', color: '#222222' }}
               title={selectedEvent ? 'Add paddler to event' : 'Select an event first'}
             >
               +
@@ -270,8 +270,8 @@ export function StagingSidebar({
                 return (
                   <Fragment key={paddler._id.toString()}>
                     {sectionBreak && (
-                      <div className="flex items-center justify-between w-full" style={{ padding: '4px 0 2px' }}>
-                        <span className="font-semibold text-sm" style={{ color: '#c0c0c0' }}>
+                      <div className="flex items-center justify-between w-full" style={{ padding: '8px 0 4px', borderBottom: '1px solid rgba(0,0,0,.06)', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '12px', color: '#717171', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           {sectionBreak.label} ({viewSections.find(s => s.id === sectionBreak.id)?.paddlers.length})
                         </span>
                         <div ref={openSortMenu === sectionBreak.id ? openSortMenuRef : undefined} style={{ position: 'relative' }}>
