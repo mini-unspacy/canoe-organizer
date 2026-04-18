@@ -202,7 +202,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               </div>
 
               {/* RIGHT COLUMN - STAGING SIDEBAR (admin only) */}
-              {ctx.activePage === 'today' && ctx.isAdmin && (
+              {ctx.isAdmin && (ctx.activePage === 'today' ? (
                 <StagingSidebar
                   sidebarOpen={ctx.sidebarOpen}
                   setSidebarOpen={ctx.setSidebarOpen}
@@ -227,7 +227,10 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
                   setAttendanceMut={ctx.setAttendanceMut}
                 />
-              )}
+              ) : (
+                /* Spacer to keep layout width consistent across pages */
+                <div style={{ width: ctx.sidebarOpen ? 180 : 32, height: '100%', flexShrink: 0, borderLeft: '1px solid rgba(0,0,0,.08)' }} />
+              ))}
             </div>
           )}
         </main>
