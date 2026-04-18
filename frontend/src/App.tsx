@@ -51,7 +51,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div
                 className="scrollbar-hidden"
                 style={{
-                  width: ctx.leftSidebarOpen ? 110 : 28,
+                  width: ctx.leftSidebarOpen ? 136 : 40,
                   height: '100%',
                   flexShrink: 0,
                   display: 'flex',
@@ -59,43 +59,33 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                   overflowY: ctx.leftSidebarOpen ? 'auto' : 'hidden',
                   overflowX: 'hidden',
                   backgroundColor: '#faf9f7',
-                  padding: '12px 4px 0 4px',
                   borderRight: '1px solid rgba(0,0,0,.08)',
                 }}
               >
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#faf9f7', padding: '12px 4px 0 4px' }}>
-                  <div onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)} style={{ textAlign: ctx.leftSidebarOpen ? 'left' : 'center', marginBottom: '8px', padding: '0 2px', cursor: 'pointer' }}>
+                {/* Logo + collapse toggle — sticky header */}
+                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#faf9f7', padding: ctx.leftSidebarOpen ? '20px 16px 0' : '20px 8px 0' }}>
+                  <div onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)} style={{ textAlign: ctx.leftSidebarOpen ? 'left' : 'center', cursor: 'pointer', paddingBottom: '12px', borderBottom: '1px solid rgba(0,0,0,.08)', marginBottom: '8px' }}>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#ed1c24',
-                      fontSize: '36px',
+                      fontSize: ctx.leftSidebarOpen ? '32px' : '28px',
+                      lineHeight: 1,
                     }}>
                       {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
-                  </div>
-                  <div className="flex items-center" style={{ marginBottom: '4px', justifyContent: ctx.leftSidebarOpen ? 'flex-end' : 'center' }}>
-                    <span
-                      onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)}
-                      style={{
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        color: '#005280',
-                        userSelect: 'none',
-                        padding: '2px 8px',
-                        backgroundColor: 'rgba(0, 82, 128, 0.06)',
-                        borderRadius: '999px',
-                      }}
-                    >
-                      {ctx.leftSidebarOpen ? '‹‹‹' : '›'}
-                    </span>
+                    {ctx.leftSidebarOpen && (
+                      <div style={{ fontSize: '9px', color: '#717171', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '2px' }}>
+                        Outrigger Canoe Club
+                      </div>
+                    )}
                   </div>
                 </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '8px 4px', flex: 1 }}>
+                {/* Nav items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: ctx.leftSidebarOpen ? '8px 12px' : '8px 6px', flex: 1 }}>
                     {([
-                      { page: 'today' as const, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /><circle cx="12" cy="15" r="2.5" /><path d="M10 17l-1.5 4 1.5-1 1.5 1L10 17" /><path d="M14 17l-1.5 4 1.5-1 1.5 1L14 17" /></svg>, label: 'event' },
+                      { page: 'today' as const, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /><circle cx="12" cy="15" r="2.5" /><path d="M10 17l-1.5 4 1.5-1 1.5 1L10 17" /><path d="M14 17l-1.5 4 1.5-1 1.5 1L14 17" /></svg>, label: 'event' },
                       { page: 'schedule' as const, icon: '☰', label: 'schedule' },
-                      { page: 'roster' as const, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></svg>, label: 'roster' },
+                      { page: 'roster' as const, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></svg>, label: 'roster' },
                       { page: 'attendance' as const, icon: '✓', label: 'attendance' },
                       { page: 'crews' as const, icon: '⛵', label: 'crews' },
                     ]).map(({ page, icon, label }) => (
@@ -107,26 +97,26 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px',
-                          padding: '6px 0 6px 0',
+                          gap: '10px',
+                          padding: ctx.leftSidebarOpen ? '8px 10px' : '8px 0',
                           borderRadius: '8px',
                           color: ctx.activePage === page ? '#005280' : '#484848',
-                          backgroundColor: ctx.activePage === page ? 'rgba(0, 82, 128, 0.06)' : 'transparent',
+                          backgroundColor: ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent',
                           fontWeight: ctx.activePage === page ? 600 : 400,
                           userSelect: 'none',
-                          justifyContent: 'flex-start',
+                          justifyContent: ctx.leftSidebarOpen ? 'flex-start' : 'center',
                         }}
                         onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
-                        onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent'; }}
                       >
-                        <span style={{ fontSize: '22px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 'inherit' }}>{label}</span>}
+                        <span style={{ fontSize: '18px', lineHeight: 1, width: '20px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+                        {ctx.leftSidebarOpen && <span style={{ fontSize: '14px', fontWeight: 'inherit' }}>{label}</span>}
                       </span>
                     ))}
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,.08)' }}>
                       {ctx.leftSidebarOpen && (
                         <>
-                          <div style={{ fontSize: '10px', color: '#717171', padding: '0 8px', wordBreak: 'break-all' }}>
+                          <div style={{ fontSize: '10px', color: '#717171', padding: '0 8px 4px', wordBreak: 'break-all' }}>
                             {currentUser.email}
                           </div>
                           <span
