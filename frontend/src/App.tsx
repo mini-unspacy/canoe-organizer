@@ -135,7 +135,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               </div>
 
               {/* MIDDLE COLUMN */}
-              <div style={{ width: ctx.containerWidth, minWidth: 0, flexShrink: 1, overflow: 'hidden', height: '100%' }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
               <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
