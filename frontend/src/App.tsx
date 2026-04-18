@@ -30,20 +30,19 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
   return (
     <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
-      <div className="overflow-hidden" style={{ height: '100%', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
-        <main className="max-w-6xl mx-auto" style={{ height: '100%', overflow: 'hidden', padding: '0 2px' }}>
+      <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
+        <main style={{ height: '100%', overflow: 'hidden', padding: '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
           {ctx.dataLoading ? (
             <LokahiSplash />
           ) : ctx.hasNoData ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
               <div
                 onClick={() => { ctx.triggerAnimation(); ctx.populatePaddlers(); ctx.populateCanoes(); }}
-                className="rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all hover:opacity-80"
-                style={{ width: 64, height: 64, backgroundColor: '#faf9f7', borderColor: '#b0b0b0', color: '#222222', fontSize: '28px' }}
+                style={{ width: 64, height: 64, backgroundColor: '#faf9f7', borderColor: '#b0b0b0', borderWidth: '3px', borderStyle: 'solid', borderRadius: '50%', color: '#222222', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
               >
                 🛶
               </div>
-              <p className="text-center mt-4 text-sm" style={{ color: '#717171' }}>Tap to load sample data</p>
+              <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#717171' }}>Tap to load sample data</p>
             </div>
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '0', width: '100%', overflow: 'hidden' }}>
