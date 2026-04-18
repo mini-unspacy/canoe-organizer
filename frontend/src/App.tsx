@@ -72,11 +72,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     }}>
                       {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}
                     </span>
-                    {ctx.leftSidebarOpen && (
-                      <div style={{ fontSize: '8px', color: '#717171', letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: '1px', lineHeight: 1.2 }}>
-                        Outrigger Canoe Club
-                      </div>
-                    )}
                   </div>
                 </div>
                 {/* Nav items */}
