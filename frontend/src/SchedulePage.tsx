@@ -203,7 +203,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 0', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0 12px', position: 'relative' }}
         className="scrollbar-hidden"
       >
         {/* Floating + event button (admin only) */}
@@ -215,8 +215,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               setShowEventForm(!showEventForm);
             }}
             style={{
-              cursor: 'pointer', fontSize: '16px', fontWeight: 800, color: '#005280',
-              userSelect: 'none', padding: '4px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '999px',
+              cursor: 'pointer', fontSize: '13px', fontWeight: 700, color: '#005280',
+              userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', border: '1px solid rgba(0,82,128,0.12)',
             }}
           >
             + event
@@ -414,7 +414,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
-              <div style={{ fontSize: '20px', color: '#717171', fontWeight: 700, padding: '18px 0 10px', textTransform: 'lowercase' }}>
+              <div style={{ fontSize: '18px', color: '#222222', fontWeight: 700, padding: '24px 0 12px', textTransform: 'lowercase', letterSpacing: '0.02em', borderBottom: '2px solid rgba(0,0,0,.08)', marginBottom: '12px' }}>
                 {m.label}
               </div>
               {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
@@ -506,11 +506,11 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    style={{ display: 'flex', gap: '6px', padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,.08)' }}
+                    style={{ display: 'flex', gap: '12px', padding: '14px 16px', marginBottom: '8px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 1px 4px rgba(0,0,0,.04), 0 3px 10px rgba(0,0,0,.06)' }}
                   >
                     {/* Left column: date + Y/N */}
                     <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '28px', fontWeight: 700, color: '#e0e0e0', lineHeight: 1.1, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayNum}</div>
+                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '28px', fontWeight: 700, color: '#222222', lineHeight: 1.1, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayNum}</div>
                       <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '20px', color: '#484848', fontWeight: 500, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayName}</div>
                       {selectedPaddlerId && (
                         <div
@@ -531,7 +531,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     </div>
                     {/* Right column: time/title, location, badges */}
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px' }}>
-                      <div style={{ fontSize: '28px', color: '#e0e0e0', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
+                      <div style={{ fontSize: '28px', color: '#222222', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                         <span
                           onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
                           style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
