@@ -68,7 +68,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     <span style={{
                       fontFamily: "'UnifrakturMaguntia', cursive",
                       color: '#ed1c24',
-                      fontSize: ctx.leftSidebarOpen ? '32px' : '28px',
+                      fontSize: ctx.leftSidebarOpen ? '28px' : '24px',
                       lineHeight: 1,
                     }}>
                       {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}

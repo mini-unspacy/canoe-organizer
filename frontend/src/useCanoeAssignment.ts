@@ -444,8 +444,8 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   };
 
   // Layout sizing
-  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 170 : 24) : 0;
-  const leftSidebarW = leftSidebarOpen ? 110 : 28;
+  const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 180 : 32) : 0;
+  const leftSidebarW = leftSidebarOpen ? 136 : 40;
   const mainPad = 4;
   const flexGap = 8;
   const containerWidth = windowWidth - sidebarW - leftSidebarW - flexGap * (sidebarW > 0 ? 2 : 1) - mainPad;
