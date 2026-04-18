@@ -161,19 +161,19 @@ export function TodayView({
         </div>
       </div>
       {/* Y/N + all boats/my boats row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '0', marginBottom: '0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'wrap' }}>
         {selectedPaddlerId && (
-          <div style={{ width: '52px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '40px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
           <div
             onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
             style={{
-              width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
+              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', userSelect: 'none',
               border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
               backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
               color: _isAttending ? '#22c55e' : '#ef4444',
-              fontSize: '17px', fontWeight: 700, transition: 'all 0.15s',
+              fontSize: '15px', fontWeight: 700, transition: 'all 0.15s',
             }}
           >
             {_isAttending ? 'Y' : 'N'}
@@ -183,16 +183,16 @@ export function TodayView({
         {!isAdmin && (
           <span
             onClick={() => setShowAllBoats(!showAllBoats)}
-            style={{ cursor: 'pointer', fontSize: '15px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '10px 24px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
           >
-            {showAllBoats ? 'SEE MY BOAT ASSIGNMENT' : 'SEE ALL BOAT ASSIGNMENTS'}
+            {showAllBoats ? 'My Boat' : 'All Boats'}
           </span>
         )}
         {isAdmin && (<>
           <div ref={sortPillRef} style={{ position: 'relative' }}>
             <span
               onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-              style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+              style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
             >
               Sort By
             </span>
@@ -254,19 +254,19 @@ export function TodayView({
           <div style={{ flex: 1 }} />
           <span
             onClick={handleAssign}
-            style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
           >
-            {sidebarOpen ? '← Assign' : '← Assign'}
+            ← Assign
           </span>
           <span
             onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-            style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '8px 16px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '10px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
           >
-            {sidebarOpen ? 'Return →' : 'Return →'}
+            Return →
           </span>
         </>)}
       </div>

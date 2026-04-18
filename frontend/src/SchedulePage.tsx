@@ -289,8 +289,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     key={r}
                     onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [], repeatUntil: r !== 'none' && !f.repeatUntil ? getLocalToday() : f.repeatUntil }))}
                     style={{
-                      padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                      border: '2px solid',
+                      padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                      border: '1px solid',
                       borderColor: eventForm.repeating === r ? '#005280' : 'transparent',
                       backgroundColor: eventForm.repeating === r ? 'rgba(59,130,246,0.15)' : 'transparent',
                       color: eventForm.repeating === r ? '#3387a2' : '#717171',

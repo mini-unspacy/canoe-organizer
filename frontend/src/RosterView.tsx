@@ -47,14 +47,14 @@ export function RosterView({
                 <span
                   onClick={isAdmin ? () => updatePaddler({ paddlerId: p.id, gender: p.gender === 'kane' ? 'wahine' : 'kane' }) : undefined}
                   style={{
-                    padding: '4px 12px',
-                    borderRadius: '999px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
                     fontSize: '12px',
                     fontWeight: 600,
-                    border: '2px solid',
+                    border: '1px solid',
                     borderColor: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
-                    backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.15)' : 'rgba(236,72,153,0.15)',
-                    color: p.gender === 'kane' ? '#60a5fa' : '#f472b6',
+                    backgroundColor: p.gender === 'kane' ? 'rgba(59,130,246,0.1)' : 'rgba(236,72,153,0.1)',
+                    color: p.gender === 'kane' ? '#3b82f6' : '#ec4899',
                     cursor: isAdmin ? 'pointer' : 'default',
                   }}
                 >
@@ -70,8 +70,8 @@ export function RosterView({
                       updatePaddler({ paddlerId: p.id, type: next });
                     }}
                     style={{
-                      padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                      border: '2px solid',
+                      padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                      border: '1px solid',
                       borderColor: p.type === 'racer' ? '#8b5cf6' : p.type === 'casual' ? '#3b82f6' : '#717171',
                       backgroundColor: p.type === 'racer' ? 'rgba(139,92,246,0.15)' : p.type === 'casual' ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.15)',
                       color: p.type === 'racer' ? '#a78bfa' : p.type === 'casual' ? '#60a5fa' : '#b0b0b0',
@@ -87,8 +87,8 @@ export function RosterView({
                         key={t}
                         onClick={() => updatePaddler({ paddlerId: p.id, type: t })}
                         style={{
-                          padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                          border: '2px solid',
+                          padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                          border: '1px solid',
                           borderColor: p.type === t
                             ? t === 'racer' ? '#8b5cf6' : t === 'casual' ? '#3b82f6' : '#717171'
                             : 'transparent',

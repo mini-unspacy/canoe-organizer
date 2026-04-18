@@ -90,7 +90,7 @@ export function StagingSidebar({
               userSelect: 'none',
               padding: '2px 8px',
               backgroundColor: 'rgba(0, 82, 128, 0.06)',
-              borderRadius: '999px',
+              borderRadius: '6px',
             }}
           >
             {sidebarOpen ? '›››' : '‹'}
@@ -108,7 +108,7 @@ export function StagingSidebar({
                 userSelect: 'none',
                 padding: '2px 8px',
                 backgroundColor: 'rgba(0, 82, 128, 0.06)',
-                borderRadius: '999px',
+                borderRadius: '6px',
                 whiteSpace: 'nowrap',
               }}
             >
@@ -285,7 +285,7 @@ export function StagingSidebar({
                               userSelect: 'none',
                               padding: '2px 8px',
                               backgroundColor: 'rgba(0, 82, 128, 0.06)',
-                              borderRadius: '999px',
+                              borderRadius: '6px',
                             }}
                           >
                             {{ gender: 'G', type: 'R', seatPreference: 'S', ability: 'A' }[sectionSorts[sectionBreak.id] || 'gender']}
