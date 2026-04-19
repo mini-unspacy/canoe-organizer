@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "./convex_generated/api";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { getLocalToday, sortPaddlersByPriority, CANOE_SORT_OPTIONS } from "./utils";
+import { pickFreshCanoeName } from "./canoeNames";
 import { useAnimationTrigger } from "./useAnimationTrigger";
 import type { EditForm } from "./EditPaddlerModal";
 
@@ -403,8 +404,8 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   };
 
   const handleAddCanoeAfter = (_index: number) => {
-    const nextNum = (canoes?.length || 0) + 1;
-    addCanoe({ name: `Canoe ${nextNum}` });
+    const taken = (canoes ?? []).map(c => c.name);
+    addCanoe({ name: pickFreshCanoeName(taken) });
   };
 
   const handleUnassignAll = async () => {
@@ -435,8 +436,11 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     const attendingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : paddlers.length;
     const neededCanoes = Math.ceil(attendingCount / 6);
     if (neededCanoes > canoes.length) {
+      const taken = new Set(canoes.map(c => c.name));
       for (let i = canoes.length; i < neededCanoes; i++) {
-        await addCanoe({ name: `Canoe ${i + 1}` });
+        const name = pickFreshCanoeName(taken);
+        taken.add(name);
+        await addCanoe({ name });
       }
     }
     triggerAnimation();

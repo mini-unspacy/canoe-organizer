@@ -202,12 +202,26 @@ export const populateSampleCanoes = mutation({
       return { message: "Canoes already exist." };
     }
 
-    const sampleCanoeNames = ["Canoe 1", "Canoe 2", "Canoe 3", "Canoe 4"];
+    // Seed with Hawaiian names drawn randomly from the pool used elsewhere
+    // so the fleet doesn't start life as "Canoe 1, 2, 3, 4".
+    const POOL = [
+      "Pōkai", "Puakea", "Hōkūleʻa", "Kainalu", "Mānele",
+      "Honu", "Nalu", "Moana", "Kilo", "Kaiāulu",
+      "Maluhia", "ʻIolani", "Makani", "Kealoha", "Lanakila",
+      "Hikianalia", "Hōkūlani", "Kaimana", "Mahina", "Keahi",
+    ];
+    // Fisher-Yates shuffle, then take the first four.
+    const shuffled = [...POOL];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const sampleCanoeNames = shuffled.slice(0, 4);
 
-    await Promise.all(sampleCanoeNames.map(async (name, index) => {
+    await Promise.all(sampleCanoeNames.map(async (name) => {
       await ctx.db.insert("canoes", {
         id: nanoid(),
-        name: name,
+        name,
         assignments: [],
         status: "open",
       });
@@ -342,5 +356,41 @@ export const renameTestCanoesToHawaiian = mutation({
       renamed.push(`${c.name} (${key}) -> ${target.name} (${target.designation})`);
     }
     return { renamed, skipped, count: renamed.length };
+  },
+});
+
+// One-shot utility: any canoe still named "Canoe N" (or just "Canoe") gets
+// swapped for a random unused Hawaiian name from the pool. Idempotent —
+// canoes whose name is already Hawaiian are left alone. Safe to run multiple
+// times; if the pool runs out, extra canoes fall back to "Canoe N".
+export const randomizeNumericCanoeNames = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const POOL = [
+      "Pōkai", "Puakea", "Hōkūleʻa", "Kainalu", "Mānele",
+      "Honu", "Nalu", "Moana", "Kilo", "Kaiāulu",
+      "Maluhia", "ʻIolani", "Makani", "Kealoha", "Lanakila",
+      "Hikianalia", "Hōkūlani", "Kaimana", "Mahina", "Keahi",
+      "Lōkahi", "Haliʻa", "Anuenue", "Kaiolohia", "Ehukai",
+    ];
+    const canoes = await ctx.db.query("canoes").collect();
+    const taken = new Set(canoes.map(c => c.name));
+    const remaining = POOL.filter(n => !taken.has(n));
+    // Fisher-Yates shuffle of the remaining pool for randomness.
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
+    const numericPattern = /^Canoe(\s+\d+)?$/;
+    const renamed: string[] = [];
+    let fallbackIdx = canoes.length;
+    for (const c of canoes) {
+      if (!numericPattern.test(c.name.trim())) continue;
+      const next = remaining.shift() ?? `Canoe ${++fallbackIdx}`;
+      await ctx.db.patch(c._id, { name: next });
+      taken.add(next);
+      renamed.push(`${c.name} -> ${next}`);
+    }
+    return { renamed, count: renamed.length };
   },
 });
