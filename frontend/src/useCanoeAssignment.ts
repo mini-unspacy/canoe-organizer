@@ -449,7 +449,10 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // Layout sizing
   const sidebarW = activePage === 'today' && isAdmin ? (sidebarOpen ? 180 : 32) : 0;
   const leftSidebarW = leftSidebarOpen ? 120 : 36;
-  const mainPad = 4; // main element padding: 0 2px (2px * 2)
+  // Main-element horizontal padding: wider on narrow (12px each side) for
+  // comfortable screen-edge breathing room, tight (2px) on desktop so the
+  // left sidebar can hug the screen edge. Keep in sync with App.tsx <main>.
+  const mainPad = windowWidth < 640 ? 24 : 4;
   const maxLayoutWidth = 1152; // max-w-6xl = 72rem
   const effectiveWidth = Math.min(windowWidth, maxLayoutWidth);
   const containerWidth = effectiveWidth - sidebarW - leftSidebarW - mainPad;
