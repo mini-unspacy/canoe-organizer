@@ -165,32 +165,27 @@ export function TodayView({
           </svg>
         </button>
       </div>
-      {/* Attendance strip — standalone pill below the title row, matching
-          the Lokahi mock: green status dot, "N going" + "of M" small caption,
-          chevron on the right. Tap to expand the attendees list. */}
+      {/* Attendance pill — compact inline pill below the title row: green
+          status dot, "N going", small chevron. Tap to expand the list. */}
       <div style={{ position: 'relative', marginBottom: '10px' }}>
         <div
           onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '10px 14px', borderRadius: '12px',
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            padding: '4px 10px', borderRadius: '999px',
             background: '#faf9f7', border: '1px solid rgba(0,0,0,.08)',
             cursor: 'pointer', userSelect: 'none',
           }}
         >
           <div style={{
-            width: 9, height: 9, borderRadius: '50%',
-            background: '#5a8a5f', boxShadow: '0 0 0 3px rgba(90,138,95,0.22)',
+            width: 7, height: 7, borderRadius: '50%',
+            background: '#5a8a5f', boxShadow: '0 0 0 2px rgba(90,138,95,0.22)',
             flexShrink: 0,
           }} />
-          <span style={{ fontSize: '14px', color: '#222222', fontWeight: 600 }}>
+          <span style={{ fontSize: '12px', color: '#222222', fontWeight: 600 }}>
             {_goingCount} going
           </span>
-          <span style={{ fontSize: '12px', color: '#717171', fontWeight: 500 }}>
-            of {(paddlers?.length ?? 0) + _guestCount}
-          </span>
-          <div style={{ flex: 1 }} />
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 6l6 6-6 6" />
           </svg>
         </div>
