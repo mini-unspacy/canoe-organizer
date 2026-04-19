@@ -14,8 +14,8 @@ export const CANOE_NAME_BY_DESIGNATION: Record<string, string> = {
   "700": "Kainalu",
   "710": "Hōkūleʻa",
   "711": "Puakea",
-  "M":   "Makani",
-  "W":   "Wahine",
+  "M":   "Malia",
+  "W":   "WAKA",
 };
 
 // Hawaiian-convention OC6 seat roles — seat 1 is the steersperson (back),
