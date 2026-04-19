@@ -95,22 +95,31 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     setTimeout(() => { isLoadingPastRef.current = false; }, 500);
   }, [pastEventsDesc.length]);
 
-  // Restore scroll position when returning to schedule page
-  useEffect(() => {
+  // Restore scroll position when returning to schedule page. useLayoutEffect
+  // so the jump happens before the browser paints — no flash at the top.
+  useLayoutEffect(() => {
     if (scrollToEventId) return;
     if (scrollPosRef && scheduleScrollRef.current && scrollPosRef.current > 0) {
       scheduleScrollRef.current.scrollTop = scrollPosRef.current;
     }
   }, []);
 
-  // Jump to a specific event at the top
-  useEffect(() => {
+  // Jump to a specific event at the top. Runs before paint so the user
+  // never sees the list at its default top position before the scroll.
+  // Stops firing after the first successful jump so later data refreshes
+  // don't bounce the scroll back.
+  const didJumpRef = useRef(false);
+  useLayoutEffect(() => {
+    if (didJumpRef.current) return;
     if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
     const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
     if (el) {
       scheduleScrollRef.current.scrollTop = el.offsetTop - scheduleScrollRef.current.offsetTop;
+      didJumpRef.current = true;
     }
   }, [scrollToEventId, events]);
+  // Reset the one-shot when the target event changes (new jump requested).
+  useEffect(() => { didJumpRef.current = false; }, [scrollToEventId]);
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
