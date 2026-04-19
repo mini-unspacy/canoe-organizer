@@ -114,6 +114,14 @@ export function TodayView({
       const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
       const _guestCount = eventGuests?.length || 0;
       const _goingCount = _goingPaddlers + _guestCount;
+      const _typeLabel: { text: string; color: string; bg: string } | null =
+        selectedEvent.eventType === 'race'
+          ? { text: 'RACE', color: '#b8181e', bg: 'rgba(200,32,40,0.2)' }
+          : selectedEvent.eventType === 'practice'
+          ? { text: 'PRACTICE', color: '#2e6b80', bg: 'rgba(46,107,128,0.18)' }
+          : selectedEvent.eventType === 'other'
+          ? { text: 'OTHER', color: '#6b6558', bg: 'rgba(107,101,88,0.18)' }
+          : null;
       return (
     <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px' }}>
       {/* Event info card — serif title + stacked date stamp, matches the mock */}
@@ -159,6 +167,13 @@ export function TodayView({
                   }}
                 />
               </div>
+            )}
+            {_typeLabel && (
+              <span style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.15em',
+                color: _typeLabel.color, background: _typeLabel.bg,
+                padding: '3px 6px', borderRadius: 3, flexShrink: 0,
+              }}>{_typeLabel.text}</span>
             )}
             <div style={{
               fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
