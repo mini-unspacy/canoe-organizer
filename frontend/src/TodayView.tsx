@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { PaddlerCircle, GuestPaddlerCircle } from "./components/PaddlerCircle";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { CANOE_DESIGNATIONS, SEAT_ROLES } from "./utils";
@@ -453,7 +452,7 @@ export function TodayView({
       <div style={{
         display: 'grid',
         gridTemplateColumns:
-          canoeView === 'list' ? 'repeat(auto-fit, minmax(260px, 1fr))'
+          canoeView === 'list' ? 'repeat(auto-fit, minmax(156px, 1fr))'
           : canoeView === '1' ? '1fr'
           : '1fr 1fr',
         gridAutoRows: canoeView === '4' ? 'min-content' : undefined,
@@ -483,14 +482,14 @@ export function TodayView({
               position: 'relative',
               backgroundColor: '#ffffff',
               borderRadius: '14px',
-              padding: '16px 16px 14px',
+              padding: '10px 10px 8px',
               boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
             }}
           >
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
                 designation · fill count ... 6-bar status strip · lock icon.
                 Mirrors the mock's CanoeCard header. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 2px', marginBottom: '4px', position: 'relative' }}>
               {/* Canoe # badge — tappable, opens the designation picker.
                   Mirrors the Lokahi.html #N / #? pill from CanoeCard. */}
               {(() => {
@@ -500,7 +499,7 @@ export function TodayView({
                 const short = designation.replace(/^[A-Za-z]+\s+/, '').trim();
                 const hasNum = short.length > 0;
                 const isEditable = isAdmin && !lockedCanoes.has(canoe.id);
-                const badgeFs = short.length >= 3 ? 11 : short.length === 2 ? 14 : 16;
+                const badgeFs = short.length >= 3 ? 10 : short.length === 2 ? 12 : 14;
                 return (
                   <button
                     type="button"
@@ -508,13 +507,13 @@ export function TodayView({
                     disabled={!isEditable}
                     aria-label={hasNum ? `Canoe number ${designation}` : 'Assign canoe number'}
                     style={{
-                      width: 34, height: 34, flexShrink: 0,
-                      borderRadius: 10,
+                      width: 28, height: 28, flexShrink: 0,
+                      borderRadius: 8,
                       border: hasNum ? '1.5px solid #b91c1c' : '1.5px solid rgba(0,0,0,0.15)',
                       background: hasNum ? 'rgba(185,28,28,0.10)' : 'transparent',
                       color: hasNum ? '#b91c1c' : '#9a9a9a',
                       fontWeight: 700,
-                      fontSize: hasNum ? badgeFs : 11,
+                      fontSize: hasNum ? badgeFs : 10,
                       letterSpacing: hasNum ? 0 : '0.08em',
                       cursor: isEditable ? 'pointer' : 'default',
                       padding: 0,
@@ -532,7 +531,7 @@ export function TodayView({
                 <span
                   style={{
                     fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                    fontSize: '22px',
+                    fontSize: '17px',
                     fontWeight: 600,
                     color: '#222222',
                     lineHeight: 1.1,
@@ -650,7 +649,7 @@ export function TodayView({
                     <div
                       key={n}
                       style={{
-                        width: 4, height: 12,
+                        width: 3, height: 10,
                         background: filled ? '#b91c1c' : 'rgba(0,0,0,.12)',
                         borderRadius: 2,
                       }}
@@ -668,7 +667,7 @@ export function TodayView({
                 })}
                 title={lockedCanoes.has(canoe.id) ? 'Unlock canoe' : 'Lock canoe'}
                 style={{
-                  width: 26, height: 26, borderRadius: 6,
+                  width: 22, height: 22, borderRadius: 5,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   border: `1px solid ${lockedCanoes.has(canoe.id) ? '#ed1c24' : 'rgba(0,0,0,.12)'}`,
                   background: lockedCanoes.has(canoe.id) ? 'rgba(237,28,36,0.10)' : 'transparent',
@@ -676,7 +675,7 @@ export function TodayView({
                 }}
               >
                 <svg
-                  width="14" height="14" viewBox="0 0 24 24"
+                  width="12" height="12" viewBox="0 0 24 24"
                   fill="none" stroke={lockedCanoes.has(canoe.id) ? '#ed1c24' : '#717171'}
                   strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                 >
@@ -694,7 +693,7 @@ export function TodayView({
                 red tint when the drop target is active, with the seat
                 number colored red only when a paddler is seated. Paddlers
                 get a small RC/CS/VC type tag on the right. */}
-            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
+            <div style={{ padding: '0 2px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '3px' }}>
               {Array.from({ length: 6 }).map((_, i) => {
                 const seat = i + 1;
                 const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -711,6 +710,20 @@ export function TodayView({
                               : assignedPaddler.type === 'casual' ? 'CS'
                               : assignedPaddler.type === 'very-casual' ? 'VC' : '')
                           : '';
+                      // Compose the paddler's seat label as "FirstnameL." (no
+                      // space) — e.g. "SharinC." — so the draggable fills the
+                      // seat row vertically with type instead of a chip card.
+                      const pFirst = assignedPaddler?.firstName || '';
+                      const pLi = (assignedPaddler?.lastInitial || assignedPaddler?.lastName?.[0] || '').toUpperCase();
+                      const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Guest');
+                      const isGuest = assignedPaddler?.id?.startsWith('guest-');
+                      const paddlerColor = isGuest
+                        ? '#a07838'
+                        : assignedPaddler?.gender === 'wahine'
+                          ? '#a81a22'
+                          : assignedPaddler?.gender === 'kane'
+                            ? '#1f4e5e'
+                            : '#2a2a2a';
                       return (
                         <div
                           ref={provided.innerRef}
@@ -719,23 +732,24 @@ export function TodayView({
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 10,
-                            padding: '6px 8px',
-                            borderRadius: 8,
+                            gap: 6,
+                            padding: '2px 6px',
+                            borderRadius: 7,
                             background: active ? 'rgba(200,32,40,0.12)' : 'rgba(0,0,0,0.03)',
                             border: `1px ${active ? 'solid' : 'dashed'} ${active ? '#c82028' : 'rgba(0,0,0,0.18)'}`,
                             transition: 'background 120ms ease, border-color 120ms ease',
+                            minHeight: 26,
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, width: '72px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                             <span
                               style={{
                                 fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                                fontSize: '20px',
+                                fontSize: '16px',
                                 fontWeight: 600,
                                 color: hasPaddler ? '#b91c1c' : '#484848',
                                 lineHeight: 1,
-                                width: '18px',
+                                width: '12px',
                                 textAlign: 'right',
                               }}
                             >
@@ -743,12 +757,13 @@ export function TodayView({
                             </span>
                             <span
                               style={{
-                                fontSize: '9px',
+                                fontSize: '8px',
                                 fontWeight: 700,
-                                letterSpacing: '1.2px',
-                                color: '#717171',
+                                letterSpacing: '1px',
+                                color: '#9a9a9a',
                                 textTransform: 'uppercase',
                                 lineHeight: 1,
+                                minWidth: 28,
                               }}
                             >
                               {SEAT_ROLES[seat]}
@@ -758,28 +773,63 @@ export function TodayView({
                             {assignedPaddler ? (
                               <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
                                 {(provided, dragSnapshot) => (
-                                  <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
-                                      {assignedPaddler.id.startsWith('guest-')
-                                        ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
-                                        : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
-                                      }
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    tabIndex={-1}
+                                    role="none"
+                                    aria-roledescription=""
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      touchAction: 'manipulation',
+                                      WebkitUserSelect: 'none',
+                                      userSelect: 'none',
+                                      visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
+                                      width: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                      minWidth: 0,
+                                    }}
+                                    data-animation-key={animationKey}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: 18,
+                                        lineHeight: 1,
+                                        fontWeight: 700,
+                                        color: paddlerColor,
+                                        letterSpacing: '-0.01em',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        flex: 1,
+                                        minWidth: 0,
+                                        opacity: dragSnapshot.isDragging ? 0.6 : 1,
+                                        transform: dragSnapshot.isDragging ? 'scale(1.03)' : 'none',
+                                        transition: 'transform 120ms ease, opacity 120ms ease',
+                                      }}
+                                      title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
+                                    >
+                                      {paddlerLabel}
+                                    </span>
                                   </div>
                                 )}
                               </Draggable>
                             ) : (
-                              <div style={{ fontSize: '11px', fontWeight: 500, color: active ? '#c82028' : '#9a9a9a', fontStyle: 'italic', letterSpacing: '0.3px' }}>
-                                {active ? '— drop here to seat —' : 'open seat'}
+                              <div style={{ fontSize: '11px', fontWeight: 500, color: active ? '#c82028' : '#9a9a9a', fontStyle: 'italic', letterSpacing: '0.2px' }}>
+                                {active ? 'drop here' : 'open seat'}
                               </div>
                             )}
                           </div>
                           {typeTag && (
                             <div
                               style={{
-                                fontSize: 9,
+                                fontSize: 8,
                                 fontWeight: 700,
-                                letterSpacing: '0.12em',
-                                color: '#717171',
-                                opacity: 0.7,
+                                letterSpacing: '0.1em',
+                                color: '#9a9a9a',
                                 flexShrink: 0,
                               }}
                             >
