@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
@@ -30,6 +31,47 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const ctx = useCanoeAssignment(currentUser);
   // Below this width we switch from a left sidebar to a bottom tab bar.
   const isNarrow = ctx.windowWidth < 640;
+
+  // Auto-hide the mobile tab bar when the user scrolls down, show it again
+  // when scrolling up or at the top. Standard mobile browser pattern.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const [navHidden, setNavHidden] = useState(false);
+  const [navH, setNavH] = useState(68);
+  const lastScrollTop = useRef(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const top = el.scrollTop;
+      const prev = lastScrollTop.current;
+      const delta = top - prev;
+      if (top <= 4) {
+        setNavHidden(false);
+      } else if (delta > 6) {
+        setNavHidden(true);
+      } else if (delta < -6) {
+        setNavHidden(false);
+      }
+      lastScrollTop.current = top;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [ctx.activePage, ctx.dataLoading, ctx.hasNoData, isNarrow]);
+
+  // Measure the tab bar's real height so the On Shore drawer can dock
+  // flush on top of it without leaving a stripe of canoe showing through.
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const measure = () => setNavH(el.getBoundingClientRect().height || 68);
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro?.disconnect(); window.removeEventListener('resize', measure); };
+  }, [isNarrow, ctx.dataLoading, ctx.hasNoData]);
 
   return (
     <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
@@ -135,7 +177,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
               {/* MIDDLE COLUMN */}
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
+              <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
@@ -243,13 +285,16 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             pendingAssignIds={ctx.pendingAssignIds}
             animationKey={ctx.animationKey}
             dragFromStaging={ctx.dragFromStaging}
-            bottomOffset={68}
+            bottomOffset={navHidden ? 0 : navH}
           />
         )}
 
-        {/* BOTTOM TAB BAR — mobile-only, matches the mock. */}
+        {/* BOTTOM TAB BAR — mobile-only, matches the mock. Auto-hides on
+            scroll-down, returns on scroll-up. The drawer reads the real
+            measured height so it sits flush without a visible gap. */}
         {!ctx.dataLoading && !ctx.hasNoData && isNarrow && (
           <nav
+            ref={navRef}
             style={{
               position: 'fixed',
               left: 0,
@@ -265,6 +310,9 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               borderTop: '1px solid rgba(0,0,0,.08)',
               paddingBottom: 'env(safe-area-inset-bottom)',
               boxShadow: '0 -6px 24px rgba(0,0,0,.04)',
+              transform: navHidden ? 'translateY(100%)' : 'translateY(0)',
+              transition: 'transform 220ms ease',
+              willChange: 'transform',
             }}
           >
             {([

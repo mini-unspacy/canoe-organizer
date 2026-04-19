@@ -194,10 +194,11 @@ export function OnShorePanel({
         position: "fixed",
         left: 0,
         right: 0,
-        // Sit flush against the tab bar, including any iOS home-indicator
-        // safe-area inset the nav pads itself with — otherwise the canoes
-        // peek through the gap on devices with a home indicator.
-        bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))`,
+        // Parent passes the tab bar's real measured height (including any
+        // safe-area padding it has), so we sit flush on top of it. When
+        // the nav auto-hides on scroll, bottomOffset drops to 0 and the
+        // drawer slides down to the true bottom of the screen.
+        bottom: bottomOffset,
         zIndex: 30,
         height: panelHeight,
         background: "#faf7f0",
@@ -205,7 +206,7 @@ export function OnShorePanel({
         boxShadow: collapsed ? "none" : "0 -4px 14px rgba(0,0,0,0.06)",
         display: "flex",
         flexDirection: "column",
-        transition: isDragging ? "none" : "height 220ms ease",
+        transition: isDragging ? "none" : "height 220ms ease, bottom 220ms ease",
       }}
     >
       {/* Top row — pill (show/hide toggle) on the left, center drag grip,
