@@ -85,7 +85,9 @@ export function TodayView({
     {selectedEvent && (() => {
       const _d = new Date(selectedEvent.date + 'T00:00:00');
       const _dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const _monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
       const _dayName = _dayNames[_d.getDay()];
+      const _monthName = _monthNames[_d.getMonth()];
       const _dayNum = _d.getDate();
       const _isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
       const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
@@ -93,20 +95,36 @@ export function TodayView({
       const _goingCount = _goingPaddlers + _guestCount;
       return (
     <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 8px' }}>
-      {/* Event info card */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px 20px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)' }}>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-        <div onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#222222', lineHeight: 1.1 }}>{_dayNum}</div>
-          <div style={{ fontSize: '20px', color: '#717171', fontWeight: 500 }}>{_dayName}</div>
+      {/* Event info card — serif title + stacked date stamp, matches the mock */}
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', alignItems: 'flex-start' }}>
+        <div
+          onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }}
+          style={{ width: '56px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', paddingTop: '2px' }}
+        >
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#717171', letterSpacing: '1.4px', lineHeight: 1 }}>{_dayName}</div>
+          <div style={{
+            fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+            fontSize: '40px', fontWeight: 600, color: '#222222', lineHeight: 1, marginTop: '2px',
+          }}>{_dayNum}</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#717171', letterSpacing: '1.4px', lineHeight: 1, marginTop: '2px' }}>{_monthName}</div>
         </div>
         <div style={{ flex: 1, minWidth: 0, overflow: 'visible', marginTop: '0px', position: 'relative' }}>
-          <div style={{ fontSize: '24px', color: '#222222', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+          <div style={{
+            fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+            fontSize: '24px', color: '#222222', fontWeight: 600,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15,
+          }}>
             <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
-              {selectedEvent.time} {selectedEvent.title}
+              {selectedEvent.title}
             </span>
           </div>
-          <div style={{ fontSize: '14px', color: '#005280', fontWeight: 600, marginTop: '6px' }}>
+          <div style={{ fontSize: '13px', color: '#717171', fontWeight: 500, marginTop: '4px' }}>
+            <span>{selectedEvent.time}</span>
+            <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
+            <span>{selectedEvent.location}</span>
+          </div>
+          <div style={{ fontSize: '13px', color: '#005280', fontWeight: 600, marginTop: '6px' }}>
             <span onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
             {showGoingList && (
               <div
