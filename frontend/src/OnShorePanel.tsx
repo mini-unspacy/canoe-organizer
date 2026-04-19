@@ -293,6 +293,45 @@ export function OnShorePanel({
           <span style={{ fontWeight: 800, letterSpacing: 0 }}>{count}</span>
         </button>
 
+        {/* + Add paddler — sits next to the ON SHORE pill so it stays
+            clear of the centered drag grip. Only shown when the drawer
+            is open; the ON SHORE pill is the collapsed-state handle. */}
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={() => {
+              if (!canAdd) return;
+              setAddOpen(v => !v);
+              setAddQuery("");
+              setTimeout(() => addInputRef.current?.focus(), 60);
+            }}
+            aria-label="Add paddler to today's event"
+            title={canAdd ? "Add paddler to today's event" : "Select an event first"}
+            disabled={!canAdd}
+            style={{
+              height: 24,
+              padding: "0 9px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              borderRadius: 12,
+              border: "none",
+              background: canAdd ? (addOpen ? "#7a1318" : "#1f7a4f") : "#c7c3bc",
+              color: "#fff",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              cursor: canAdd ? "pointer" : "not-allowed",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              transition: "background 120ms ease",
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1, letterSpacing: 0 }}>+</span>
+            <span>Add</span>
+          </button>
+        )}
+
         {/* Center drag grip — sits horizontally centered in the row and is
             the ONLY place that resizes the drawer. */}
         <div
@@ -333,39 +372,6 @@ export function OnShorePanel({
         {!collapsed && (
           <>
             <div style={{ flex: 1 }} />
-            <button
-              type="button"
-              onClick={() => {
-                if (!canAdd) return;
-                setAddOpen(v => !v);
-                setAddQuery("");
-                setTimeout(() => addInputRef.current?.focus(), 60);
-              }}
-              aria-label="Add paddler to today's event"
-              title={canAdd ? "Add paddler to today's event" : "Select an event first"}
-              disabled={!canAdd}
-              style={{
-                height: 24,
-                padding: "0 10px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                borderRadius: 12,
-                border: "none",
-                background: canAdd ? (addOpen ? "#7a1318" : "#c82028") : "#c7c3bc",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                cursor: canAdd ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
-                transition: "background 120ms ease",
-              }}
-            >
-              <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1, letterSpacing: 0 }}>+</span>
-              <span>Add</span>
-            </button>
             <NotchedZoom zoom={zoom} setZoom={setZoom} />
             <div ref={menuRef} style={{ position: "relative" }}>
               <button
