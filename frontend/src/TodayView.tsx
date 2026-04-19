@@ -140,60 +140,45 @@ export function TodayView({
               {selectedEvent.title}
             </span>
           </div>
-          <div style={{ fontSize: '13px', color: '#717171', fontWeight: 500, marginTop: '4px' }}>
-            <span>{selectedEvent.time}</span>
-            <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
-            <span>{selectedEvent.location}</span>
+          {/* Location / time row with the going pill tucked to the right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: '4px' }}>
+            <div style={{ fontSize: '13px', color: '#717171', fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span>{selectedEvent.time}</span>
+              <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
+              <span>{selectedEvent.location}</span>
+            </div>
+            <div style={{ flex: 1 }} />
+            <div
+              onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '4px 10px', borderRadius: '999px',
+                background: '#faf9f7', border: '1px solid rgba(0,0,0,.08)',
+                cursor: 'pointer', userSelect: 'none', flexShrink: 0,
+              }}
+            >
+              <div style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: '#5a8a5f', boxShadow: '0 0 0 2px rgba(90,138,95,0.22)',
+                flexShrink: 0,
+              }} />
+              <span style={{ fontSize: '12px', color: '#222222', fontWeight: 600 }}>
+                {_goingCount} going
+              </span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </div>
           </div>
         </div>
-        {/* Event-switcher chevron — taps through to the schedule view */}
-        <button
-          type="button"
-          onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }}
-          title="Switch event"
-          aria-label="Switch event"
-          style={{
-            flexShrink: 0, alignSelf: 'center',
-            width: 32, height: 32, borderRadius: 8,
-            background: 'transparent', border: 'none', padding: 0,
-            cursor: 'pointer', color: '#717171',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
       </div>
-      {/* Attendance pill — compact inline pill below the title row: green
-          status dot, "N going", small chevron. Tap to expand the list. */}
-      <div style={{ position: 'relative', marginBottom: '10px' }}>
-        <div
-          onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '4px 10px', borderRadius: '999px',
-            background: '#faf9f7', border: '1px solid rgba(0,0,0,.08)',
-            cursor: 'pointer', userSelect: 'none',
-          }}
-        >
-          <div style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: '#5a8a5f', boxShadow: '0 0 0 2px rgba(90,138,95,0.22)',
-            flexShrink: 0,
-          }} />
-          <span style={{ fontSize: '12px', color: '#222222', fontWeight: 600 }}>
-            {_goingCount} going
-          </span>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </div>
+      {/* Expanded attendee list — dropdown anchored below the header card */}
+      <div style={{ position: 'relative', marginBottom: showGoingList ? '10px' : '0' }}>
         {showGoingList && (
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '6px',
+              position: 'absolute', top: 0, left: 0, right: 0,
               backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.08)', borderRadius: '12px',
               padding: '12px 16px', zIndex: 100,
               boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
