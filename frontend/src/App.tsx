@@ -76,7 +76,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   return (
     <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
       <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
-        <main style={{ height: '100%', overflow: 'hidden', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
+        <main style={{ height: '100%', overflow: 'hidden', boxSizing: 'border-box', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
           {ctx.dataLoading ? (
             <LokahiSplash />
           ) : ctx.hasNoData ? (
