@@ -287,6 +287,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             animationKey={ctx.animationKey}
             dragFromStaging={ctx.dragFromStaging}
             bottomOffset={navHidden ? 8 : navH}
+            paddlers={ctx.paddlers}
+            selectedEventId={ctx.selectedEvent?.id}
+            eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
+            onAddPaddler={(paddlerId: string) => {
+              if (!ctx.selectedEvent) return;
+              void ctx.setAttendanceMut({ paddlerId, eventId: ctx.selectedEvent.id, attending: true });
+            }}
           />
         )}
 
