@@ -236,20 +236,32 @@ export function TodayView({
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'wrap' }}>
         {selectedPaddlerId && (
           <div style={{ width: '40px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-          <div
-            onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
-            style={{
-              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', userSelect: 'none',
-              border: `2px solid ${_isAttending ? '#22c55e' : '#ef4444'}`,
-              backgroundColor: _isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-              color: _isAttending ? '#22c55e' : '#ef4444',
-              fontSize: '15px', fontWeight: 700, transition: 'all 0.15s',
-            }}
-          >
-            {_isAttending ? 'Y' : 'N'}
-          </div>
+            <div
+              role="switch"
+              aria-checked={_isAttending}
+              aria-label={_isAttending ? 'Going — tap to mark not going' : 'Not going — tap to mark going'}
+              onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
+              style={{
+                position: 'relative',
+                width: 36, height: 20, borderRadius: 999, flexShrink: 0,
+                display: 'inline-block',
+                cursor: 'pointer', userSelect: 'none',
+                background: _isAttending ? '#2f7a47' : '#d6d1c8',
+                transition: 'background 180ms ease',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: _isAttending ? 18 : 2,
+                  width: 16, height: 16, borderRadius: '50%',
+                  background: '#fff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                  transition: 'left 180ms ease',
+                }}
+              />
+            </div>
           </div>
         )}
         {!isAdmin && (
