@@ -94,6 +94,11 @@ export function OnShorePanel({
   // that near-closed drag targets snap visually to "closed" styling.
   const collapsed = panelHeight <= CLOSED_H + 8;
 
+  // Remember the last non-collapsed height so the pill's show/hide toggle
+  // returns to where the user left the drawer, not always to SMALL.
+  const lastOpenH = useRef<number>(collapsed ? getSmallH() : panelHeight);
+  useEffect(() => { if (!collapsed) lastOpenH.current = panelHeight; }, [panelHeight, collapsed]);
+
   useEffect(() => {
     window.localStorage.setItem(PANEL_HEIGHT_LS_KEY, String(panelHeight));
     window.localStorage.setItem("lokahi.onShoreCollapsed", collapsed ? "1" : "0");
@@ -163,19 +168,17 @@ export function OnShorePanel({
     const st = dragState.current;
     if (!st) return;
     (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
-    if (!st.moved) {
-      // Tap: cycle CLOSED → SMALL → MEDIUM → LARGE → FULL → CLOSED so
-      // a user can ratchet the drawer up in bite-sized steps without
-      // reaching for the drag handle.
-      const stops = [CLOSED_H, getSmallH(), getMediumH(), getLargeH(), getFullH()];
-      const idx = stops.findIndex(s => Math.abs(panelHeight - s) <= 6);
-      const next = stops[(idx + 1) % stops.length] ?? getSmallH();
-      setPanelHeight(next);
-    } else {
+    if (st.moved) {
       setPanelHeight(snapToNearest(panelHeight));
     }
     dragState.current = null;
     setIsDragging(false);
+  };
+
+  // Pill is the show/hide toggle — taps only; dragging happens on the
+  // dedicated center grip.
+  const togglePill = () => {
+    setPanelHeight(collapsed ? lastOpenH.current : CLOSED_H);
   };
 
   const dims = ON_SHORE_ZOOM_STEPS[zoom];
@@ -191,21 +194,23 @@ export function OnShorePanel({
         position: "fixed",
         left: 0,
         right: 0,
-        bottom: bottomOffset,
+        // Sit flush against the tab bar, including any iOS home-indicator
+        // safe-area inset the nav pads itself with — otherwise the canoes
+        // peek through the gap on devices with a home indicator.
+        bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))`,
         zIndex: 30,
         height: panelHeight,
-        background: collapsed ? "#fff" : "#faf7f0",
+        background: "#faf7f0",
         borderTop: "1px solid rgba(0,0,0,.08)",
         boxShadow: collapsed ? "none" : "0 -4px 14px rgba(0,0,0,0.06)",
         display: "flex",
         flexDirection: "column",
-        transition: isDragging ? "none" : "height 220ms ease, background 220ms ease",
+        transition: isDragging ? "none" : "height 220ms ease",
       }}
     >
-      {/* Top row — the red "ON SHORE n" pill doubles as the drag handle &
-          tap-to-toggle target. When collapsed the drawer is just a hairline
-          with the pill sitting on it; when open, zoom + sort show on the
-          right. */}
+      {/* Top row — pill (show/hide toggle) on the left, center drag grip,
+          zoom + sort on the right. The pill now only opens/closes the
+          drawer; resize lives on the grip. */}
       <div
         style={{
           padding: "4px 10px",
@@ -219,11 +224,9 @@ export function OnShorePanel({
       >
         <button
           type="button"
-          onPointerDown={onHandlePointerDown}
-          onPointerMove={onHandlePointerMove}
-          onPointerUp={onHandlePointerUp}
-          onPointerCancel={onHandlePointerUp}
-          aria-label={`On Shore ${count} paddlers — drag or tap to resize`}
+          onClick={togglePill}
+          aria-label={`On Shore ${count} paddlers — tap to ${collapsed ? "open" : "close"}`}
+          aria-expanded={!collapsed}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -232,14 +235,13 @@ export function OnShorePanel({
             padding: "0 10px",
             borderRadius: 12,
             border: "none",
-            background: count === 0 ? "#a8a39a" : isDragging ? "#9e1820" : "#c82028",
+            background: count === 0 ? "#a8a39a" : "#c82028",
             color: "#fff",
             fontSize: 10,
             fontWeight: 800,
             letterSpacing: "0.16em",
             textTransform: "uppercase",
-            cursor: "ns-resize",
-            touchAction: "none",
+            cursor: "pointer",
             userSelect: "none",
             WebkitUserSelect: "none",
             boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
@@ -249,6 +251,43 @@ export function OnShorePanel({
           <span>On Shore</span>
           <span style={{ fontWeight: 800, letterSpacing: 0 }}>{count}</span>
         </button>
+
+        {/* Center drag grip — sits horizontally centered in the row and is
+            the ONLY place that resizes the drawer. */}
+        <div
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Drag to resize On Shore panel"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: 0,
+            transform: "translateX(-50%)",
+            height: CLOSED_H,
+            width: 72,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "ns-resize",
+            touchAction: "none",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 4,
+              borderRadius: 2,
+              background: isDragging ? "#c82028" : "rgba(0,0,0,0.22)",
+              transition: "background 120ms ease",
+            }}
+          />
+        </div>
 
         {!collapsed && (
           <>
