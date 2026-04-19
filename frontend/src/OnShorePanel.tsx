@@ -46,12 +46,15 @@ function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
 
 // Snap presets for the drag-to-resize On Shore panel. Heights are derived
 // from the viewport so the panel always looks right on phones of varying
-// sizes. When fully closed the drawer collapses to a hairline with just
-// the "ON SHORE n" pill floating above it — that pill doubles as the
-// drag handle so the user can pull the drawer back up.
+// sizes. Multiple intermediate stops let the user pick a comfortable
+// amount of pool height without the drawer jumping to "halfway up the
+// screen" on the first pull. Closed is a hairline with just the pill
+// floating above it; the pill doubles as the drag handle.
 const CLOSED_H = 32;
-const getMediumH = () => (typeof window === "undefined" ? 360 : Math.round(window.innerHeight * 0.42));
-const getFullH = () => (typeof window === "undefined" ? 640 : Math.round(window.innerHeight * 0.75));
+const getSmallH = () => (typeof window === "undefined" ? 140 : Math.max(110, Math.round(window.innerHeight * 0.18)));
+const getMediumH = () => (typeof window === "undefined" ? 240 : Math.round(window.innerHeight * 0.32));
+const getLargeH = () => (typeof window === "undefined" ? 380 : Math.round(window.innerHeight * 0.52));
+const getFullH = () => (typeof window === "undefined" ? 640 : Math.round(window.innerHeight * 0.78));
 const PANEL_HEIGHT_LS_KEY = "lokahi.onShorePanelHeight";
 
 export function OnShorePanel({
@@ -72,7 +75,7 @@ export function OnShorePanel({
     }
     // Legacy collapsed flag fallback from the pre-drag version
     const legacyCollapsed = window.localStorage.getItem("lokahi.onShoreCollapsed") === "1";
-    return legacyCollapsed ? CLOSED_H : getMediumH();
+    return legacyCollapsed ? CLOSED_H : getSmallH();
   });
   const [zoom, setZoom] = useState<number>(() => {
     if (typeof window === "undefined") return 2;
@@ -132,7 +135,7 @@ export function OnShorePanel({
   const [isDragging, setIsDragging] = useState(false);
 
   const snapToNearest = (h: number): number => {
-    const targets = [CLOSED_H, getMediumH(), getFullH()];
+    const targets = [CLOSED_H, getSmallH(), getMediumH(), getLargeH(), getFullH()];
     let best = targets[0];
     let bestDist = Math.abs(h - best);
     for (const t of targets) {
@@ -161,8 +164,13 @@ export function OnShorePanel({
     if (!st) return;
     (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
     if (!st.moved) {
-      // Tap: toggle between CLOSED and MEDIUM
-      setPanelHeight(collapsed ? getMediumH() : CLOSED_H);
+      // Tap: cycle CLOSED → SMALL → MEDIUM → LARGE → FULL → CLOSED so
+      // a user can ratchet the drawer up in bite-sized steps without
+      // reaching for the drag handle.
+      const stops = [CLOSED_H, getSmallH(), getMediumH(), getLargeH(), getFullH()];
+      const idx = stops.findIndex(s => Math.abs(panelHeight - s) <= 6);
+      const next = stops[(idx + 1) % stops.length] ?? getSmallH();
+      setPanelHeight(next);
     } else {
       setPanelHeight(snapToNearest(panelHeight));
     }
