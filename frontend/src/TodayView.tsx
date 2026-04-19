@@ -207,13 +207,81 @@ export function TodayView({
           </span>
         )}
         {isAdmin && (<>
+          {/* Mock-style outlined-pill action bar: Auto / Clear / + Canoe / Sort,
+              roughly matching the Lokahi mock's Today toolbar (with Sort By kept
+              as a fourth pill since the feature is useful). */}
+          <button
+            type="button"
+            onClick={() => { triggerAnimation(); handleAssign(); }}
+            title="Auto-assign paddlers to seats"
+            style={{
+              height: 32, padding: '0 12px',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, fontWeight: 600, color: '#484848',
+              background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)',
+              borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 3h5v5M4 20l17-17M4 4l5 5M15 15l6 6M21 16v5h-5" />
+            </svg>
+            Auto
+          </button>
+          <button
+            type="button"
+            onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+            title="Clear all assignments"
+            style={{
+              height: 32, padding: '0 12px',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, fontWeight: 600, color: '#484848',
+              background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)',
+              borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 6l12 12M6 18L18 6" />
+            </svg>
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const n = (canoes?.length ?? 0) + 1;
+              addCanoe({ name: `Canoe ${n}` });
+            }}
+            title="Add a canoe to the fleet"
+            style={{
+              height: 32, padding: '0 12px',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, fontWeight: 600, color: '#484848',
+              background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)',
+              borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Canoe
+          </button>
           <div ref={sortPillRef} style={{ position: 'relative' }}>
-            <span
+            <button
+              type="button"
               onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
-              style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
+              title="Change sort priority"
+              style={{
+                height: 32, padding: '0 12px',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                fontSize: 13, fontWeight: 600, color: '#484848',
+                background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)',
+                borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
             >
-              Sort By
-            </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 5h18l-7 9v5l-4 2v-7z" />
+              </svg>
+              Sort
+            </button>
             {sortPillOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
                 <DragDropContext onDragEnd={(result) => {
@@ -270,22 +338,6 @@ export function TodayView({
             )}
           </div>
           <div style={{ flex: 1 }} />
-          <span
-            onClick={handleAssign}
-            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
-          >
-            ← Assign
-          </span>
-          <span
-            onClick={() => { triggerAnimation(); handleUnassignAll(); }}
-            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
-          >
-            Return →
-          </span>
         </>)}
       </div>
       </div>{/* end event info card */}
