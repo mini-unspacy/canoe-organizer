@@ -281,3 +281,55 @@ export const updateDesignation = mutation({
     return { success: true };
   },
 });
+
+export const renameCanoe = mutation({
+  args: {
+    canoeId: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const canoeDoc = await ctx.db.query("canoes").withIndex("by_canoe_id", (q) => q.eq("id", args.canoeId)).unique();
+    if (!canoeDoc) throw new Error("Canoe not found");
+    await ctx.db.patch(canoeDoc._id, { name: args.name });
+    return { success: true, name: args.name };
+  },
+});
+
+// One-shot maintenance mutation: rebrand the existing numeric test canoes with
+// Hawaiian names and human-readable designations to match the Lokahi mock-up.
+// The current dev DB stores the numeric tag in the `designation` field and a
+// generic "Canoe N" in the `name` field; this mutation swaps them. Idempotent:
+// only canoes whose current designation matches the mapping are touched, and
+// only the first match per designation is renamed (so running twice is a no-op).
+export const renameTestCanoesToHawaiian = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const mapping: Record<string, { name: string; designation: string }> = {
+      "707": { name: "Pōkai",    designation: "Race 1" },
+      "711": { name: "Puakea",   designation: "Race 2" },
+      "710": { name: "Hōkūleʻa", designation: "Long Course" },
+      "700": { name: "Kainalu",  designation: "Novice" },
+      "67":  { name: "Mānele",   designation: "Race 3" },
+    };
+    const canoes = await ctx.db.query("canoes").collect();
+    const claimed = new Set<string>();
+    const renamed: string[] = [];
+    const skipped: string[] = [];
+    for (const c of canoes) {
+      // Already rebranded (name is one of the Hawaiian targets)? Skip.
+      const hawaiianTargets = new Set(Object.values(mapping).map(m => m.name));
+      if (hawaiianTargets.has(c.name)) continue;
+      const key = c.designation ?? "";
+      const target = mapping[key];
+      if (!target) continue;
+      if (claimed.has(key)) {
+        skipped.push(`${c.name} (${key}) — duplicate designation, skipped`);
+        continue;
+      }
+      claimed.add(key);
+      await ctx.db.patch(c._id, { name: target.name, designation: target.designation });
+      renamed.push(`${c.name} (${key}) -> ${target.name} (${target.designation})`);
+    }
+    return { renamed, skipped, count: renamed.length };
+  },
+});
