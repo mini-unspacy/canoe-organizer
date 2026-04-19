@@ -104,6 +104,11 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     }
   }, []);
 
+  // Keep the page invisible until we've jumped to the target event.
+  // Prevents the brief flash of the "Schedule" header at the top before
+  // the scroll is applied on the second render (after events arrive).
+  const [pendingJump, setPendingJump] = useState<boolean>(!!scrollToEventId);
+
   // Jump to a specific event at the top. Runs before paint so the user
   // never sees the list at its default top position before the scroll.
   // Stops firing after the first successful jump so later data refreshes
@@ -116,10 +121,26 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     if (el) {
       scheduleScrollRef.current.scrollTop = el.offsetTop - scheduleScrollRef.current.offsetTop;
       didJumpRef.current = true;
+      setPendingJump(false);
+    } else {
+      // Events loaded but target not found — give up hiding so we don't
+      // leave the user staring at a blank screen.
+      didJumpRef.current = true;
+      setPendingJump(false);
     }
   }, [scrollToEventId, events]);
   // Reset the one-shot when the target event changes (new jump requested).
-  useEffect(() => { didJumpRef.current = false; }, [scrollToEventId]);
+  useEffect(() => {
+    didJumpRef.current = false;
+    if (scrollToEventId) setPendingJump(true);
+  }, [scrollToEventId]);
+  // Safety fallback: if nothing ever resolves (no events, stuck), reveal
+  // after 600ms so the page isn't permanently hidden.
+  useEffect(() => {
+    if (!pendingJump) return;
+    const t = setTimeout(() => setPendingJump(false), 600);
+    return () => clearTimeout(t);
+  }, [pendingJump]);
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
@@ -174,7 +195,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
   }, [allMonths, activeMonth]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100% - 40px)', gap: '0' }}>
+    <div style={{ display: 'flex', height: 'calc(100% - 40px)', gap: '0', visibility: pendingJump ? 'hidden' : 'visible' }}>
       {/* Event list */}
       <div
         ref={scheduleScrollRef}
