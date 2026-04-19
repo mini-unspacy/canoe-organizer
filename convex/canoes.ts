@@ -202,32 +202,27 @@ export const populateSampleCanoes = mutation({
       return { message: "Canoes already exist." };
     }
 
-    // Seed with Hawaiian names drawn randomly from the pool used elsewhere
-    // so the fleet doesn't start life as "Canoe 1, 2, 3, 4".
-    const POOL = [
-      "Pōkai", "Puakea", "Hōkūleʻa", "Kainalu", "Mānele",
-      "Honu", "Nalu", "Moana", "Kilo", "Kaiāulu",
-      "Maluhia", "ʻIolani", "Makani", "Kealoha", "Lanakila",
-      "Hikianalia", "Hōkūlani", "Kaimana", "Mahina", "Keahi",
+    // Seed with canonical canoe #/name pairs so a fresh DB starts with four
+    // real-looking boats. Mirrors the CANOE_NAME_BY_DESIGNATION map on the
+    // frontend (kept in sync by hand; see frontend/src/utils.ts).
+    const SEEDS: Array<{ designation: string; name: string }> = [
+      { designation: "710", name: "Hōkūleʻa" },
+      { designation: "711", name: "Puakea" },
+      { designation: "700", name: "Kainalu" },
+      { designation: "67",  name: "Mānele"  },
     ];
-    // Fisher-Yates shuffle, then take the first four.
-    const shuffled = [...POOL];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    const sampleCanoeNames = shuffled.slice(0, 4);
 
-    await Promise.all(sampleCanoeNames.map(async (name) => {
+    await Promise.all(SEEDS.map(async ({ designation, name }) => {
       await ctx.db.insert("canoes", {
         id: nanoid(),
         name,
+        designation,
         assignments: [],
         status: "open",
       });
     }));
 
-    return { message: `Populated ${sampleCanoeNames.length} sample canoes.` };
+    return { message: `Populated ${SEEDS.length} sample canoes.` };
   },
 });
 

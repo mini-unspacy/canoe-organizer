@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "./convex_generated/api";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { getLocalToday, sortPaddlersByPriority, CANOE_SORT_OPTIONS } from "./utils";
-import { pickFreshCanoeName } from "./canoeNames";
 import { useAnimationTrigger } from "./useAnimationTrigger";
 import type { EditForm } from "./EditPaddlerModal";
 
@@ -37,6 +36,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const allEvents = useQuery(api.events.getEvents);
   const allUsers = useQuery(api.auth.getAllUsers);
   const updateDesignationMut = useMutation(api.canoes.updateDesignation);
+  const renameCanoeMut = useMutation(api.canoes.renameCanoe);
   const toggleAdminMut = useMutation(api.auth.toggleAdmin);
   const deleteUserByPaddlerIdMut = useMutation(api.auth.deleteUserByPaddlerId);
   const deletePaddlerMut = useMutation(api.paddlers.deletePaddler);
@@ -404,8 +404,9 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   };
 
   const handleAddCanoeAfter = (_index: number) => {
-    const taken = (canoes ?? []).map(c => c.name);
-    addCanoe({ name: pickFreshCanoeName(taken) });
+    // Create canoe with blank name; the name is populated later when the
+    // user selects a canoe # from the designation picker.
+    addCanoe({ name: '' });
   };
 
   const handleUnassignAll = async () => {
@@ -436,11 +437,9 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     const attendingCount = eventAttendingPaddlerIds ? eventAttendingPaddlerIds.size : paddlers.length;
     const neededCanoes = Math.ceil(attendingCount / 6);
     if (neededCanoes > canoes.length) {
-      const taken = new Set(canoes.map(c => c.name));
+      // Auto-created canoes get a blank name; admin can assign a canoe # later.
       for (let i = canoes.length; i < neededCanoes; i++) {
-        const name = pickFreshCanoeName(taken);
-        taken.add(name);
-        await addCanoe({ name });
+        await addCanoe({ name: '' });
       }
     }
     triggerAnimation();
@@ -492,7 +491,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     handleAssign, handleUnassignAll, handleReassignCanoes,
     handleRemoveCanoe, handleAddCanoeAfter, handleSaveEdit, handleCloseEditModal,
     triggerAnimation, populatePaddlers, populateCanoes, addCanoe,
-    updatePaddler, updateDesignationMut, toggleAdminMut,
+    updatePaddler, updateDesignationMut, renameCanoeMut, toggleAdminMut,
     deleteUserByPaddlerIdMut, deletePaddlerMut, setAttendanceMut,
   };
 }

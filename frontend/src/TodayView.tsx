@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
-import { CANOE_DESIGNATIONS } from "./utils";
+import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
+import { pickFreshCanoeName } from "./canoeNames";
 
 // localStorage key used to persist the user's Fleet section view preference
 // across sessions. Matches the Lokahi mock's canoeView state.
@@ -42,6 +43,7 @@ interface TodayViewProps {
   setLockedCanoes: React.Dispatch<React.SetStateAction<Set<string>>>;
   canoeDesignations: Record<string, string>;
   updateDesignationMut: (args: { canoeId: string; designation: string }) => void;
+  renameCanoeMut: (args: { canoeId: string; name: string }) => void;
   animationKey: number;
   boatWidth: number;
   canoeRowHeight: number;
@@ -70,7 +72,7 @@ export function TodayView({
   selectedEvent, isAdmin, sidebarOpen, canoes, paddlers, canoeSortedPaddlers,
   canoeAssignmentsByCanoe, eventAssignments, eventAttendingPaddlerIds, eventGuests,
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
-  canoeDesignations, updateDesignationMut, animationKey, boatWidth, canoeRowHeight, canoeMargin,
+  canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey, boatWidth, canoeRowHeight, canoeMargin,
   currentUser, selectedPaddlerId, showAllBoats, setShowAllBoats,
   showGoingList, setShowGoingList, handleToggleAttendance,
   handleAssign, handleUnassignAll, handleReassignCanoes,
@@ -498,7 +500,14 @@ export function TodayView({
                           key={d}
                           onClick={(e) => {
                             e.stopPropagation();
-                            updateDesignationMut({ canoeId: canoe.id, designation: isMine ? '' : d });
+                            const nextDesignation = isMine ? '' : d;
+                            updateDesignationMut({ canoeId: canoe.id, designation: nextDesignation });
+                            // Auto-populate the canoe's name from the # mapping.
+                            // Clearing the # also clears the name.
+                            const nextName = nextDesignation
+                              ? (CANOE_NAME_BY_DESIGNATION[nextDesignation] ?? '')
+                              : '';
+                            renameCanoeMut({ canoeId: canoe.id, name: nextName });
                             setOpenDesignator(null);
                           }}
                           style={{
@@ -522,7 +531,14 @@ export function TodayView({
                         e.stopPropagation();
                         const custom = prompt('Enter canoe designation:');
                         if (custom && custom.trim()) {
-                          updateDesignationMut({ canoeId: canoe.id, designation: custom.trim() });
+                          const d = custom.trim();
+                          updateDesignationMut({ canoeId: canoe.id, designation: d });
+                          // Custom # has no canonical name — pick a random
+                          // unused Hawaiian name so the canoe still has one.
+                          const mapped = CANOE_NAME_BY_DESIGNATION[d];
+                          const takenNames = (canoes ?? []).map(c => c.name).filter(Boolean);
+                          const nextName = mapped ?? pickFreshCanoeName(takenNames);
+                          renameCanoeMut({ canoeId: canoe.id, name: nextName });
                         }
                         setOpenDesignator(null);
                       }}
@@ -543,6 +559,7 @@ export function TodayView({
                       onClick={(e) => {
                         e.stopPropagation();
                         updateDesignationMut({ canoeId: canoe.id, designation: '' });
+                        renameCanoeMut({ canoeId: canoe.id, name: '' });
                         setOpenDesignator(null);
                       }}
                       style={{

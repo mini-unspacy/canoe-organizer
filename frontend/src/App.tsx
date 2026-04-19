@@ -195,6 +195,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     setLockedCanoes={ctx.setLockedCanoes}
                     canoeDesignations={ctx.canoeDesignations}
                     updateDesignationMut={ctx.updateDesignationMut}
+                    renameCanoeMut={ctx.renameCanoeMut}
                     animationKey={ctx.animationKey}
                     boatWidth={ctx.boatWidth}
                     canoeRowHeight={ctx.canoeRowHeight}

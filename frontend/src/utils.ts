@@ -4,6 +4,20 @@ export const TOOLBAR_SIZE = 34;
 
 export const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
+// Canonical Hawaiian names for each hull. Picked in the designation picker
+// to auto-populate the canoe's display name when its # is chosen. These are
+// placeholder names (real club canoes may have different names) but stable —
+// picking the same # always yields the same name.
+export const CANOE_NAME_BY_DESIGNATION: Record<string, string> = {
+  "57":  "Kaimana",
+  "67":  "Mānele",
+  "700": "Kainalu",
+  "710": "Hōkūleʻa",
+  "711": "Puakea",
+  "M":   "Makani",
+  "W":   "Wahine",
+};
+
 // Hawaiian-convention OC6 seat roles — seat 1 is the steersperson (back),
 // seat 6 is the stroke (front). Used to label each seat row on the canoe card.
 export const SEAT_ROLES: Record<number, string> = {
