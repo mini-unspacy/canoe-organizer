@@ -557,6 +557,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 }
                 const isAttending = attendingEventIds.has(evt.id);
                 const isRace = evt.eventType === 'race';
+                const typeLabel: { text: string; color: string; bg: string } | null =
+                  evt.eventType === 'race'
+                    ? { text: 'RACE', color: '#b8181e', bg: 'rgba(200,32,40,0.2)' }
+                    : evt.eventType === 'practice'
+                    ? { text: 'PRACTICE', color: '#2e6b80', bg: 'rgba(46,107,128,0.18)' }
+                    : evt.eventType === 'other'
+                    ? { text: 'OTHER', color: '#6b6558', bg: 'rgba(107,101,88,0.18)' }
+                    : null;
                 const now = new Date();
                 now.setHours(0,0,0,0);
                 const evDate = new Date(evt.date + 'T12:00:00');
@@ -619,8 +627,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     {/* Title + meta column */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
-                        {isRace && (
-                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#b8181e', background: 'rgba(200,32,40,0.2)', padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>RACE</span>
+                        {typeLabel && (
+                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: typeLabel.color, background: typeLabel.bg, padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>{typeLabel.text}</span>
                         )}
                         {isToday && (
                           <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#2f7a47', background: 'rgba(47,122,71,0.2)', padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>TODAY</span>
