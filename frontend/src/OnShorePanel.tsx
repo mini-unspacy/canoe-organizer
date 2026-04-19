@@ -46,9 +46,10 @@ function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
 
 // Snap presets for the drag-to-resize On Shore panel. Heights are derived
 // from the viewport so the panel always looks right on phones of varying
-// sizes. Dragging to CLOSED hides the content and leaves only the grab
-// notch so the user can pull it back up.
-const CLOSED_H = 44;
+// sizes. When fully closed the drawer collapses to a hairline with just
+// the "ON SHORE n" pill floating above it — that pill doubles as the
+// drag handle so the user can pull the drawer back up.
+const CLOSED_H = 32;
 const getMediumH = () => (typeof window === "undefined" ? 360 : Math.round(window.innerHeight * 0.42));
 const getFullH = () => (typeof window === "undefined" ? 640 : Math.round(window.innerHeight * 0.75));
 const PANEL_HEIGHT_LS_KEY = "lokahi.onShorePanelHeight";
@@ -193,67 +194,57 @@ export function OnShorePanel({
         transition: isDragging ? "none" : "height 220ms ease, background 220ms ease",
       }}
     >
-      {/* Grab handle — always visible so the panel can be resized. Doubles
-          as a tap target that toggles CLOSED ↔ MEDIUM. */}
+      {/* Top row — the red "ON SHORE n" pill doubles as the drag handle &
+          tap-to-toggle target. When collapsed the drawer is just a hairline
+          with the pill sitting on it; when open, zoom + sort show on the
+          right. */}
       <div
-        onPointerDown={onHandlePointerDown}
-        onPointerMove={onHandlePointerMove}
-        onPointerUp={onHandlePointerUp}
-        onPointerCancel={onHandlePointerUp}
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Resize On Shore panel"
         style={{
-          width: "100%",
-          padding: "8px 0 6px",
+          padding: "4px 10px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          cursor: "ns-resize",
-          touchAction: "none",
+          gap: 8,
           flexShrink: 0,
-          userSelect: "none",
-          WebkitUserSelect: "none",
+          position: "relative",
+          height: CLOSED_H,
         }}
       >
-        <div
+        <button
+          type="button"
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          aria-label={`On Shore ${count} paddlers — drag or tap to resize`}
           style={{
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            background: isDragging ? "#c82028" : "rgba(0,0,0,0.22)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            height: 24,
+            padding: "0 10px",
+            borderRadius: 12,
+            border: "none",
+            background: isDragging ? "#9e1820" : "#c82028",
+            color: "#fff",
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            cursor: "ns-resize",
+            touchAction: "none",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
             transition: "background 120ms ease",
           }}
-        />
-      </div>
+        >
+          <span>On Shore</span>
+          <span style={{ fontWeight: 800, letterSpacing: 0 }}>{count}</span>
+        </button>
 
-      {!collapsed && (
-        <>
-          {/* Header row — label + count on the left, zoom & sort on the right */}
-          <div
-            style={{
-              padding: "2px 12px 4px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              flexShrink: 0,
-              position: "relative",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "#717171",
-              }}
-            >
-              On Shore
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#c82028" }}>{count}</span>
+        {!collapsed && (
+          <>
             <div style={{ flex: 1 }} />
-
             <NotchedZoom zoom={zoom} setZoom={setZoom} />
             <div ref={menuRef} style={{ position: "relative" }}>
               <button
@@ -322,9 +313,12 @@ export function OnShorePanel({
                 </div>
               )}
             </div>
-          </div>
+          </>
+        )}
+      </div>
 
-          <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+      {!collapsed && (
+        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
@@ -426,7 +420,6 @@ export function OnShorePanel({
             </div>
           )}
         </Droppable>
-        </>
       )}
     </div>
   );
