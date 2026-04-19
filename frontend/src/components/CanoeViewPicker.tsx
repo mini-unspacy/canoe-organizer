@@ -1,12 +1,11 @@
-// CanoeViewPicker — 4-way toggle matching the Lokahi mock's Fleet section
-// control. Lets the user switch between "1" (one canoe per row), "list"
-// (auto-fit grid, the default), "2" (two per row), and "4" (2x2 grid with
-// pagination). Active segment fills with the club red and inverts its icon
-// to white; inactive segments are transparent with charcoal icons.
+// CanoeViewPicker — 3-way toggle for the Fleet section. Lets the user
+// switch between "1" (single canoe per row), "2" (two columns, scrollable),
+// and "4" (four columns, scrollable — compact). Active segment fills with
+// the club red and inverts its icon to white.
 
-export type CanoeView = '1' | 'list' | '2' | '4';
+export type CanoeView = '1' | '2' | '4';
 
-export const CANOE_VIEW_VALUES: CanoeView[] = ['1', 'list', '2', '4'];
+export const CANOE_VIEW_VALUES: CanoeView[] = ['1', '2', '4'];
 
 const RED = '#b91c1c';
 const CHARCOAL = '#2a2a2a';
@@ -14,15 +13,6 @@ const INK_LINE = 'rgba(0,0,0,0.12)';
 
 function ViewIcon({ value, active }: { value: CanoeView; active: boolean }) {
   const c = active ? '#ffffff' : CHARCOAL;
-  if (value === 'list') {
-    return (
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <rect x="1.5" y="2"   width="9" height="1.6" rx="0.4" fill={c} />
-        <rect x="1.5" y="5.2" width="9" height="1.6" rx="0.4" fill={c} />
-        <rect x="1.5" y="8.4" width="9" height="1.6" rx="0.4" fill={c} />
-      </svg>
-    );
-  }
   if (value === '1') {
     return (
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

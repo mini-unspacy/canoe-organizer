@@ -9,12 +9,12 @@ import { CANOE_DESIGNATIONS } from "./utils";
 const CANOE_VIEW_LS_KEY = 'lokahi.canoeView';
 
 const loadCanoeView = (): CanoeView => {
-  if (typeof window === 'undefined') return 'list';
+  if (typeof window === 'undefined') return '1';
   try {
     const v = window.localStorage.getItem(CANOE_VIEW_LS_KEY);
-    if (v === '1' || v === '2' || v === '4' || v === 'list') return v;
+    if (v === '1' || v === '2' || v === '4') return v;
   } catch {}
-  return 'list';
+  return '1';
 };
 
 interface SelectedEvent {
@@ -81,11 +81,9 @@ export function TodayView({
   const [sortPillOpen, setSortPillOpen] = useState(false);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
   const sortPillRef = useRef<HTMLDivElement>(null);
-  // Fleet section view: '1' | 'list' | '2' | '4'. 'list' is the current
-  // responsive auto-fit grid (desktop-friendly); '1'/'2'/'4' force a
-  // fixed column count with pagination, mirroring the Lokahi mock.
+  // Fleet section view: '1' | '2' | '4'. All modes render every canoe in a
+  // fixed-column grid; the page scrolls vertically when they overflow.
   const [canoeView, setCanoeView] = useState<CanoeView>(() => loadCanoeView());
-  const [canoePage, setCanoePage] = useState(0);
   useEffect(() => {
     try { window.localStorage.setItem(CANOE_VIEW_LS_KEY, canoeView); } catch {}
   }, [canoeView]);
@@ -416,73 +414,29 @@ export function TodayView({
       </div>{/* end event info card */}
       {(isAdmin || showAllBoats) ? (<>
       {/* FLEET / N CANOES divider strip — matches the mock-up's section header.
-          On the right we add a CanoeViewPicker (1/List/2/4) and, when a paged
-          view is active, a tiny "page of pages" chevron pair. */}
-      {(() => {
-        const perPage = canoeView === '1' ? 1 : canoeView === '2' ? 2 : canoeView === '4' ? 4 : 0;
-        const totalPages = perPage ? Math.max(1, Math.ceil((canoes?.length ?? 0) / perPage)) : 1;
-        const page = Math.min(canoePage, totalPages - 1);
-        const showPager = perPage > 0 && totalPages > 1;
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '20px 4px 10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>Fleet</span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,.08)' }} />
-            {showPager && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button
-                  type="button"
-                  onClick={() => setCanoePage(Math.max(0, page - 1))}
-                  disabled={page === 0}
-                  aria-label="Previous page"
-                  style={{ width: 22, height: 22, border: 'none', borderRadius: 6, background: 'transparent', cursor: page === 0 ? 'default' : 'pointer', opacity: page === 0 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2a2a2a', padding: 0 }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-                </button>
-                <span style={{ fontSize: 10, color: '#9a9a9a', fontVariantNumeric: 'tabular-nums', minWidth: 26, textAlign: 'center' }}>{page + 1}/{totalPages}</span>
-                <button
-                  type="button"
-                  onClick={() => setCanoePage(Math.min(totalPages - 1, page + 1))}
-                  disabled={page >= totalPages - 1}
-                  aria-label="Next page"
-                  style={{ width: 22, height: 22, border: 'none', borderRadius: 6, background: 'transparent', cursor: page >= totalPages - 1 ? 'default' : 'pointer', opacity: page >= totalPages - 1 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2a2a2a', padding: 0 }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-                </button>
-              </div>
-            )}
-            <CanoeViewPicker value={canoeView} onChange={(v) => { setCanoeView(v); setCanoePage(0); }} />
-            <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>
-              {canoes?.length ?? 0} {(canoes?.length ?? 0) === 1 ? 'Canoe' : 'Canoes'}
-            </span>
-          </div>
-        );
-      })()}
-      {/* Grid layout varies by canoeView: 'list' keeps the existing
-          responsive auto-fit grid; '1'/'2'/'4' switch to a fixed column
-          count and slice the canoe list by canoePage. */}
+          On the right we add a CanoeViewPicker (1/2/4). All modes render the
+          whole fleet and let the page scroll vertically. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '20px 4px 10px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>Fleet</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,.08)' }} />
+        <CanoeViewPicker value={canoeView} onChange={(v) => setCanoeView(v)} />
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>
+          {canoes?.length ?? 0} {(canoes?.length ?? 0) === 1 ? 'Canoe' : 'Canoes'}
+        </span>
+      </div>
+      {/* Grid layout: 1/2/4 fixed columns, entire fleet rendered, page
+          handles vertical scroll. */}
       <div style={{
         display: 'grid',
         gridTemplateColumns:
-          canoeView === 'list' ? 'repeat(auto-fit, minmax(140px, 1fr))'
-          : canoeView === '1' ? '1fr'
-          : '1fr 1fr',
+          canoeView === '1' ? '1fr'
+          : canoeView === '2' ? '1fr 1fr'
+          : 'repeat(4, 1fr)',
         gridAutoRows: canoeView === '4' ? 'min-content' : undefined,
         gap: `8px`,
         padding: `4px 0 16px`,
       }}>
-      {(() => {
-        if (!canoes) return null;
-        // 'list' mode renders every canoe (full auto-fit responsive grid).
-        // Paged modes slice to just the current page so /2 and /4 grids
-        // don't force off-screen vertical scrolling of extra canoes.
-        if (canoeView === 'list') return canoes.map((canoe, idx) => ({ canoe, index: idx }));
-        const perPage = canoeView === '1' ? 1 : canoeView === '2' ? 2 : 4;
-        const totalPages = Math.max(1, Math.ceil(canoes.length / perPage));
-        const page = Math.min(canoePage, totalPages - 1);
-        return canoes
-          .map((canoe, idx) => ({ canoe, index: idx }))
-          .slice(page * perPage, (page + 1) * perPage);
-      })()?.map(({ canoe, index }: { canoe: Canoe; index: number }) => {
+      {canoes?.map((canoe, index) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         return (
           <div
@@ -539,42 +493,23 @@ export function TodayView({
                 );
               })()}
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                <span
-                  style={{
-                    fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                    fontSize: '17px',
-                    fontWeight: 600,
-                    color: '#222222',
-                    lineHeight: 1.1,
-                    letterSpacing: '0.2px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {canoe.name}
-                </span>
-                <span
-                  className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
-                  onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: '#717171',
-                    letterSpacing: '1.2px',
-                    textTransform: 'uppercase',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    marginTop: '2px',
-                  }}
-                >
-                  {canoeDesignations[canoe.id] || '???'}
-                  {(() => {
-                    const filled = canoeEventAssignments.length;
-                    return <span style={{ color: '#b0b0b0', marginLeft: '8px' }}>· {filled}/6</span>;
-                  })()}
-                </span>
+                {canoeView !== '4' && (
+                  <span
+                    style={{
+                      fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                      fontSize: '17px',
+                      fontWeight: 600,
+                      color: '#222222',
+                      lineHeight: 1.1,
+                      letterSpacing: '0.2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {canoe.name}
+                  </span>
+                )}
               </div>
               {/* Designation selector dropdown — Lokahi.html-style 5-col grid
                   with taken numbers dimmed and a Clear row at the bottom. */}
