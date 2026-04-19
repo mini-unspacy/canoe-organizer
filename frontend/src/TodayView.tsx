@@ -131,14 +131,45 @@ export function TodayView({
           <div style={{ fontSize: '10px', fontWeight: 700, color: '#717171', letterSpacing: '1.4px', lineHeight: 1, marginTop: '2px' }}>{_monthName}</div>
         </div>
         <div style={{ flex: 1, minWidth: 0, overflow: 'visible', marginTop: '0px', position: 'relative' }}>
-          <div style={{
-            fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-            fontSize: '24px', color: '#222222', fontWeight: 600,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15,
-          }}>
-            <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
-              {selectedEvent.title}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            {selectedPaddlerId && (
+              <div
+                role="switch"
+                aria-checked={_isAttending}
+                aria-label={_isAttending ? 'Going — tap to mark not going' : 'Not going — tap to mark going'}
+                onClick={(e) => { e.stopPropagation(); handleToggleAttendance(selectedPaddlerId, selectedEvent.id); }}
+                style={{
+                  position: 'relative',
+                  width: 36, height: 20, borderRadius: 999, flexShrink: 0,
+                  display: 'inline-block',
+                  cursor: 'pointer', userSelect: 'none',
+                  background: _isAttending ? '#2f7a47' : '#d6d1c8',
+                  transition: 'background 180ms ease',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 2,
+                    left: _isAttending ? 18 : 2,
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: '#fff',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                    transition: 'left 180ms ease',
+                  }}
+                />
+              </div>
+            )}
+            <div style={{
+              fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+              fontSize: '24px', color: '#222222', fontWeight: 600,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.15,
+              minWidth: 0, flex: 1,
+            }}>
+              <span onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }} style={{ cursor: 'pointer' }}>
+                {selectedEvent.title}
+              </span>
+            </div>
           </div>
           {/* Location / time row with the going pill tucked to the right */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: '4px' }}>
@@ -214,38 +245,9 @@ export function TodayView({
           </div>
         )}
       </div>
-      {/* Y/N + all boats/my boats row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'wrap' }}>
-        {selectedPaddlerId && (
-          <div style={{ width: '40px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-            <div
-              role="switch"
-              aria-checked={_isAttending}
-              aria-label={_isAttending ? 'Going — tap to mark not going' : 'Not going — tap to mark going'}
-              onClick={() => handleToggleAttendance(selectedPaddlerId, selectedEvent.id)}
-              style={{
-                position: 'relative',
-                width: 36, height: 20, borderRadius: 999, flexShrink: 0,
-                display: 'inline-block',
-                cursor: 'pointer', userSelect: 'none',
-                background: _isAttending ? '#2f7a47' : '#d6d1c8',
-                transition: 'background 180ms ease',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 2,
-                  left: _isAttending ? 18 : 2,
-                  width: 16, height: 16, borderRadius: '50%',
-                  background: '#fff',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
-                  transition: 'left 180ms ease',
-                }}
-              />
-            </div>
-          </div>
-        )}
+      {/* All boats / admin action bar — no more Y/N here; the toggle now
+          lives next to the event title above. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'nowrap', overflowX: 'auto' }}>
         {!isAdmin && (
           <span
             onClick={() => setShowAllBoats(!showAllBoats)}
