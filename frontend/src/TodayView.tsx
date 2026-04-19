@@ -478,37 +478,77 @@ export function TodayView({
                   })()}
                 </span>
               </div>
-              {/* Designation selector dropdown */}
+              {/* Designation selector dropdown — Lokahi.html-style 5-col grid
+                  with taken numbers dimmed and a Clear row at the bottom. */}
               {openDesignator === canoe.id && (
                 <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 19 }} onClick={() => setOpenDesignator(null)} />
-                <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20 }}>
-                  <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '6px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', minWidth: '110px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.08)', border: '1px solid rgba(0,0,0,.08)' }}>
-                    {CANOE_DESIGNATIONS.map(d => (
-                      <button
-                        key={d}
-                        onClick={(e) => { e.stopPropagation(); updateDesignationMut({ canoeId: canoe.id, designation: d }); setOpenDesignator(null); }}
-                        style={{ padding: '4px 8px', fontSize: '10px', fontWeight: 700, color: '#484848', borderRadius: '4px', textAlign: 'center', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,.06)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                      >
-                        {d}
-                      </button>
-                    ))}
+                <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20, marginTop: 4 }}>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(5, 34px)', gap: '4px', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', border: '1px solid rgba(0,0,0,.08)' }}>
+                    {CANOE_DESIGNATIONS.map(d => {
+                      const isMine = canoeDesignations[canoe.id] === d;
+                      const takenBy = Object.entries(canoeDesignations).find(([cid, v]) => v === d && cid !== canoe.id);
+                      return (
+                        <button
+                          key={d}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateDesignationMut({ canoeId: canoe.id, designation: isMine ? '' : d });
+                            setOpenDesignator(null);
+                          }}
+                          style={{
+                            width: 34, height: 34, borderRadius: 8,
+                            border: `1px solid ${isMine ? '#b91c1c' : 'rgba(0,0,0,0.12)'}`,
+                            background: isMine ? 'rgba(185,28,28,0.14)' : takenBy ? 'rgba(0,0,0,0.04)' : '#fff',
+                            color: isMine ? '#b91c1c' : takenBy ? '#9a9a9a' : '#484848',
+                            fontWeight: 700, fontSize: d.length >= 3 ? 11 : 14,
+                            cursor: 'pointer', opacity: takenBy ? 0.5 : 1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            padding: 0,
+                            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                          }}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const custom = prompt('Enter canoe number:');
+                        const custom = prompt('Enter canoe designation:');
                         if (custom && custom.trim()) {
                           updateDesignationMut({ canoeId: canoe.id, designation: custom.trim() });
                         }
                         setOpenDesignator(null);
                       }}
-                      style={{ padding: '4px 8px', fontSize: '10px', fontWeight: 700, color: '#22c55e', borderRadius: '4px', textAlign: 'center', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(34,197,94,0.08)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      style={{
+                        width: 34, height: 34, borderRadius: 8,
+                        border: '1px dashed rgba(0,0,0,0.20)',
+                        background: 'transparent',
+                        color: '#484848',
+                        fontWeight: 700, fontSize: 16,
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 0,
+                      }}
                     >
                       +
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateDesignationMut({ canoeId: canoe.id, designation: '' });
+                        setOpenDesignator(null);
+                      }}
+                      style={{
+                        gridColumn: '1 / -1', padding: '6px 8px', marginTop: 2,
+                        background: 'transparent', border: '1px dashed rgba(0,0,0,0.20)',
+                        color: '#9a9a9a', fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.12em', textTransform: 'uppercase',
+                        borderRadius: 6, cursor: 'pointer',
+                      }}
+                    >
+                      Clear #
                     </button>
                   </div>
                 </div>
