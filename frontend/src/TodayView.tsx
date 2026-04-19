@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
-import { CANOE_DESIGNATIONS, SEAT_ROLES } from "./utils";
+import { CANOE_DESIGNATIONS } from "./utils";
 
 // localStorage key used to persist the user's Fleet section view preference
 // across sessions. Matches the Lokahi mock's canoeView state.
@@ -115,7 +115,7 @@ export function TodayView({
       const _guestCount = eventGuests?.length || 0;
       const _goingCount = _goingPaddlers + _guestCount;
       return (
-    <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 8px' }}>
+    <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px' }}>
       {/* Event info card — serif title + stacked date stamp, matches the mock */}
       <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', alignItems: 'flex-start' }}>
@@ -452,11 +452,11 @@ export function TodayView({
       <div style={{
         display: 'grid',
         gridTemplateColumns:
-          canoeView === 'list' ? 'repeat(auto-fit, minmax(156px, 1fr))'
+          canoeView === 'list' ? 'repeat(auto-fit, minmax(140px, 1fr))'
           : canoeView === '1' ? '1fr'
           : '1fr 1fr',
         gridAutoRows: canoeView === '4' ? 'min-content' : undefined,
-        gap: `${Math.max(canoeMargin, 12)}px`,
+        gap: `8px`,
         padding: `4px 0 16px`,
       }}>
       {(() => {
@@ -741,34 +741,20 @@ export function TodayView({
                             minHeight: 26,
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                            <span
-                              style={{
-                                fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                color: hasPaddler ? '#b91c1c' : '#484848',
-                                lineHeight: 1,
-                                width: '12px',
-                                textAlign: 'right',
-                              }}
-                            >
-                              {seat}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '8px',
-                                fontWeight: 700,
-                                letterSpacing: '1px',
-                                color: '#9a9a9a',
-                                textTransform: 'uppercase',
-                                lineHeight: 1,
-                                minWidth: 28,
-                              }}
-                            >
-                              {SEAT_ROLES[seat]}
-                            </span>
-                          </div>
+                          <span
+                            style={{
+                              flexShrink: 0,
+                              fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                              fontSize: '16px',
+                              fontWeight: 600,
+                              color: hasPaddler ? '#b91c1c' : '#484848',
+                              lineHeight: 1,
+                              width: '12px',
+                              textAlign: 'right',
+                            }}
+                          >
+                            {seat}
+                          </span>
                           <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                             {assignedPaddler ? (
                               <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>

@@ -352,20 +352,56 @@ export function OnShorePanel({
   );
 }
 
-// Five-notch zoom control from Lokahi.html's NotchedZoom. Dots grow
-// left-to-right and turn red when active or below the current level.
+// Five-step zoom slider. The previous dotted version had tiny 4-12px hit
+// targets that were fiddly on touch. We now render a real draggable thumb
+// that snaps to the 5 steps, with visible tick marks underneath so the
+// notched feel from the mock is preserved.
 function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => void }) {
+  const TRACK_W = 84;
+  const STEPS = 5;
+  const clamp = (n: number) => Math.max(0, Math.min(STEPS - 1, n));
+  const fromX = (x: number, trackLeft: number) => {
+    const frac = (x - trackLeft) / TRACK_W;
+    return clamp(Math.round(frac * (STEPS - 1)));
+  };
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const pointerUpdate = (clientX: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const next = fromX(clientX, rect.left);
+    if (next !== zoom) setZoom(next);
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true;
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    pointerUpdate(e.clientX);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    pointerUpdate(e.clientX);
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    dragging.current = false;
+    (e.target as Element).releasePointerCapture?.(e.pointerId);
+  };
+
+  const thumbLeft = (zoom / (STEPS - 1)) * TRACK_W;
+
   return (
     <div
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 6,
-        padding: "3px 8px",
-        height: 24,
+        gap: 8,
+        padding: "0 8px",
+        height: 28,
         background: "#fff",
         border: "1px solid rgba(0,0,0,.12)",
-        borderRadius: 7,
+        borderRadius: 8,
       }}
     >
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -374,25 +410,71 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
-      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-        {[0, 1, 2, 3, 4].map(n => (
-          <button
-            key={n}
-            type="button"
-            aria-label={`zoom ${n}`}
-            onClick={() => setZoom(n)}
-            style={{
-              width: 4 + n * 2,
-              height: 4 + n * 2,
-              borderRadius: "50%",
-              padding: 0,
-              border: "none",
-              background: zoom >= n ? "#c82028" : "rgba(0,0,0,0.18)",
-              cursor: "pointer",
-              transition: "background 120ms",
-            }}
-          />
-        ))}
+      <div
+        ref={trackRef}
+        role="slider"
+        aria-label="Paddler chip zoom"
+        aria-valuemin={0}
+        aria-valuemax={STEPS - 1}
+        aria-valuenow={zoom}
+        tabIndex={0}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); setZoom(clamp(zoom + 1)); }
+          if (e.key === "ArrowLeft"  || e.key === "ArrowDown") { e.preventDefault(); setZoom(clamp(zoom - 1)); }
+        }}
+        style={{
+          position: "relative",
+          width: TRACK_W,
+          height: 24,
+          cursor: "pointer",
+          touchAction: "none",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {/* Track line */}
+        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", background: "rgba(0,0,0,0.10)", borderRadius: 2 }} />
+        {/* Filled portion up to the thumb */}
+        <div style={{ position: "absolute", left: 0, top: "50%", height: 2, width: thumbLeft, transform: "translateY(-50%)", background: "#c82028", borderRadius: 2 }} />
+        {/* Tick marks */}
+        {[0, 1, 2, 3, 4].map(n => {
+          const left = (n / (STEPS - 1)) * TRACK_W;
+          return (
+            <div
+              key={n}
+              style={{
+                position: "absolute",
+                left,
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 2,
+                height: 8,
+                background: n <= zoom ? "#c82028" : "rgba(0,0,0,0.25)",
+                borderRadius: 1,
+                pointerEvents: "none",
+              }}
+            />
+          );
+        })}
+        {/* Thumb */}
+        <div
+          style={{
+            position: "absolute",
+            left: thumbLeft,
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            background: "#c82028",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+            border: "2px solid #fff",
+            pointerEvents: "none",
+          }}
+        />
       </div>
     </div>
   );
