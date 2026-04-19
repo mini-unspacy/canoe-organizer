@@ -403,17 +403,43 @@ export function TodayView({
                 designation · fill count ... 6-bar status strip · lock icon.
                 Mirrors the mock's CanoeCard header. */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
-              {/* Canoe hull silhouette — tiny red outline that signals the card */}
-              <svg
-                width="28" height="18" viewBox="0 0 28 18"
-                style={{ flexShrink: 0 }}
-                aria-hidden="true"
-              >
-                <path d="M2 8 Q14 16 26 8 L24 10 Q14 14 4 10 Z" fill="#b91c1c" opacity="0.9" />
-                <path d="M2 8 Q14 14 26 8" stroke="#ffffff" strokeWidth="0.8" fill="none" />
-                <line x1="14" y1="2" x2="14" y2="10" stroke="#b91c1c" strokeWidth="1.2" />
-                <line x1="8" y1="4" x2="20" y2="4" stroke="#b91c1c" strokeWidth="0.8" />
-              </svg>
+              {/* Canoe # badge — tappable, opens the designation picker.
+                  Mirrors the Lokahi.html #N / #? pill from CanoeCard. */}
+              {(() => {
+                const designation = canoeDesignations[canoe.id] || '';
+                // Strip a leading word like "RACE " so the badge shows just
+                // the short token ("RACE 1" -> "1", "M" -> "M", "57" -> "57").
+                const short = designation.replace(/^[A-Za-z]+\s+/, '').trim();
+                const hasNum = short.length > 0;
+                const isEditable = isAdmin && !lockedCanoes.has(canoe.id);
+                const badgeFs = short.length >= 3 ? 11 : short.length === 2 ? 14 : 16;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => isEditable && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                    disabled={!isEditable}
+                    aria-label={hasNum ? `Canoe number ${designation}` : 'Assign canoe number'}
+                    style={{
+                      width: 34, height: 34, flexShrink: 0,
+                      borderRadius: 10,
+                      border: hasNum ? '1.5px solid #b91c1c' : '1.5px solid rgba(0,0,0,0.15)',
+                      background: hasNum ? 'rgba(185,28,28,0.10)' : 'transparent',
+                      color: hasNum ? '#b91c1c' : '#9a9a9a',
+                      fontWeight: 700,
+                      fontSize: hasNum ? badgeFs : 11,
+                      letterSpacing: hasNum ? 0 : '0.08em',
+                      cursor: isEditable ? 'pointer' : 'default',
+                      padding: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {hasNum ? `#${short}` : '#?'}
+                  </button>
+                );
+              })()}
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                 <span
                   style={{
