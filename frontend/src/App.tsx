@@ -27,6 +27,8 @@ function LokahiSplash() {
 
 function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () => void }) {
   const ctx = useCanoeAssignment(currentUser);
+  // Below this width we switch from a left sidebar to a bottom tab bar.
+  const isNarrow = ctx.windowWidth < 640;
 
   return (
     <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
@@ -46,7 +48,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             </div>
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '0', width: '100%', overflow: 'hidden' }}>
-              {/* LEFT SIDEBAR - NAVIGATION */}
+              {/* LEFT SIDEBAR - NAVIGATION (hidden on narrow; bottom tab bar is rendered instead) */}
+              {!isNarrow && (
               <div
                 className="scrollbar-hidden"
                 style={{
@@ -127,10 +130,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     </div>
                   </div>
               </div>
+              )}
 
               {/* MIDDLE COLUMN */}
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? 'calc(68px + env(safe-area-inset-bottom))' : 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
@@ -195,8 +199,8 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               </div>
               </div>
 
-              {/* RIGHT COLUMN - STAGING SIDEBAR (admin only) */}
-              {ctx.isAdmin && (ctx.activePage === 'today' ? (
+              {/* RIGHT COLUMN - STAGING SIDEBAR (admin only, hidden on narrow) */}
+              {!isNarrow && ctx.isAdmin && (ctx.activePage === 'today' ? (
                 <StagingSidebar
                   sidebarOpen={ctx.sidebarOpen}
                   setSidebarOpen={ctx.setSidebarOpen}
@@ -228,6 +232,74 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             </div>
           )}
         </main>
+
+        {/* BOTTOM TAB BAR — mobile-only, matches the mock. */}
+        {!ctx.dataLoading && !ctx.hasNoData && isNarrow && (
+          <nav
+            style={{
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 40,
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'stretch',
+              backgroundColor: 'rgba(255,255,255,0.96)',
+              backdropFilter: 'saturate(180%) blur(18px)',
+              WebkitBackdropFilter: 'saturate(180%) blur(18px)',
+              borderTop: '1px solid rgba(0,0,0,.08)',
+              paddingBottom: 'env(safe-area-inset-bottom)',
+              boxShadow: '0 -6px 24px rgba(0,0,0,.04)',
+            }}
+          >
+            {([
+              { page: 'today' as const, label: 'Today',    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12 L12 3 L21 12" /><path d="M5 10 V21 H19 V10" /></svg> },
+              { page: 'schedule' as const, label: 'Schedule', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /></svg> },
+              { page: 'attendance' as const, label: 'Going', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> },
+              { page: 'roster' as const, label: 'Roster', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20 a6.5 6.5 0 0 1 13 0" /><circle cx="17.5" cy="9" r="2.8" /><path d="M14.8 20 a5 5 0 0 1 6.7-4.7" /></svg> },
+            ]).map(({ page, label, icon }) => {
+              const active = ctx.activePage === page;
+              return (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => { ctx.setActivePage(page); if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null); }}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '10px 6px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '3px',
+                    cursor: 'pointer',
+                    color: active ? '#b91c1c' : '#717171',
+                    fontWeight: active ? 700 : 500,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '40px',
+                      height: '26px',
+                      borderRadius: '13px',
+                      backgroundColor: active ? 'rgba(185,28,28,0.12)' : 'transparent',
+                      transition: 'background-color 0.15s',
+                    }}
+                  >
+                    {icon}
+                  </span>
+                  <span style={{ fontSize: '10.5px', letterSpacing: '0.2px' }}>{label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Edit Paddler Modal */}
         {ctx.isEditModalOpen && ctx.editingPaddler && (
