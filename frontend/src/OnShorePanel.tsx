@@ -224,7 +224,7 @@ export function OnShorePanel({
             padding: "0 10px",
             borderRadius: 12,
             border: "none",
-            background: isDragging ? "#9e1820" : "#c82028",
+            background: count === 0 ? "#a8a39a" : isDragging ? "#9e1820" : "#c82028",
             color: "#fff",
             fontSize: 10,
             fontWeight: 800,

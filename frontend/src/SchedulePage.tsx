@@ -558,18 +558,30 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                       </div>
                       {selectedPaddlerId && (
                         <div
+                          role="switch"
+                          aria-checked={isAttending}
+                          aria-label={isAttending ? 'Going — tap to mark not going' : 'Not going — tap to mark going'}
                           onClick={(e) => { e.stopPropagation(); toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id }); }}
                           style={{
-                            width: 28, height: 22, borderRadius: 6, marginTop: 6,
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            position: 'relative',
+                            width: 32, height: 18, borderRadius: 999, marginTop: 8,
+                            display: 'inline-block',
                             cursor: 'pointer', userSelect: 'none',
-                            border: `1.5px solid ${isAttending ? '#2f7a47' : '#c82028'}`,
-                            backgroundColor: isAttending ? 'rgba(47,122,71,0.14)' : 'rgba(200,32,40,0.10)',
-                            color: isAttending ? '#2f7a47' : '#c82028',
-                            fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
+                            background: isAttending ? '#2f7a47' : '#d6d1c8',
+                            transition: 'background 180ms ease',
                           }}
                         >
-                          {isAttending ? 'Y' : 'N'}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              left: isAttending ? 16 : 2,
+                              width: 14, height: 14, borderRadius: '50%',
+                              background: '#fff',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                              transition: 'left 180ms ease',
+                            }}
+                          />
                         </div>
                       )}
                     </div>
