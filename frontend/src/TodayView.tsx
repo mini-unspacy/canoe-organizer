@@ -200,7 +200,7 @@ export function TodayView({
             }}
           >
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#717171', marginBottom: '8px', letterSpacing: '0.08em' }}>
-              ATTENDING ({_goingCount})
+              ATTENDING ({_goingPaddlers})
             </div>
             {_goingCount === 0 ? (
               <div style={{ fontSize: '14px', color: '#717171' }}>No one yet</div>
@@ -215,7 +215,9 @@ export function TodayView({
                     </div>
                   ))}
                 {eventGuests && eventGuests.length > 0 && (
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700 }}>GUESTS</div>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700, letterSpacing: '0.08em' }}>
+                    GUESTS ({_guestCount})
+                  </div>
                 )}
                 {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
                   <div key={g._id} style={{ fontSize: '14px', color: '#a07838' }}>
