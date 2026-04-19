@@ -300,26 +300,6 @@ export function TodayView({
             </svg>
             Clear
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              const n = (canoes?.length ?? 0) + 1;
-              addCanoe({ name: `Canoe ${n}` });
-            }}
-            title="Add a canoe to the fleet"
-            style={{
-              height: 32, padding: '0 12px',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 13, fontWeight: 600, color: '#484848',
-              background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)',
-              borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Canoe
-          </button>
           <div ref={sortPillRef} style={{ position: 'relative' }}>
             <button
               type="button"
@@ -624,6 +604,30 @@ export function TodayView({
                   }
                 </svg>
               </button>}
+              {isAdmin && <button
+                type="button"
+                onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
+                disabled={lockedCanoes.has(canoe.id)}
+                title={lockedCanoes.has(canoe.id) ? 'Unlock canoe to delete' : 'Delete canoe'}
+                aria-label="Delete canoe"
+                style={{
+                  width: 22, height: 22, borderRadius: 5,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  border: '1px solid rgba(0,0,0,.12)',
+                  background: 'transparent',
+                  cursor: lockedCanoes.has(canoe.id) ? 'not-allowed' : 'pointer',
+                  opacity: lockedCanoes.has(canoe.id) ? 0.4 : 1,
+                  padding: 0, flexShrink: 0,
+                }}
+              >
+                <svg
+                  width="12" height="12" viewBox="0 0 24 24"
+                  fill="none" stroke="#717171"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M6 6l12 12M6 18L18 6" />
+                </svg>
+              </button>}
             </div>
             {/* 6 seats in a single vertical column. Each seat row gets a
                 subtle dashed-border card treatment matching the Lokahi mock:
@@ -768,56 +772,54 @@ export function TodayView({
                 );
               })}
             </div>
-            {/* -/+ buttons on last canoe */}
-            {isAdmin && canoes && index === canoes.length - 1 && <div className="flex items-center" style={{ gap: '8px', padding: '8px 4px 0' }}>
-              <span
-                onClick={() => !lockedCanoes.has(canoe.id) && handleRemoveCanoe(canoe.id)}
-                className={`transition-colors ${lockedCanoes.has(canoe.id) ? 'cursor-default' : 'hover:text-rose-600 hover:border-rose-400 cursor-pointer'}`}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '28px', height: '28px', borderRadius: '8px',
-                  backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)',
-                  fontSize: '16px', fontWeight: 600, lineHeight: 1,
-                  color: lockedCanoes.has(canoe.id) ? '#b0b0b0' : '#717171',
-                  transition: 'all 0.15s',
-                }}
-                title="Remove canoe"
-              >
-                −
-              </span>
-              <span
-                onClick={() => handleAddCanoeAfter(index)}
-                className="hover:text-emerald-500 hover:border-emerald-400 cursor-pointer transition-colors"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '28px', height: '28px', borderRadius: '8px',
-                  backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)',
-                  fontSize: '16px', fontWeight: 600, lineHeight: 1,
-                  color: '#717171',
-                  transition: 'all 0.15s',
-                }}
-                title="Add canoe"
-              >
-                +
-              </span>
-            </div>}
           </div>
         );
       })}
-      </div>{/* end fleet grid */}
-
-      {/* Add Canoe button when no canoes exist — admin only */}
-      {isAdmin && (!canoes || canoes.length === 0) && (
+      {/* Ghost "add canoe" placeholder — sits at the end of the grid as an
+          extra cell so scrolling to the bottom surfaces a big dashed card
+          to tap. Admin-only; shown whether or not any canoes exist. */}
+      {isAdmin && (
         <button
-          onClick={() => addCanoe({ name: "Canoe 1" })}
-          style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '2px dashed rgba(0,0,0,.12)', color: '#717171', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'transparent', fontSize: '14px' }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#005280'; e.currentTarget.style.color = '#005280'; e.currentTarget.style.backgroundColor = 'rgba(0,82,128,0.04)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.12)'; e.currentTarget.style.color = '#717171'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+          type="button"
+          onClick={() => {
+            const n = (canoes?.length ?? 0) + 1;
+            addCanoe({ name: `Canoe ${n}` });
+          }}
+          title="Add canoe"
+          aria-label="Add canoe"
+          style={{
+            minHeight: canoeView === '4' ? 140 : 200,
+            width: '100%',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 8,
+            padding: '18px',
+            borderRadius: 14,
+            border: '2px dashed rgba(0,0,0,.18)',
+            background: 'rgba(0,0,0,0.025)',
+            color: '#9a9a9a',
+            cursor: 'pointer',
+            transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#b91c1c';
+            e.currentTarget.style.color = '#b91c1c';
+            e.currentTarget.style.background = 'rgba(185,28,28,0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(0,0,0,.18)';
+            e.currentTarget.style.color = '#9a9a9a';
+            e.currentTarget.style.background = 'rgba(0,0,0,0.025)';
+          }}
         >
-          <span className="text-lg">+</span>
-          <span className="font-medium">Add Canoe</span>
+          <svg width={canoeView === '4' ? 28 : 36} height={canoeView === '4' ? 28 : 36} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {canoeView !== '4' && (
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.04em' }}>Add canoe</span>
+          )}
         </button>
       )}
+      </div>{/* end fleet grid */}
     </div>
       ); })()}
     </>
