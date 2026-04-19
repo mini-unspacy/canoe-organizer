@@ -381,8 +381,21 @@ export function TodayView({
               boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
             }}
           >
-            {/* Header row: Hawaiian name (big serif) over designation · fill count ... lock icon */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
+            {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
+                designation · fill count ... 6-bar status strip · lock icon.
+                Mirrors the mock's CanoeCard header. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
+              {/* Canoe hull silhouette — tiny red outline that signals the card */}
+              <svg
+                width="28" height="18" viewBox="0 0 28 18"
+                style={{ flexShrink: 0 }}
+                aria-hidden="true"
+              >
+                <path d="M2 8 Q14 16 26 8 L24 10 Q14 14 4 10 Z" fill="#b91c1c" opacity="0.9" />
+                <path d="M2 8 Q14 14 26 8" stroke="#ffffff" strokeWidth="0.8" fill="none" />
+                <line x1="14" y1="2" x2="14" y2="10" stroke="#b91c1c" strokeWidth="1.2" />
+                <line x1="8" y1="4" x2="20" y2="4" stroke="#b91c1c" strokeWidth="0.8" />
+              </svg>
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                 <span
                   style={{
@@ -457,24 +470,51 @@ export function TodayView({
                 </div>
                 </>
               )}
-              {isAdmin && <svg
+              {/* 6-bar fill-status strip — red when seat assigned, grey when open */}
+              <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6].map(n => {
+                  const filled = canoeEventAssignments.some(a => a.seat === n);
+                  return (
+                    <div
+                      key={n}
+                      style={{
+                        width: 4, height: 12,
+                        background: filled ? '#b91c1c' : 'rgba(0,0,0,.12)',
+                        borderRadius: 2,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              {isAdmin && <button
+                type="button"
                 onClick={() => setLockedCanoes(prev => {
                   const next = new Set(prev);
                   if (next.has(canoe.id)) next.delete(canoe.id);
                   else next.add(canoe.id);
                   return next;
                 })}
-                width="14" height="14" viewBox="0 0 24 24"
-                fill="none" stroke={lockedCanoes.has(canoe.id) ? '#ed1c24' : '#b0b0b0'}
-                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ cursor: 'pointer', flexShrink: 0 }}
+                title={lockedCanoes.has(canoe.id) ? 'Unlock canoe' : 'Lock canoe'}
+                style={{
+                  width: 26, height: 26, borderRadius: 6,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  border: `1px solid ${lockedCanoes.has(canoe.id) ? '#ed1c24' : 'rgba(0,0,0,.12)'}`,
+                  background: lockedCanoes.has(canoe.id) ? 'rgba(237,28,36,0.10)' : 'transparent',
+                  cursor: 'pointer', padding: 0, flexShrink: 0,
+                }}
               >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                {lockedCanoes.has(canoe.id)
-                  ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                }
-              </svg>}
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24"
+                  fill="none" stroke={lockedCanoes.has(canoe.id) ? '#ed1c24' : '#717171'}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  {lockedCanoes.has(canoe.id)
+                    ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    : <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                  }
+                </svg>
+              </button>}
             </div>
             {/* 6 seats in a single vertical column */}
             <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
