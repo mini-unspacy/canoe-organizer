@@ -272,14 +272,29 @@ export function TodayView({
       </div>
       </div>{/* end event info card */}
       {(isAdmin || showAllBoats) ? (<>
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)', marginBottom: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: `${canoeMargin}px`, padding: `${canoeMargin}px 0` }}>
+      {/* FLEET / N CANOES divider strip — matches the mock-up's section header. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 4px 10px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>Fleet</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,.08)' }} />
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>
+          {canoes?.length ?? 0} {(canoes?.length ?? 0) === 1 ? 'Canoe' : 'Canoes'}
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: `${Math.max(canoeMargin, 12)}px`, padding: `4px 0 16px` }}>
       {canoes?.map((canoe: Canoe, index: number) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         return (
           <div
             key={canoe._id.toString()}
-            style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              backgroundColor: '#ffffff',
+              borderRadius: '14px',
+              padding: '16px 16px 14px',
+              boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
+            }}
           >
             {/* Header row: Hawaiian name (big serif) over designation · fill count ... lock icon */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
@@ -377,7 +392,7 @@ export function TodayView({
               </svg>}
             </div>
             {/* 6 seats in a single vertical column */}
-            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0px', height: `${canoeRowHeight}px`, overflow: 'hidden' }}>
+            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
               {Array.from({ length: 6 }).map((_, i) => {
                 const seat = i + 1;
                 const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -484,8 +499,7 @@ export function TodayView({
           </div>
         );
       })}
-      </div>
-      </div>{/* end boat grid card */}
+      </div>{/* end fleet grid */}
 
       {/* Add Canoe button when no canoes exist */}
       {(!canoes || canoes.length === 0) && (
