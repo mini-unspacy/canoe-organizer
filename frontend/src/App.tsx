@@ -9,6 +9,7 @@ import { SchedulePage } from "./SchedulePage";
 import { TodayView } from "./TodayView";
 import { RosterView } from "./RosterView";
 import { StagingSidebar } from "./StagingSidebar";
+import { OnShorePanel } from "./OnShorePanel";
 import { EditPaddlerModal } from "./EditPaddlerModal";
 import { useCanoeAssignment } from "./useCanoeAssignment";
 import type { User } from "./types";
@@ -134,7 +135,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
               {/* MIDDLE COLUMN */}
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
-              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? 'calc(68px + env(safe-area-inset-bottom))' : 'env(safe-area-inset-bottom)' }}>
+              <div className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
@@ -232,6 +233,19 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             </div>
           )}
         </main>
+
+        {/* ON SHORE PANEL — mobile-only paddler pool, replaces sidebar on narrow. */}
+        {!ctx.dataLoading && !ctx.hasNoData && isNarrow && ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent && (
+          <OnShorePanel
+            unassignedPaddlers={ctx.unassignedPaddlers}
+            unassignedGuests={ctx.unassignedGuests}
+            guestPaddlerMap={ctx.guestPaddlerMap}
+            pendingAssignIds={ctx.pendingAssignIds}
+            animationKey={ctx.animationKey}
+            dragFromStaging={ctx.dragFromStaging}
+            bottomOffset={68}
+          />
+        )}
 
         {/* BOTTOM TAB BAR — mobile-only, matches the mock. */}
         {!ctx.dataLoading && !ctx.hasNoData && isNarrow && (

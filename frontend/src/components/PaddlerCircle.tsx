@@ -10,7 +10,17 @@ import type { Paddler } from "../types";
 
 type Variant = 'boat' | 'sidebar';
 
-type ChipDims = { w: number; h: number; fs: number; dot: number; pad: string };
+export type ChipDims = { w: number; h: number; fs: number; dot: number; pad: string };
+
+// Notched-zoom steps used by the mobile On Shore panel (Lokahi.html's
+// NotchedZoom, zoom 0..4). Re-exported so callers can index into it.
+export const ON_SHORE_ZOOM_STEPS: ChipDims[] = [
+  { w: 44, h: 34, fs: 9,  dot: 2.2, pad: '3px 4px' },
+  { w: 52, h: 40, fs: 10, dot: 2.8, pad: '3px 5px' },
+  { w: 60, h: 46, fs: 11, dot: 3,   pad: '4px 6px' },
+  { w: 72, h: 56, fs: 13, dot: 4,   pad: '6px 8px' },
+  { w: 88, h: 68, fs: 14, dot: 4,   pad: '8px 10px' },
+];
 
 const dimsFor = (variant: Variant | undefined): ChipDims =>
   variant === 'sidebar'
@@ -43,7 +53,9 @@ export const PaddlerCircle: React.FC<{
   animationDelay?: number;
   isAdmin?: boolean;
   variant?: Variant;
-}> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, variant }) => {
+  /** Overrides variant-based sizing. Used by the On Shore zoom slider. */
+  dims?: ChipDims;
+}> = ({ paddler, isDragging, animationKey = 0, animationDelay = 0, variant, dims: dimsOverride }) => {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -66,7 +78,7 @@ export const PaddlerCircle: React.FC<{
     return () => anim.cancel();
   }, [animationKey, animationDelay]);
 
-  const dims = dimsFor(variant);
+  const dims = dimsOverride ?? dimsFor(variant);
   const { fg, bg1, bg2, border, dotOff } = genderPalette(paddler.gender);
 
   const firstName = paddler.firstName || '?';
@@ -176,8 +188,9 @@ export const GuestPaddlerCircle: React.FC<{
   paddler: Paddler;
   isDragging?: boolean;
   variant?: Variant;
-}> = ({ paddler, isDragging, variant }) => {
-  const dims = dimsFor(variant);
+  dims?: ChipDims;
+}> = ({ paddler, isDragging, variant, dims: dimsOverride }) => {
+  const dims = dimsOverride ?? dimsFor(variant);
   const firstName = paddler.firstName || 'Guest';
   const lastInitial = (paddler.lastInitial || paddler.lastName?.[0] || '').toUpperCase();
   const fg = '#fff7e6';

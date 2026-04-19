@@ -1,0 +1,399 @@
+import { useEffect, useRef, useState } from "react";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { PaddlerCircle, GuestPaddlerCircle, ON_SHORE_ZOOM_STEPS } from "./components/PaddlerCircle";
+import type { Paddler } from "./types";
+
+// Lokahi.html's On Shore bottom panel: a collapsible drawer docked above
+// the mobile tab bar that hosts the paddler pool with a notched zoom
+// slider and a sort menu. Replaces the right-hand staging sidebar on
+// narrow viewports; the sidebar continues to handle desktop.
+
+type OnShoreSort = "default" | "name" | "ability" | "gender" | "type";
+
+const sortLabels: Record<OnShoreSort, string> = {
+  default: "Default",
+  name: "Name",
+  ability: "Ability",
+  gender: "Gender",
+  type: "Type",
+};
+
+interface OnShorePanelProps {
+  unassignedPaddlers: Paddler[];
+  unassignedGuests: any[];
+  guestPaddlerMap: Map<string, Paddler>;
+  pendingAssignIds: Set<string>;
+  animationKey: number;
+  dragFromStaging: boolean;
+  /** Distance in px to leave below the panel (height of the mobile tab bar). */
+  bottomOffset: number;
+}
+
+function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
+  if (sort === "default") return paddlers;
+  const copy = [...paddlers];
+  if (sort === "name") {
+    copy.sort((a, b) => (a.firstName || "").localeCompare(b.firstName || ""));
+  } else if (sort === "ability") {
+    copy.sort((a, b) => (b.ability || 0) - (a.ability || 0));
+  } else if (sort === "gender") {
+    copy.sort((a, b) => (a.gender || "").localeCompare(b.gender || ""));
+  } else if (sort === "type") {
+    copy.sort((a, b) => (a.type || "").localeCompare(b.type || ""));
+  }
+  return copy;
+}
+
+export function OnShorePanel({
+  unassignedPaddlers,
+  unassignedGuests,
+  guestPaddlerMap,
+  pendingAssignIds,
+  animationKey,
+  dragFromStaging,
+  bottomOffset,
+}: OnShorePanelProps) {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("lokahi.onShoreCollapsed") === "1";
+  });
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window === "undefined") return 2;
+    const raw = parseInt(window.localStorage.getItem("lokahi.onShoreZoom") || "2", 10);
+    return Number.isNaN(raw) ? 2 : Math.max(0, Math.min(4, raw));
+  });
+  const [sort, setSort] = useState<OnShoreSort>(() => {
+    if (typeof window === "undefined") return "default";
+    const raw = window.localStorage.getItem("lokahi.onShoreSort");
+    return (raw as OnShoreSort) || "default";
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.localStorage.setItem("lokahi.onShoreCollapsed", collapsed ? "1" : "0");
+  }, [collapsed]);
+  useEffect(() => {
+    window.localStorage.setItem("lokahi.onShoreZoom", String(zoom));
+  }, [zoom]);
+  useEffect(() => {
+    window.localStorage.setItem("lokahi.onShoreSort", sort);
+  }, [sort]);
+
+  // Close the sort menu on click-outside
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const dims = ON_SHORE_ZOOM_STEPS[zoom];
+  const visiblePaddlers = sortPaddlers(
+    unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
+    sort
+  );
+  const count = visiblePaddlers.length + unassignedGuests.length;
+  const expandedHeight = "42vh";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: bottomOffset,
+        zIndex: 30,
+        height: collapsed ? 44 : expandedHeight,
+        background: collapsed ? "#fff" : "#faf7f0",
+        borderTop: "1px solid rgba(0,0,0,.08)",
+        boxShadow: collapsed ? "none" : "0 -4px 14px rgba(0,0,0,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        transition: "height 220ms ease, background 220ms ease",
+      }}
+    >
+      {/* Header row — chevron + label, optional zoom slider + sort */}
+      <div
+        style={{
+          padding: collapsed ? "12px 14px" : "8px 12px 4px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flexShrink: 0,
+          position: "relative",
+        }}
+      >
+        <div
+          onClick={() => setCollapsed(v => !v)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            cursor: "pointer",
+            flexShrink: 0,
+            userSelect: "none",
+          }}
+        >
+          <div
+            style={{
+              width: 16,
+              height: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#717171",
+              transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
+              transition: "transform 180ms ease",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "#717171",
+            }}
+          >
+            On Shore
+          </span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#c82028" }}>{count}</span>
+        </div>
+        <div style={{ flex: 1 }} />
+
+        {!collapsed && (
+          <>
+            <NotchedZoom zoom={zoom} setZoom={setZoom} />
+            <div ref={menuRef} style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(v => !v)}
+                style={{
+                  height: 24,
+                  padding: "0 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  borderRadius: 7,
+                  border: "1px solid rgba(0,0,0,.12)",
+                  background: "#fff",
+                  color: "#484848",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18M7 12h10M10 18h4" />
+                </svg>
+                {sortLabels[sort]}
+              </button>
+              {menuOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: 30,
+                    zIndex: 40,
+                    background: "#fff",
+                    border: "1px solid rgba(0,0,0,.12)",
+                    borderRadius: 10,
+                    padding: 6,
+                    boxShadow: "0 10px 24px rgba(0,0,0,0.15)",
+                    minWidth: 140,
+                  }}
+                >
+                  {(Object.keys(sortLabels) as OnShoreSort[]).map(v => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => {
+                        setSort(v);
+                        setMenuOpen(false);
+                      }}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "7px 10px",
+                        background: sort === v ? "rgba(200,32,40,0.08)" : "transparent",
+                        border: "none",
+                        borderRadius: 6,
+                        color: sort === v ? "#c82028" : "#484848",
+                        fontSize: 12,
+                        fontWeight: sort === v ? 700 : 500,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {sortLabels[v]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {!collapsed && (
+        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "4px 10px 10px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 4 + zoom,
+                alignContent: "flex-start",
+                background: snapshot.isDraggingOver ? "rgba(251,191,36,0.12)" : "transparent",
+                transition: "background 120ms ease",
+              }}
+            >
+              {visiblePaddlers.length === 0 && unassignedGuests.length === 0 ? (
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "center",
+                    padding: "20px",
+                    color: "#717171",
+                    fontSize: 12,
+                    fontStyle: "italic",
+                  }}
+                >
+                  Everyone's seated 🛶
+                </div>
+              ) : (
+                <>
+                  {visiblePaddlers.map((paddler, index) => (
+                    <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
+                      {(dragProvided, dragSnapshot) => (
+                        <div
+                          ref={dragProvided.innerRef}
+                          {...dragProvided.draggableProps}
+                          {...dragProvided.dragHandleProps}
+                          tabIndex={-1}
+                          role="none"
+                          aria-roledescription=""
+                          style={{
+                            ...dragProvided.draggableProps.style,
+                            touchAction: "manipulation",
+                            WebkitUserSelect: "none",
+                            userSelect: "none",
+                          }}
+                        >
+                          <PaddlerCircle
+                            paddler={paddler}
+                            isDragging={dragSnapshot.isDragging}
+                            animationKey={animationKey}
+                            animationDelay={index * 20}
+                            dims={dims}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {unassignedGuests.map((guest: any, gi: number) => {
+                    const guestId = `guest-${guest._id}`;
+                    const guestPaddler = guestPaddlerMap.get(guestId);
+                    if (!guestPaddler) return null;
+                    return (
+                      <Draggable
+                        key={guestId}
+                        draggableId={guestId}
+                        index={visiblePaddlers.length + gi}
+                        shouldRespectForcePress={false}
+                      >
+                        {(dragProvided, dragSnapshot) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            {...dragProvided.dragHandleProps}
+                            tabIndex={-1}
+                            role="none"
+                            aria-roledescription=""
+                            style={{
+                              ...dragProvided.draggableProps.style,
+                              touchAction: "manipulation",
+                              WebkitUserSelect: "none",
+                              userSelect: "none",
+                            }}
+                          >
+                            <GuestPaddlerCircle
+                              paddler={guestPaddler}
+                              isDragging={dragSnapshot.isDragging}
+                              dims={dims}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                </>
+              )}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      )}
+    </div>
+  );
+}
+
+// Five-notch zoom control from Lokahi.html's NotchedZoom. Dots grow
+// left-to-right and turn red when active or below the current level.
+function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => void }) {
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "3px 8px",
+        height: 24,
+        background: "#fff",
+        border: "1px solid rgba(0,0,0,.12)",
+        borderRadius: 7,
+      }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        {[0, 1, 2, 3, 4].map(n => (
+          <button
+            key={n}
+            type="button"
+            aria-label={`zoom ${n}`}
+            onClick={() => setZoom(n)}
+            style={{
+              width: 4 + n * 2,
+              height: 4 + n * 2,
+              borderRadius: "50%",
+              padding: 0,
+              border: "none",
+              background: zoom >= n ? "#c82028" : "rgba(0,0,0,0.18)",
+              cursor: "pointer",
+              transition: "background 120ms",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
