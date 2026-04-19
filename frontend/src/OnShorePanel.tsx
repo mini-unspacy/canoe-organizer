@@ -214,6 +214,7 @@ export function OnShorePanel({
           drawer; resize lives on the grip. */}
       <div
         style={{
+          boxSizing: "border-box",
           padding: "4px 12px",
           display: "flex",
           alignItems: "center",

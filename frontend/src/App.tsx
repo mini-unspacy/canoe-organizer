@@ -286,7 +286,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             pendingAssignIds={ctx.pendingAssignIds}
             animationKey={ctx.animationKey}
             dragFromStaging={ctx.dragFromStaging}
-            bottomOffset={navHidden ? 0 : navH}
+            bottomOffset={navHidden ? 8 : navH}
           />
         )}
 
