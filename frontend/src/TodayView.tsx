@@ -258,18 +258,11 @@ export function TodayView({
           </div>
         )}
       </div>
-      {/* All boats / admin action bar — no more Y/N here; the toggle now
-          lives next to the event title above. */}
+      {/* Admin action bar — Auto / Clear / + Canoe / Sort. Non-admins see
+          the same fleet view below but with no editing controls, so we
+          simply skip this whole strip for them. */}
+      {isAdmin && (
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'nowrap', overflowX: 'auto' }}>
-        {!isAdmin && (
-          <span
-            onClick={() => setShowAllBoats(!showAllBoats)}
-            style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#005280', userSelect: 'none', padding: '6px 12px', backgroundColor: 'rgba(0, 82, 128, 0.06)', borderRadius: '8px', whiteSpace: 'nowrap', border: '1px solid rgba(0,82,128,0.12)', transition: 'all 0.15s' }}
-          >
-            {showAllBoats ? 'My Boat' : 'All Boats'}
-          </span>
-        )}
-        {isAdmin && (<>
           {/* Mock-style outlined-pill action bar: Auto / Clear / + Canoe / Sort,
               roughly matching the Lokahi mock's Today toolbar (with Sort By kept
               as a fourth pill since the feature is useful). */}
@@ -409,10 +402,9 @@ export function TodayView({
             )}
           </div>
           <div style={{ flex: 1 }} />
-        </>)}
       </div>
+      )}
       </div>{/* end event info card */}
-      {(isAdmin || showAllBoats) ? (<>
       {/* FLEET / N CANOES divider strip — matches the mock-up's section header.
           On the right we add a CanoeViewPicker (1/2/4). All modes render the
           whole fleet and let the page scroll vertically. */}
@@ -646,7 +638,7 @@ export function TodayView({
                 const assignedPaddler = assignment ? (canoeSortedPaddlers.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId)) : undefined;
 
                 return (
-                  <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
+                  <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat} isDropDisabled={!isAdmin}>
                     {(provided, snapshot) => {
                       const active = snapshot.isDraggingOver;
                       const hasPaddler = !!assignedPaddler;
@@ -703,7 +695,7 @@ export function TodayView({
                           </span>
                           <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                             {assignedPaddler ? (
-                              <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
+                              <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
                                 {(provided, dragSnapshot) => (
                                   <div
                                     ref={provided.innerRef}
@@ -721,7 +713,7 @@ export function TodayView({
                                       width: '100%',
                                       display: 'flex',
                                       alignItems: 'center',
-                                      cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                      cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
                                       minWidth: 0,
                                     }}
                                     data-animation-key={animationKey}
@@ -814,8 +806,8 @@ export function TodayView({
       })}
       </div>{/* end fleet grid */}
 
-      {/* Add Canoe button when no canoes exist */}
-      {(!canoes || canoes.length === 0) && (
+      {/* Add Canoe button when no canoes exist — admin only */}
+      {isAdmin && (!canoes || canoes.length === 0) && (
         <button
           onClick={() => addCanoe({ name: "Canoe 1" })}
           style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '2px dashed rgba(0,0,0,.12)', color: '#717171', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'transparent', fontSize: '14px' }}
@@ -825,52 +817,6 @@ export function TodayView({
           <span className="text-lg">+</span>
           <span className="font-medium">Add Canoe</span>
         </button>
-      )}
-      </>) : (
-      /* Non-admin: show only the paddler's assigned canoe in military style */
-      (() => {
-        const myAssignment = eventAssignments?.find((a: { paddlerId: string }) => a.paddlerId === currentUser.paddlerId);
-        const myCanoe = myAssignment ? canoes?.find((c: Canoe) => c.id === myAssignment.canoeId) : null;
-        const myCanoeAssignments = myCanoe ? (canoeAssignmentsByCanoe.get(myCanoe.id) || []) : [];
-        const designation = myCanoe ? (canoeDesignations[myCanoe.id] || '???') : null;
-        if (!myCanoe) {
-          return (
-            <div style={{ fontSize: '22px', fontWeight: 700, color: '#717171', textAlign: 'center', padding: '40px 0', letterSpacing: '1px' }}>
-              No Assignment
-            </div>
-          );
-        }
-
-        return (
-          <div style={{ padding: '20px 0' }}>
-            <div style={{ fontSize: '26px', fontWeight: 700, color: '#222222', letterSpacing: '1px', marginBottom: '20px' }}>
-              Boat: {designation}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {Array.from({ length: 6 }).map((_, i) => {
-                const seat = i + 1;
-                const assignment = myCanoeAssignments.find((a: { seat: number }) => a.seat === seat);
-                const assignedPaddler = assignment ? (paddlers?.find((p: Paddler) => p.id === assignment.paddlerId) || guestPaddlerMap.get(assignment.paddlerId) || null) : null;
-                const isMe = assignedPaddler?.id === currentUser.paddlerId;
-                const isGuest = assignedPaddler?.id.startsWith('guest-');
-                return (
-                  <div key={seat} style={{ fontSize: '18px', fontWeight: 600, color: assignedPaddler ? '#484848' : '#b0b0b0', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,.06)', backgroundColor: isMe ? 'rgba(250, 204, 21, 0.1)' : 'transparent', borderRadius: isMe ? '8px' : '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ color: '#b0b0b0', marginRight: '12px', fontWeight: 500 }}>{seat}.</span>
-                      {assignedPaddler ? (
-                        <span style={isMe ? { color: '#facc15', textShadow: '0 0 8px rgba(250, 204, 21, 0.4)' } : undefined}>
-                          {assignedPaddler.firstName} {assignedPaddler.lastName}
-                          {isGuest && <span style={{ fontSize: '14px', color: '#717171', marginLeft: '8px', opacity: 0.7 }}>guest</span>}
-                        </span>
-                      ) : (
-                        <span>---</span>
-                      )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()
       )}
     </div>
       ); })()}
