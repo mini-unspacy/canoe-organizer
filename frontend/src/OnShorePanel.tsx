@@ -214,7 +214,7 @@ export function OnShorePanel({
           drawer; resize lives on the grip. */}
       <div
         style={{
-          padding: "4px 14px",
+          padding: "4px 12px",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -374,7 +374,7 @@ export function OnShorePanel({
               style={{
                 flex: 1,
                 overflowY: "auto",
-                padding: "4px 14px 10px",
+                padding: "4px 12px 10px",
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 4 + zoom,
