@@ -125,6 +125,24 @@ export function TodayView({
             <span>{selectedEvent.location}</span>
           </div>
         </div>
+        {/* Event-switcher chevron — taps through to the schedule view */}
+        <button
+          type="button"
+          onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }}
+          title="Switch event"
+          aria-label="Switch event"
+          style={{
+            flexShrink: 0, alignSelf: 'center',
+            width: 32, height: 32, borderRadius: 8,
+            background: 'transparent', border: 'none', padding: 0,
+            cursor: 'pointer', color: '#717171',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
       </div>
       {/* Attendance strip — standalone pill below the title row, matching
           the Lokahi mock: green status dot, "N going" + "of M" small caption,
