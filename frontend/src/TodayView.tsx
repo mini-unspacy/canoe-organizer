@@ -403,11 +403,11 @@ export function TodayView({
       <div style={{
         display: 'grid',
         gridTemplateColumns:
-          canoeView === '1' ? '1fr'
-          : canoeView === '2' ? '1fr 1fr'
-          : 'repeat(4, 1fr)',
+          canoeView === '1' ? 'minmax(0, 1fr)'
+          : canoeView === '2' ? 'repeat(2, minmax(0, 1fr))'
+          : 'repeat(4, minmax(0, 1fr))',
         gridAutoRows: canoeView === '4' ? 'min-content' : undefined,
-        gap: `8px`,
+        gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
       {canoes?.map((canoe, index) => {
@@ -421,8 +421,9 @@ export function TodayView({
               position: 'relative',
               backgroundColor: '#ffffff',
               borderRadius: '14px',
-              padding: '10px 10px 8px',
+              padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
               boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
+              minWidth: 0,
             }}
           >
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
@@ -576,22 +577,6 @@ export function TodayView({
                 </div>
                 </>
               )}
-              {/* 6-bar fill-status strip — red when seat assigned, grey when open */}
-              <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} aria-hidden="true">
-                {[1, 2, 3, 4, 5, 6].map(n => {
-                  const filled = canoeEventAssignments.some(a => a.seat === n);
-                  return (
-                    <div
-                      key={n}
-                      style={{
-                        width: 3, height: 10,
-                        background: filled ? '#b91c1c' : 'rgba(0,0,0,.12)',
-                        borderRadius: 2,
-                      }}
-                    />
-                  );
-                })}
-              </div>
               {isAdmin && <button
                 type="button"
                 onClick={() => setLockedCanoes(prev => {
@@ -652,7 +637,7 @@ export function TodayView({
                 red tint when the drop target is active, with the seat
                 number colored red only when a paddler is seated. Paddlers
                 get a small RC/CS/VC type tag on the right. */}
-            <div style={{ padding: '0 2px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '3px' }}>
+            <div style={{ padding: canoeView === '4' ? '0' : '0 2px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: canoeView === '4' ? '2px' : '3px' }}>
               {Array.from({ length: 6 }).map((_, i) => {
                 const seat = i + 1;
                 const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -691,24 +676,24 @@ export function TodayView({
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 6,
-                            padding: '2px 6px',
+                            gap: canoeView === '4' ? 4 : 6,
+                            padding: canoeView === '4' ? '1px 4px' : '2px 6px',
                             borderRadius: 7,
                             background: active ? 'rgba(200,32,40,0.12)' : 'rgba(0,0,0,0.03)',
                             border: `1px ${active ? 'solid' : 'dashed'} ${active ? '#c82028' : 'rgba(0,0,0,0.18)'}`,
                             transition: 'background 120ms ease, border-color 120ms ease',
-                            minHeight: 26,
+                            minHeight: canoeView === '4' ? 22 : 26,
                           }}
                         >
                           <span
                             style={{
                               flexShrink: 0,
                               fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                              fontSize: '16px',
+                              fontSize: canoeView === '4' ? '13px' : '16px',
                               fontWeight: 600,
                               color: hasPaddler ? '#b91c1c' : '#484848',
                               lineHeight: 1,
-                              width: '12px',
+                              width: canoeView === '4' ? '10px' : '12px',
                               textAlign: 'right',
                             }}
                           >
@@ -741,7 +726,7 @@ export function TodayView({
                                   >
                                     <span
                                       style={{
-                                        fontSize: 18,
+                                        fontSize: canoeView === '4' ? 13 : 18,
                                         lineHeight: 1,
                                         fontWeight: 700,
                                         color: paddlerColor,
@@ -768,7 +753,7 @@ export function TodayView({
                               </div>
                             )}
                           </div>
-                          {typeTag && (
+                          {typeTag && canoeView !== '4' && (
                             <div
                               style={{
                                 fontSize: 8,
