@@ -4,6 +4,17 @@ export const TOOLBAR_SIZE = 34;
 
 export const CANOE_DESIGNATIONS = ["57", "67", "700", "711", "710", "M", "W"];
 
+// Hawaiian-convention OC6 seat roles — seat 1 is the steersperson (back),
+// seat 6 is the stroke (front). Used to label each seat row on the canoe card.
+export const SEAT_ROLES: Record<number, string> = {
+  1: "Steers",
+  2: "Caller",
+  3: "Engine",
+  4: "Engine",
+  5: "Power",
+  6: "Stroke",
+};
+
 export const CANOE_SORT_OPTIONS: CanoeSortItem[] = [
   { id: "ability", label: "ability", gradient: "from-violet-500 to-purple-600", icon: "⭐" },
   { id: "gender", label: "gender", gradient: "from-pink-500 to-rose-500", icon: "⚥" },

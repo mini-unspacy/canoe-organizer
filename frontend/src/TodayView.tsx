@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { PaddlerCircle, GuestPaddlerCircle } from "./components/PaddlerCircle";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
-import { CANOE_DESIGNATIONS } from "./utils";
+import { CANOE_DESIGNATIONS, SEAT_ROLES } from "./utils";
 
 interface SelectedEvent {
   id: string;
@@ -281,23 +281,46 @@ export function TodayView({
             key={canoe._id.toString()}
             style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
           >
-            {/* Header row: BOAT: designation ... lock icon */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '2px', position: 'relative' }}>
-              <span
-                className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
-                onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  color: '#222222',
-                  letterSpacing: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {sidebarOpen ? '' : 'BOAT: '}{canoeDesignations[canoe.id] || '???'}
-              </span>
+            {/* Header row: Hawaiian name (big serif) over designation · fill count ... lock icon */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '6px', position: 'relative' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                <span
+                  style={{
+                    fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                    fontSize: '22px',
+                    fontWeight: 600,
+                    color: '#222222',
+                    lineHeight: 1.1,
+                    letterSpacing: '0.2px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {canoe.name}
+                </span>
+                <span
+                  className={`transition-colors ${isAdmin && !lockedCanoes.has(canoe.id) ? 'cursor-pointer hover:text-blue-400' : 'cursor-default'}`}
+                  onClick={() => isAdmin && !lockedCanoes.has(canoe.id) && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#717171',
+                    letterSpacing: '1.2px',
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    marginTop: '2px',
+                  }}
+                >
+                  {canoeDesignations[canoe.id] || '???'}
+                  {(() => {
+                    const filled = canoeEventAssignments.length;
+                    return <span style={{ color: '#b0b0b0', marginLeft: '8px' }}>· {filled}/6</span>;
+                  })()}
+                </span>
+              </div>
               {/* Designation selector dropdown */}
               {openDesignator === canoe.id && (
                 <>
@@ -374,20 +397,50 @@ export function TodayView({
                             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
                           />
                         )}
-                        {assignedPaddler ? (
-                          <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                            {(provided, dragSnapshot) => (
-                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
-                                  {assignedPaddler.id.startsWith('guest-')
-                                    ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
-                                    : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
-                                  }
-                              </div>
-                            )}
-                          </Draggable>
-                        ) : (
-                          <div style={{ fontSize: '15px', fontWeight: 600, color: '#b0b0b0', padding: '0 2px', lineHeight: 1 }}>{seat}.</div>
-                        )}
+                        {/* Seat number + role label, shown on every row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, width: '92px' }}>
+                          <span
+                            style={{
+                              fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                              fontSize: '20px',
+                              fontWeight: 600,
+                              color: '#b91c1c',
+                              lineHeight: 1,
+                              width: '18px',
+                              textAlign: 'right',
+                            }}
+                          >
+                            {seat}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 700,
+                              letterSpacing: '1.2px',
+                              color: '#717171',
+                              textTransform: 'uppercase',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {SEAT_ROLES[seat]}
+                          </span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                          {assignedPaddler ? (
+                            <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
+                              {(provided, dragSnapshot) => (
+                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
+                                    {assignedPaddler.id.startsWith('guest-')
+                                      ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
+                                      : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
+                                    }
+                                </div>
+                              )}
+                            </Draggable>
+                          ) : (
+                            <div style={{ fontSize: '11px', fontWeight: 500, color: '#c0c0c0', fontStyle: 'italic', letterSpacing: '0.3px' }}>open seat</div>
+                          )}
+                        </div>
                         <div style={{ display: 'none' }}>{provided.placeholder}</div>
                       </div>
                     )}
