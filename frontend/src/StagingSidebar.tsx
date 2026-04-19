@@ -62,7 +62,7 @@ export function StagingSidebar({
     <div
       className="scrollbar-hidden"
       style={{
-        width: sidebarOpen ? 180 : 32,
+        width: sidebarOpen ? 210 : 32,
         height: '100%',
         flexShrink: 0,
         display: 'flex',
@@ -320,7 +320,7 @@ export function StagingSidebar({
                           tabIndex={-1}
                           role="none"
                           aria-roledescription=""
-                          style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
+                          style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', marginBottom: 4, display: 'flex', alignItems: 'center' }}
                         >
                           <PaddlerCircle paddler={paddler} isDragging={snapshot.isDragging} animationKey={animationKey} animationDelay={index * 20} isAdmin={isAdmin} variant="sidebar" />
                         </div>
@@ -363,7 +363,7 @@ export function StagingSidebar({
                           tabIndex={-1}
                           role="none"
                           aria-roledescription=""
-                          style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', width: '100%', height: '22px', display: 'flex', alignItems: 'center' }}
+                          style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', marginBottom: 4, display: 'flex', alignItems: 'center' }}
                         >
                           <GuestPaddlerCircle paddler={guestPaddler} isDragging={snapshot.isDragging} variant="sidebar" />
                         </div>
