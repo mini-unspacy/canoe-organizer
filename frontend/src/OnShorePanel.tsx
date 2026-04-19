@@ -44,6 +44,15 @@ function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
   return copy;
 }
 
+// Snap presets for the drag-to-resize On Shore panel. Heights are derived
+// from the viewport so the panel always looks right on phones of varying
+// sizes. Dragging to CLOSED hides the content and leaves only the grab
+// notch so the user can pull it back up.
+const CLOSED_H = 44;
+const getMediumH = () => (typeof window === "undefined" ? 360 : Math.round(window.innerHeight * 0.42));
+const getFullH = () => (typeof window === "undefined" ? 640 : Math.round(window.innerHeight * 0.75));
+const PANEL_HEIGHT_LS_KEY = "lokahi.onShorePanelHeight";
+
 export function OnShorePanel({
   unassignedPaddlers,
   unassignedGuests,
@@ -53,9 +62,16 @@ export function OnShorePanel({
   dragFromStaging,
   bottomOffset,
 }: OnShorePanelProps) {
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("lokahi.onShoreCollapsed") === "1";
+  const [panelHeight, setPanelHeight] = useState<number>(() => {
+    if (typeof window === "undefined") return 360;
+    const rawH = window.localStorage.getItem(PANEL_HEIGHT_LS_KEY);
+    if (rawH != null) {
+      const n = parseInt(rawH, 10);
+      if (!Number.isNaN(n) && n >= CLOSED_H) return n;
+    }
+    // Legacy collapsed flag fallback from the pre-drag version
+    const legacyCollapsed = window.localStorage.getItem("lokahi.onShoreCollapsed") === "1";
+    return legacyCollapsed ? CLOSED_H : getMediumH();
   });
   const [zoom, setZoom] = useState<number>(() => {
     if (typeof window === "undefined") return 2;
@@ -70,9 +86,14 @@ export function OnShorePanel({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Collapsed is a computed property of height, with a small tolerance so
+  // that near-closed drag targets snap visually to "closed" styling.
+  const collapsed = panelHeight <= CLOSED_H + 8;
+
   useEffect(() => {
+    window.localStorage.setItem(PANEL_HEIGHT_LS_KEY, String(panelHeight));
     window.localStorage.setItem("lokahi.onShoreCollapsed", collapsed ? "1" : "0");
-  }, [collapsed]);
+  }, [panelHeight, collapsed]);
   useEffect(() => {
     window.localStorage.setItem("lokahi.onShoreZoom", String(zoom));
   }, [zoom]);
@@ -92,13 +113,68 @@ export function OnShorePanel({
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
+  // Keep the panel reasonable when the viewport is resized (e.g. phone
+  // rotation). Clamps to the current FULL max and, if it lands above that,
+  // re-snaps to a viable preset.
+  useEffect(() => {
+    const onResize = () => {
+      const full = getFullH();
+      setPanelHeight(h => (h > full ? full : h));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Drag-to-resize state. We track startY/startH plus a "moved" flag so a
+  // tap (no drag) toggles open/closed while an actual drag sets a height.
+  const dragState = useRef<{ startY: number; startH: number; moved: boolean } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const snapToNearest = (h: number): number => {
+    const targets = [CLOSED_H, getMediumH(), getFullH()];
+    let best = targets[0];
+    let bestDist = Math.abs(h - best);
+    for (const t of targets) {
+      const d = Math.abs(h - t);
+      if (d < bestDist) { bestDist = d; best = t; }
+    }
+    return best;
+  };
+
+  const onHandlePointerDown = (e: React.PointerEvent) => {
+    dragState.current = { startY: e.clientY, startH: panelHeight, moved: false };
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    setIsDragging(true);
+  };
+  const onHandlePointerMove = (e: React.PointerEvent) => {
+    const st = dragState.current;
+    if (!st) return;
+    const dy = st.startY - e.clientY; // dragging up = taller
+    if (Math.abs(dy) > 3) st.moved = true;
+    const full = getFullH();
+    const nextH = Math.max(CLOSED_H, Math.min(full, st.startH + dy));
+    setPanelHeight(nextH);
+  };
+  const onHandlePointerUp = (e: React.PointerEvent) => {
+    const st = dragState.current;
+    if (!st) return;
+    (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
+    if (!st.moved) {
+      // Tap: toggle between CLOSED and MEDIUM
+      setPanelHeight(collapsed ? getMediumH() : CLOSED_H);
+    } else {
+      setPanelHeight(snapToNearest(panelHeight));
+    }
+    dragState.current = null;
+    setIsDragging(false);
+  };
+
   const dims = ON_SHORE_ZOOM_STEPS[zoom];
   const visiblePaddlers = sortPaddlers(
     unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
     sort
   );
   const count = visiblePaddlers.length + unassignedGuests.length;
-  const expandedHeight = "42vh";
 
   return (
     <div
@@ -108,70 +184,76 @@ export function OnShorePanel({
         right: 0,
         bottom: bottomOffset,
         zIndex: 30,
-        height: collapsed ? 44 : expandedHeight,
+        height: panelHeight,
         background: collapsed ? "#fff" : "#faf7f0",
         borderTop: "1px solid rgba(0,0,0,.08)",
         boxShadow: collapsed ? "none" : "0 -4px 14px rgba(0,0,0,0.06)",
         display: "flex",
         flexDirection: "column",
-        transition: "height 220ms ease, background 220ms ease",
+        transition: isDragging ? "none" : "height 220ms ease, background 220ms ease",
       }}
     >
-      {/* Header row — chevron + label, optional zoom slider + sort */}
+      {/* Grab handle — always visible so the panel can be resized. Doubles
+          as a tap target that toggles CLOSED ↔ MEDIUM. */}
       <div
+        onPointerDown={onHandlePointerDown}
+        onPointerMove={onHandlePointerMove}
+        onPointerUp={onHandlePointerUp}
+        onPointerCancel={onHandlePointerUp}
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize On Shore panel"
         style={{
-          padding: collapsed ? "12px 14px" : "8px 12px 4px",
+          width: "100%",
+          padding: "8px 0 6px",
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          justifyContent: "center",
+          cursor: "ns-resize",
+          touchAction: "none",
           flexShrink: 0,
-          position: "relative",
+          userSelect: "none",
+          WebkitUserSelect: "none",
         }}
       >
         <div
-          onClick={() => setCollapsed(v => !v)}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            cursor: "pointer",
-            flexShrink: 0,
-            userSelect: "none",
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            background: isDragging ? "#c82028" : "rgba(0,0,0,0.22)",
+            transition: "background 120ms ease",
           }}
-        >
+        />
+      </div>
+
+      {!collapsed && (
+        <>
+          {/* Header row — label + count on the left, zoom & sort on the right */}
           <div
             style={{
-              width: 16,
-              height: 16,
+              padding: "2px 12px 4px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              color: "#717171",
-              transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
-              transition: "transform 180ms ease",
+              gap: 10,
+              flexShrink: 0,
+              position: "relative",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "#717171",
-            }}
-          >
-            On Shore
-          </span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#c82028" }}>{count}</span>
-        </div>
-        <div style={{ flex: 1 }} />
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#717171",
+              }}
+            >
+              On Shore
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#c82028" }}>{count}</span>
+            <div style={{ flex: 1 }} />
 
-        {!collapsed && (
-          <>
             <NotchedZoom zoom={zoom} setZoom={setZoom} />
             <div ref={menuRef} style={{ position: "relative" }}>
               <button
@@ -240,12 +322,9 @@ export function OnShorePanel({
                 </div>
               )}
             </div>
-          </>
-        )}
-      </div>
+          </div>
 
-      {!collapsed && (
-        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+          <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
@@ -347,6 +426,7 @@ export function OnShorePanel({
             </div>
           )}
         </Droppable>
+        </>
       )}
     </div>
   );
