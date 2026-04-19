@@ -263,6 +263,17 @@ export const removeCanoe = mutation({
       }
     }
 
+    // Delete any per-event seat assignments that reference this canoe.
+    // Without this, paddlers stay "assigned" to a now-deleted canoe and
+    // don't return to the On Shore pool.
+    const orphanedEventAssignments = await ctx.db
+      .query("eventAssignments")
+      .filter((q) => q.eq(q.field("canoeId"), args.canoeId))
+      .collect();
+    for (const ea of orphanedEventAssignments) {
+      await ctx.db.delete(ea._id);
+    }
+
     // Delete the canoe
     await ctx.db.delete(canoeDoc._id);
     return { success: true, message: `Removed canoe ${canoeDoc.name}` };
