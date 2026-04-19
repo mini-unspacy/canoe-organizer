@@ -29,8 +29,8 @@ function LokahiSplash() {
 
 function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () => void }) {
   const ctx = useCanoeAssignment(currentUser);
-  // Below this width we switch from a left sidebar to a bottom tab bar.
-  const isNarrow = ctx.windowWidth < 640;
+  // Mobile-only layout: bottom tab bar + On Shore drawer, no desktop sidebars.
+  const isNarrow = true;
 
   // Auto-hide the mobile tab bar when the user scrolls down, show it again
   // when scrolling up or at the top. Standard mobile browser pattern.
