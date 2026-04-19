@@ -311,9 +311,17 @@ export function TodayView({
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 5h18l-7 9v5l-4 2v-7z" />
+                <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h14M20 17h0" />
+                <circle cx="16" cy="7" r="2" fill="currentColor" />
+                <circle cx="10" cy="12" r="2" fill="currentColor" />
               </svg>
-              Sort
+              Sort: {(() => {
+                const top = canoePriority[0];
+                const label = top
+                  ? ({ ability: 'Ability', gender: 'Gender', type: 'Racer?', seatPreference: 'Seat' } as Record<string, string>)[top.id]
+                  : 'Default';
+                return label || 'Default';
+              })()}
             </button>
             {sortPillOpen && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
