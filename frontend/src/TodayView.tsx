@@ -688,8 +688,13 @@ export function TodayView({
                 </svg>
               </button>}
             </div>
-            {/* 6 seats in a single vertical column */}
-            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
+            {/* 6 seats in a single vertical column. Each seat row gets a
+                subtle dashed-border card treatment matching the Lokahi mock:
+                dashed border + light tint when empty, red-solid border +
+                red tint when the drop target is active, with the seat
+                number colored red only when a paddler is seated. Paddlers
+                get a small RC/CS/VC type tag on the right. */}
+            <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
               {Array.from({ length: 6 }).map((_, i) => {
                 const seat = i + 1;
                 const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -697,65 +702,94 @@ export function TodayView({
 
                 return (
                   <Droppable droppableId={`canoe-${canoe.id}-seat-${seat}`} key={seat}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}
-                      >
-                        {(!assignedPaddler || snapshot.isDraggingOver || snapshot.draggingFromThisWith) && (
-                          <div
-                            className="transition-all"
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: snapshot.isDraggingOver ? 'rgba(96,165,250,0.3)' : 'transparent', borderRadius: '2px', pointerEvents: 'none' }}
-                          />
-                        )}
-                        {/* Seat number + role label, shown on every row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, width: '92px' }}>
-                          <span
-                            style={{
-                              fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                              fontSize: '20px',
-                              fontWeight: 600,
-                              color: '#b91c1c',
-                              lineHeight: 1,
-                              width: '18px',
-                              textAlign: 'right',
-                            }}
-                          >
-                            {seat}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '9px',
-                              fontWeight: 700,
-                              letterSpacing: '1.2px',
-                              color: '#717171',
-                              textTransform: 'uppercase',
-                              lineHeight: 1,
-                            }}
-                          >
-                            {SEAT_ROLES[seat]}
-                          </span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                          {assignedPaddler ? (
-                            <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
-                              {(provided, dragSnapshot) => (
-                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
-                                    {assignedPaddler.id.startsWith('guest-')
-                                      ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
-                                      : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
-                                    }
-                                </div>
-                              )}
-                            </Draggable>
-                          ) : (
-                            <div style={{ fontSize: '11px', fontWeight: 500, color: '#c0c0c0', fontStyle: 'italic', letterSpacing: '0.3px' }}>open seat</div>
+                    {(provided, snapshot) => {
+                      const active = snapshot.isDraggingOver;
+                      const hasPaddler = !!assignedPaddler;
+                      const typeTag =
+                        assignedPaddler && 'type' in assignedPaddler && assignedPaddler.type
+                          ? (assignedPaddler.type === 'racer' ? 'RC'
+                              : assignedPaddler.type === 'casual' ? 'CS'
+                              : assignedPaddler.type === 'very-casual' ? 'VC' : '')
+                          : '';
+                      return (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          style={{
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '6px 8px',
+                            borderRadius: 8,
+                            background: active ? 'rgba(200,32,40,0.12)' : 'rgba(0,0,0,0.03)',
+                            border: `1px ${active ? 'solid' : 'dashed'} ${active ? '#c82028' : 'rgba(0,0,0,0.18)'}`,
+                            transition: 'background 120ms ease, border-color 120ms ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, width: '72px' }}>
+                            <span
+                              style={{
+                                fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                                fontSize: '20px',
+                                fontWeight: 600,
+                                color: hasPaddler ? '#b91c1c' : '#484848',
+                                lineHeight: 1,
+                                width: '18px',
+                                textAlign: 'right',
+                              }}
+                            >
+                              {seat}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '9px',
+                                fontWeight: 700,
+                                letterSpacing: '1.2px',
+                                color: '#717171',
+                                textTransform: 'uppercase',
+                                lineHeight: 1,
+                              }}
+                            >
+                              {SEAT_ROLES[seat]}
+                            </span>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                            {assignedPaddler ? (
+                              <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false}>
+                                {(provided, dragSnapshot) => (
+                                  <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} tabIndex={-1} role="none" aria-roledescription="" style={{ ...provided.draggableProps.style, touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none', visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible', width: '100%' }}>
+                                      {assignedPaddler.id.startsWith('guest-')
+                                        ? <GuestPaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} />
+                                        : <PaddlerCircle paddler={assignedPaddler} isDragging={dragSnapshot.isDragging} animationKey={animationKey} animationDelay={seat * 30} isAdmin={isAdmin} />
+                                      }
+                                  </div>
+                                )}
+                              </Draggable>
+                            ) : (
+                              <div style={{ fontSize: '11px', fontWeight: 500, color: active ? '#c82028' : '#9a9a9a', fontStyle: 'italic', letterSpacing: '0.3px' }}>
+                                {active ? '— drop here to seat —' : 'open seat'}
+                              </div>
+                            )}
+                          </div>
+                          {typeTag && (
+                            <div
+                              style={{
+                                fontSize: 9,
+                                fontWeight: 700,
+                                letterSpacing: '0.12em',
+                                color: '#717171',
+                                opacity: 0.7,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {typeTag}
+                            </div>
                           )}
+                          <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>
-                        <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                      </div>
-                    )}
+                      );
+                    }}
                   </Droppable>
                 );
               })}
