@@ -203,9 +203,20 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0 12px', position: 'relative' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '0', position: 'relative', background: '#ffffff' }}
         className="scrollbar-hidden"
       >
+        {/* Mock-style hero header */}
+        <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #e3e0da', position: 'relative' }}>
+          <div style={{ fontSize: 10, color: '#8a8275', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>
+            2026 Season · SCORA
+          </div>
+          <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 30, fontWeight: 600, color: '#1a1a1a', lineHeight: 1.05, marginTop: 2 }}>
+            Schedule
+          </div>
+        </div>
+
+        <div style={{ padding: '12px 12px 40px' }}>
         {/* Floating + event button (admin only) */}
         {isAdmin && <div style={{ position: 'sticky', top: '8px', zIndex: 20, float: 'right' }}>
           <span
@@ -215,9 +226,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               setShowEventForm(!showEventForm);
             }}
             style={{
-              cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#ffffff',
-              userSelect: 'none', padding: '10px 20px', backgroundColor: '#005280', borderRadius: '10px', border: 'none',
-              boxShadow: '0 2px 8px rgba(0,82,128,0.25)', transition: 'opacity 0.15s',
+              cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
+              userSelect: 'none', padding: '8px 14px', backgroundColor: '#c82028', borderRadius: 999, border: 'none',
+              boxShadow: '0 2px 8px rgba(200,32,40,0.25)', transition: 'opacity 0.15s',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
@@ -415,11 +426,20 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
         {allMonths.map(m => {
           const group = eventsByMonth.find(g => g.month === m.month);
           const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+          // "apr 2026" -> "April 2026" so the mock-style section header reads well.
+          const prettyMonth = (() => {
+            const [y, mo] = m.month.split('-');
+            const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            return `${names[parseInt(mo, 10) - 1]} ${y}`;
+          })();
           return (
-            <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }}>
-              <div style={{ fontSize: '18px', color: '#222222', fontWeight: 700, padding: '24px 0 12px', textTransform: 'lowercase', letterSpacing: '0.02em', borderBottom: '2px solid rgba(0,0,0,.08)', marginBottom: '12px' }}>
-                {m.label}
+            <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }} style={{ marginBottom: 18 }}>
+              {/* Section label with hairline rule — matches mock's SectionLabel */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#6b6558' }}>
+                <span>{prettyMonth}</span>
+                <div style={{ flex: 1, height: 1, background: '#e3e0da' }} />
               </div>
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
                 const d = new Date(evt.date + 'T00:00:00');
                 const dayNum = d.getDate();
@@ -506,95 +526,121 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   );
                 }
                 const isAttending = attendingEventIds.has(evt.id);
+                const isRace = evt.eventType === 'race';
+                const now = new Date();
+                now.setHours(0,0,0,0);
+                const evDate = new Date(evt.date + 'T12:00:00');
+                const evDayStart = new Date(evDate); evDayStart.setHours(0,0,0,0);
+                const isToday = evDayStart.getTime() === now.getTime();
+                const isPast = evDayStart.getTime() < now.getTime();
+                const go = () => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType });
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
-                    style={{ display: 'flex', gap: '12px', padding: '14px 16px', marginBottom: '8px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 1px 4px rgba(0,0,0,.04), 0 3px 10px rgba(0,0,0,.06)' }}
+                    onClick={go}
+                    style={{
+                      display: 'flex', gap: 12, alignItems: 'center',
+                      padding: '10px 12px',
+                      background: '#f5f3ef',
+                      border: '1px solid #e3e0da',
+                      borderRadius: 12,
+                      opacity: isPast ? 0.45 : 1,
+                      cursor: onSelectEvent ? 'pointer' : 'default',
+                    }}
                   >
-                    {/* Left column: date + Y/N */}
-                    <div style={{ width: '52px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '28px', fontWeight: 700, color: '#222222', lineHeight: 1.1, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayNum}</div>
-                      <div onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })} style={{ fontSize: '20px', color: '#484848', fontWeight: 500, cursor: onSelectEvent ? 'pointer' : 'default' }}>{dayName}</div>
+                    {/* Date column: day-of-week + serif day number */}
+                    <div style={{ textAlign: 'center', width: 44, flexShrink: 0 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: isRace ? '#b8181e' : '#2e6b80', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        {dayName}
+                      </div>
+                      <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 24, color: '#1a1a1a', fontWeight: 600, lineHeight: 1, marginTop: 1 }}>
+                        {dayNum}
+                      </div>
                       {selectedPaddlerId && (
                         <div
-                          onClick={() => toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id })}
+                          onClick={(e) => { e.stopPropagation(); toggleAttendanceMut({ paddlerId: selectedPaddlerId, eventId: evt.id }); }}
                           style={{
-                            width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0, marginTop: '6px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 28, height: 22, borderRadius: 6, marginTop: 6,
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             cursor: 'pointer', userSelect: 'none',
-                            border: `2px solid ${isAttending ? '#22c55e' : '#ef4444'}`,
-                            backgroundColor: isAttending ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                            color: isAttending ? '#22c55e' : '#ef4444',
-                            fontSize: '17px', fontWeight: 700, transition: 'all 0.15s',
+                            border: `1.5px solid ${isAttending ? '#2f7a47' : '#c82028'}`,
+                            backgroundColor: isAttending ? 'rgba(47,122,71,0.14)' : 'rgba(200,32,40,0.10)',
+                            color: isAttending ? '#2f7a47' : '#c82028',
+                            fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                           }}
                         >
                           {isAttending ? 'Y' : 'N'}
                         </div>
                       )}
                     </div>
-                    {/* Right column: time/title, location, badges */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginTop: '0px' }}>
-                      <div style={{ fontSize: '28px', color: '#222222', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
-                        <span
-                          onClick={() => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType })}
-                          style={{ cursor: onSelectEvent ? 'pointer' : 'default' }}
-                        >{evt.time} {evt.title}</span>
-                      </div>
-                      {evt.location && <div style={{ fontSize: '20px', color: '#484848', fontWeight: 500, marginTop: '-1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.location}</div>}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                        {evt.eventType && (
-                          <span style={{
-                            padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                            backgroundColor: evt.eventType === 'practice' ? 'rgba(59,130,246,0.1)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)',
-                            color: evt.eventType === 'practice' ? '#3387a2' : evt.eventType === 'race' ? '#f87171' : '#b0b0b0',
-                            border: `1px solid ${evt.eventType === 'practice' ? 'rgba(59,130,246,0.2)' : evt.eventType === 'race' ? 'rgba(239,68,68,0.2)' : 'rgba(100,116,139,0.2)'}`,
-                          }}>
-                            {evt.eventType}
-                          </span>
+
+                    {/* Title + meta column */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
+                        {isRace && (
+                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#b8181e', background: 'rgba(200,32,40,0.2)', padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>RACE</span>
                         )}
-                        <span
-                          data-guest-popup
-                          onClick={(e) => { e.stopPropagation(); setGuestPopupEventId(guestPopupEventId === evt.id ? null : evt.id); setGuestNameInput(''); }}
-                          style={{
-                            padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                            backgroundColor: guestPopupEventId === evt.id ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.08)',
-                            color: '#f59e0b',
-                            border: `1px solid ${guestPopupEventId === evt.id ? 'rgba(245,158,11,0.4)' : 'rgba(245,158,11,0.2)'}`,
-                            cursor: 'pointer', userSelect: 'none',
-                            marginLeft: 'auto',
-                          }}
-                        >
-                          guest?
-                        </span>
-                        {isAdmin && <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <svg
-                          onClick={() => {
-                            setEditingEventId(evt.id);
-                            setEventForm({
-                              title: evt.title, date: evt.date, time: evt.time, location: evt.location,
-                              eventType: (evt.eventType || 'practice') as 'practice' | 'race' | 'other',
-                              repeating: evt.repeating as 'none' | 'weekly' | 'monthly',
-                              weekdays: evt.weekdays || [],
-                              monthdays: evt.monthdays || [],
-                              repeatUntil: evt.repeatUntil || '',
-                            });
-                            setShowEventForm(true);
-                          }}
-                          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ cursor: 'pointer', padding: '4px', boxSizing: 'content-box' }}
-                        >
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        <svg
-                          onClick={() => deleteEventMut({ eventId: evt.id })}
-                          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ cursor: 'pointer', padding: '4px', boxSizing: 'content-box' }}
-                        >
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                      </span>}
+                        {isToday && (
+                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#2f7a47', background: 'rgba(47,122,71,0.2)', padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>TODAY</span>
+                        )}
+                        <div style={{ fontSize: 14, color: '#1a1a1a', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.2, flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {evt.title}
+                        </div>
                       </div>
+                      <div style={{ fontSize: 11, color: '#6b6558', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {evt.time}{evt.location ? <> <span style={{ opacity: 0.5 }}>·</span> {evt.location}</> : null}
+                      </div>
+                    </div>
+
+                    {/* Trailing actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                      <span
+                        data-guest-popup
+                        onClick={(e) => { e.stopPropagation(); setGuestPopupEventId(guestPopupEventId === evt.id ? null : evt.id); setGuestNameInput(''); }}
+                        style={{
+                          padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                          backgroundColor: guestPopupEventId === evt.id ? 'rgba(160,120,56,0.25)' : 'rgba(160,120,56,0.12)',
+                          color: '#a07838',
+                          border: `1px solid rgba(160,120,56,${guestPopupEventId === evt.id ? 0.4 : 0.2})`,
+                          cursor: 'pointer', userSelect: 'none',
+                        }}
+                      >
+                        guest
+                      </span>
+                      {isAdmin && (
+                        <>
+                          <svg
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingEventId(evt.id);
+                              setEventForm({
+                                title: evt.title, date: evt.date, time: evt.time, location: evt.location,
+                                eventType: (evt.eventType || 'practice') as 'practice' | 'race' | 'other',
+                                repeating: evt.repeating as 'none' | 'weekly' | 'monthly',
+                                weekdays: evt.weekdays || [],
+                                monthdays: evt.monthdays || [],
+                                repeatUntil: evt.repeatUntil || '',
+                              });
+                              setShowEventForm(true);
+                            }}
+                            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a928a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ cursor: 'pointer', padding: 4, boxSizing: 'content-box' }}
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          <svg
+                            onClick={(e) => { e.stopPropagation(); deleteEventMut({ eventId: evt.id }); }}
+                            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a928a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ cursor: 'pointer', padding: 4, boxSizing: 'content-box' }}
+                          >
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                        </>
+                      )}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
                     </div>
                   </div>
                   {/* Guest popup */}
@@ -649,12 +695,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   </div>
                 );
               }) : (
-                <div style={{ padding: '12px 0', fontSize: '16px', color: '#b0b0b0' }}>—</div>
+                <div style={{ padding: '8px 0', fontSize: 12, color: '#8a8275' }}>—</div>
               )}
+              </div>
             </div>
           );
         })}
         <div style={{ height: '80px' }} />
+        </div>
       </div>
     </div>
   );
