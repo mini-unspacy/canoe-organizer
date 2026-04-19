@@ -124,59 +124,74 @@ export function TodayView({
             <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
             <span>{selectedEvent.location}</span>
           </div>
-          <div style={{ fontSize: '13px', color: '#005280', fontWeight: 600, marginTop: '6px' }}>
-            <span onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }} style={{ cursor: 'pointer' }}>({_goingCount} going)</span>
-            {showGoingList && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: 'absolute', top: '100%', left: 0, marginTop: '8px',
-                  backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.08)', borderRadius: '12px',
-                  padding: '12px 16px', minWidth: '220px', zIndex: 100,
-                  boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
-                }}
-              >
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#717171', marginBottom: '8px' }}>
-                  ATTENDING ({_goingCount})
-                </div>
-                {_goingCount === 0 ? (
-                  <div style={{ fontSize: '14px', color: '#717171' }}>No one yet</div>
-                ) : (
-                  <>
-                  <div
-                    ref={(el) => {
-                      if (!el) return;
-                      const indicator = el.nextElementSibling as HTMLElement;
-                      if (!indicator) return;
-                      const check = () => { indicator.style.display = el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight < el.scrollHeight - 4 ? 'block' : 'none'; };
-                      check();
-                      el.onscroll = check;
-                    }}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '390px', overflowY: 'auto' }}>
-                    {paddlers
-                      ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                      .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                      .map((p: Paddler) => (
-                        <div key={p.id} style={{ fontSize: '14px', color: '#484848' }}>
-                          {p.firstName} {p.lastName || p.lastInitial}
-                        </div>
-                      ))}
-                    {eventGuests && eventGuests.length > 0 && (
-                      <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700 }}>GUESTS</div>
-                    )}
-                    {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                      <div key={g._id} style={{ fontSize: '14px', color: '#fbbf24' }}>
-                        {g.name} <span style={{ fontSize: '11px', color: '#f59e0b', opacity: 0.7 }}>guest</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ textAlign: 'center', color: '#717171', fontSize: '16px', lineHeight: 1, padding: '2px 0', display: 'none' }}>...</div>
-                  </>
+        </div>
+      </div>
+      {/* Attendance strip — standalone pill below the title row, matching
+          the Lokahi mock: green status dot, "N going" + "of M" small caption,
+          chevron on the right. Tap to expand the attendees list. */}
+      <div style={{ position: 'relative', marginBottom: '10px' }}>
+        <div
+          onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '10px 14px', borderRadius: '12px',
+            background: '#faf9f7', border: '1px solid rgba(0,0,0,.08)',
+            cursor: 'pointer', userSelect: 'none',
+          }}
+        >
+          <div style={{
+            width: 9, height: 9, borderRadius: '50%',
+            background: '#5a8a5f', boxShadow: '0 0 0 3px rgba(90,138,95,0.22)',
+            flexShrink: 0,
+          }} />
+          <span style={{ fontSize: '14px', color: '#222222', fontWeight: 600 }}>
+            {_goingCount} going
+          </span>
+          <span style={{ fontSize: '12px', color: '#717171', fontWeight: 500 }}>
+            of {(paddlers?.length ?? 0) + _guestCount}
+          </span>
+          <div style={{ flex: 1 }} />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </div>
+        {showGoingList && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '6px',
+              backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.08)', borderRadius: '12px',
+              padding: '12px 16px', zIndex: 100,
+              boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
+            }}
+          >
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#717171', marginBottom: '8px', letterSpacing: '0.08em' }}>
+              ATTENDING ({_goingCount})
+            </div>
+            {_goingCount === 0 ? (
+              <div style={{ fontSize: '14px', color: '#717171' }}>No one yet</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '390px', overflowY: 'auto' }}>
+                {paddlers
+                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
+                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                  .map((p: Paddler) => (
+                    <div key={p.id} style={{ fontSize: '14px', color: '#484848' }}>
+                      {p.firstName} {p.lastName || p.lastInitial}
+                    </div>
+                  ))}
+                {eventGuests && eventGuests.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700 }}>GUESTS</div>
                 )}
+                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
+                  <div key={g._id} style={{ fontSize: '14px', color: '#a07838' }}>
+                    {g.name} <span style={{ fontSize: '11px', color: '#a07838', opacity: 0.7 }}>guest</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
       {/* Y/N + all boats/my boats row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'wrap' }}>
