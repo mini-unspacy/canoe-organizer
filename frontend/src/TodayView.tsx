@@ -799,8 +799,9 @@ export function TodayView({
         <button
           type="button"
           onClick={() => {
-            const n = (canoes?.length ?? 0) + 1;
-            addCanoe({ name: `Canoe ${n}` });
+            // Blank name on add — the name is populated when the admin picks
+            // a canoe # from the designation picker on the new card.
+            handleAddCanoeAfter(canoes?.length ?? 0);
           }}
           title="Add canoe"
           aria-label="Add canoe"

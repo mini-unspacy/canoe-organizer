@@ -355,36 +355,32 @@ export const renameTestCanoesToHawaiian = mutation({
 });
 
 // One-shot utility: any canoe still named "Canoe N" (or just "Canoe") gets
-// swapped for a random unused Hawaiian name from the pool. Idempotent —
-// canoes whose name is already Hawaiian are left alone. Safe to run multiple
-// times; if the pool runs out, extra canoes fall back to "Canoe N".
-export const randomizeNumericCanoeNames = mutation({
+// its name replaced. If the canoe already has a designation we know about,
+// the canonical name for that # is used (710 → Hōkūleʻa etc.); otherwise
+// the name is blanked so the admin can pick a # in the UI, which will then
+// auto-populate the name. Idempotent.
+export const normalizeNumericCanoeNames = mutation({
   args: {},
   handler: async (ctx) => {
-    const POOL = [
-      "Pōkai", "Puakea", "Hōkūleʻa", "Kainalu", "Mānele",
-      "Honu", "Nalu", "Moana", "Kilo", "Kaiāulu",
-      "Maluhia", "ʻIolani", "Makani", "Kealoha", "Lanakila",
-      "Hikianalia", "Hōkūlani", "Kaimana", "Mahina", "Keahi",
-      "Lōkahi", "Haliʻa", "Anuenue", "Kaiolohia", "Ehukai",
-    ];
-    const canoes = await ctx.db.query("canoes").collect();
-    const taken = new Set(canoes.map(c => c.name));
-    const remaining = POOL.filter(n => !taken.has(n));
-    // Fisher-Yates shuffle of the remaining pool for randomness.
-    for (let i = remaining.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-    }
+    // Keep in sync with frontend/src/utils.ts CANOE_NAME_BY_DESIGNATION.
+    const NAME_BY_DESIGNATION: Record<string, string> = {
+      "57":  "Kaimana",
+      "67":  "Mānele",
+      "700": "Kainalu",
+      "710": "Hōkūleʻa",
+      "711": "Puakea",
+      "M":   "Malia",
+      "W":   "WAKA",
+    };
     const numericPattern = /^Canoe(\s+\d+)?$/;
+    const canoes = await ctx.db.query("canoes").collect();
     const renamed: string[] = [];
-    let fallbackIdx = canoes.length;
     for (const c of canoes) {
       if (!numericPattern.test(c.name.trim())) continue;
-      const next = remaining.shift() ?? `Canoe ${++fallbackIdx}`;
+      const designation = (c.designation ?? "").trim();
+      const next = NAME_BY_DESIGNATION[designation] ?? "";
       await ctx.db.patch(c._id, { name: next });
-      taken.add(next);
-      renamed.push(`${c.name} -> ${next}`);
+      renamed.push(`${c.name} -> ${next || "(blank)"}`);
     }
     return { renamed, count: renamed.length };
   },
