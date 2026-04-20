@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
@@ -87,6 +88,22 @@ export function TodayView({
   windowWidth,
 }: TodayViewProps) {
   const [openDesignator, setOpenDesignator] = useState<string | null>(null);
+  // Anchor rect for the # cluster popover. Captured when a canoe's #
+  // badge is clicked so we can render the popover via createPortal at
+  // the document root — this avoids any parent stacking-context or
+  // overflow:hidden ancestor clipping the menu (which was blocking the
+  // first canoe's popover on certain layouts).
+  const [designatorAnchor, setDesignatorAnchor] = useState<{
+    left: number; top: number; width: number;
+  } | null>(null);
+  // Close the popover when the viewport resizes so its anchor math stays
+  // honest; also refresh anchor on scroll so it tracks the button.
+  useEffect(() => {
+    if (!openDesignator) return;
+    const onClose = () => setOpenDesignator(null);
+    window.addEventListener('resize', onClose);
+    return () => window.removeEventListener('resize', onClose);
+  }, [openDesignator]);
   const [sortPillOpen, setSortPillOpen] = useState(false);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
   const sortPillRef = useRef<HTMLDivElement>(null);
@@ -934,7 +951,23 @@ export function TodayView({
                 return (
                   <button
                     type="button"
-                    onClick={() => isEditable && setOpenDesignator(openDesignator === canoe.id ? null : canoe.id)}
+                    onClick={(e) => {
+                      if (!isEditable) return;
+                      // Toggle closed if we're clicking the same canoe's
+                      // badge while it's already open.
+                      if (openDesignator === canoe.id) {
+                        setOpenDesignator(null);
+                        setDesignatorAnchor(null);
+                        return;
+                      }
+                      // Capture the button's viewport-relative rect so the
+                      // portal-rendered popover can anchor against it with
+                      // position: fixed, escaping any parent stacking
+                      // context / overflow clip.
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setDesignatorAnchor({ left: rect.left, top: rect.bottom, width: rect.width });
+                      setOpenDesignator(canoe.id);
+                    }}
                     disabled={!isEditable}
                     aria-label={hasNum ? `Canoe number ${designation}` : 'Assign canoe number'}
                     style={{
@@ -977,96 +1010,163 @@ export function TodayView({
                   </span>
                 )}
               </div>
-              {/* Designation selector dropdown — Lokahi.html-style 5-col grid
-                  with taken numbers dimmed and a Clear row at the bottom. */}
-              {openDesignator === canoe.id && (
-                <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 19 }} onClick={() => setOpenDesignator(null)} />
-                <div style={{ position: 'absolute', top: '100%', left: '4px', zIndex: 20, marginTop: 4 }}>
-                  <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(5, 34px)', gap: '4px', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', border: '1px solid rgba(0,0,0,.08)' }}>
-                    {CANOE_DESIGNATIONS.map(d => {
-                      const isMine = canoeDesignations[canoe.id] === d;
-                      const takenBy = Object.entries(canoeDesignations).find(([cid, v]) => v === d && cid !== canoe.id);
-                      return (
-                        <button
-                          key={d}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const nextDesignation = isMine ? '' : d;
-                            updateDesignationMut({ canoeId: canoe.id, designation: nextDesignation });
-                            // Auto-populate the canoe's name from the # mapping.
-                            // Clearing the # also clears the name.
-                            const nextName = nextDesignation
-                              ? (CANOE_NAME_BY_DESIGNATION[nextDesignation] ?? '')
-                              : '';
-                            renameCanoeMut({ canoeId: canoe.id, name: nextName });
-                            setOpenDesignator(null);
-                          }}
-                          style={{
-                            width: 34, height: 34, borderRadius: 8,
-                            border: `1px solid ${isMine ? '#b91c1c' : 'rgba(0,0,0,0.12)'}`,
-                            background: isMine ? 'rgba(185,28,28,0.14)' : takenBy ? 'rgba(0,0,0,0.04)' : '#fff',
-                            color: isMine ? '#b91c1c' : takenBy ? '#9a9a9a' : '#484848',
-                            fontWeight: 700, fontSize: d.length >= 3 ? 11 : 14,
-                            cursor: 'pointer', opacity: takenBy ? 0.5 : 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            padding: 0,
-                            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                          }}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const custom = prompt('Enter canoe designation:');
-                        if (custom && custom.trim()) {
-                          const d = custom.trim();
-                          updateDesignationMut({ canoeId: canoe.id, designation: d });
-                          // Custom # has no canonical name — pick a random
-                          // unused Hawaiian name so the canoe still has one.
-                          const mapped = CANOE_NAME_BY_DESIGNATION[d];
-                          const takenNames = (canoes ?? []).map(c => c.name).filter(Boolean);
-                          const nextName = mapped ?? pickFreshCanoeName(takenNames);
-                          renameCanoeMut({ canoeId: canoe.id, name: nextName });
-                        }
-                        setOpenDesignator(null);
-                      }}
-                      style={{
-                        width: 34, height: 34, borderRadius: 8,
-                        border: '1px dashed rgba(0,0,0,0.20)',
-                        background: 'transparent',
-                        color: '#484848',
-                        fontWeight: 700, fontSize: 16,
-                        cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        padding: 0,
-                      }}
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateDesignationMut({ canoeId: canoe.id, designation: '' });
-                        renameCanoeMut({ canoeId: canoe.id, name: '' });
-                        setOpenDesignator(null);
-                      }}
-                      style={{
-                        gridColumn: '1 / -1', padding: '6px 8px', marginTop: 2,
-                        background: 'transparent', border: '1px dashed rgba(0,0,0,0.20)',
-                        color: '#9a9a9a', fontSize: 10, fontWeight: 700,
-                        letterSpacing: '0.12em', textTransform: 'uppercase',
-                        borderRadius: 6, cursor: 'pointer',
-                      }}
-                    >
-                      Clear #
-                    </button>
-                  </div>
-                </div>
-                </>
+              {/* Designation selector dropdown. Rendered via a portal to
+                  document.body so parent overflow / stacking contexts
+                  can't clip or obscure it (which was breaking the very
+                  first canoe's popover). Cells are 40×40 for comfortable
+                  tapping, with the taken-by short label under each in-use
+                  number. Footer groups Custom and Clear as distinct pills
+                  rather than reusing the cell style. */}
+              {openDesignator === canoe.id && designatorAnchor && createPortal(
+                (() => {
+                  // Clamp the popover inside the viewport — on the
+                  // leftmost canoe of a 4-col grid `anchor.left` can be
+                  // near 0, and on the rightmost canoe the raw menu would
+                  // overflow the right edge.
+                  const menuWidth = 240;
+                  const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+                  const pad = 8;
+                  let menuLeft = designatorAnchor.left;
+                  if (menuLeft + menuWidth > vw - pad) menuLeft = vw - menuWidth - pad;
+                  if (menuLeft < pad) menuLeft = pad;
+                  const menuTop = designatorAnchor.top + 6;
+                  return (
+                    <>
+                      <div
+                        style={{ position: 'fixed', inset: 0, zIndex: 199, background: 'transparent' }}
+                        onClick={() => { setOpenDesignator(null); setDesignatorAnchor(null); }}
+                      />
+                      <div
+                        role="dialog"
+                        aria-label="Assign canoe number"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'fixed', top: menuTop, left: menuLeft, zIndex: 200,
+                          width: menuWidth,
+                          backgroundColor: '#ffffff',
+                          borderRadius: 14,
+                          padding: 10,
+                          boxShadow: '0 12px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
+                          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        }}
+                      >
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '2px 4px 8px',
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#717171', textTransform: 'uppercase' }}>
+                            Canoe #
+                          </span>
+                          <span style={{ fontSize: 11, color: '#9a9a9a' }}>
+                            {canoeDesignations[canoe.id] ? `currently ${canoeDesignations[canoe.id]}` : 'unassigned'}
+                          </span>
+                        </div>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(5, 40px)',
+                          gap: 6,
+                          justifyContent: 'center',
+                        }}>
+                          {CANOE_DESIGNATIONS.map(d => {
+                            const isMine = canoeDesignations[canoe.id] === d;
+                            const takenEntry = Object.entries(canoeDesignations).find(([cid, v]) => v === d && cid !== canoe.id);
+                            const takenByCanoe = takenEntry ? (canoes ?? []).find(c => c.id === takenEntry[0]) : undefined;
+                            const takenLabel = takenByCanoe?.name ? takenByCanoe.name.slice(0, 4) : (takenEntry ? '—' : '');
+                            return (
+                              <button
+                                key={d}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const nextDesignation = isMine ? '' : d;
+                                  updateDesignationMut({ canoeId: canoe.id, designation: nextDesignation });
+                                  const nextName = nextDesignation
+                                    ? (CANOE_NAME_BY_DESIGNATION[nextDesignation] ?? '')
+                                    : '';
+                                  renameCanoeMut({ canoeId: canoe.id, name: nextName });
+                                  setOpenDesignator(null);
+                                  setDesignatorAnchor(null);
+                                }}
+                                title={takenEntry ? `Currently on ${takenByCanoe?.name ?? 'another canoe'} — tap to reassign` : d}
+                                style={{
+                                  width: 40, height: 40, borderRadius: 10,
+                                  border: `1px solid ${isMine ? '#b91c1c' : 'rgba(0,0,0,0.10)'}`,
+                                  background: isMine ? '#b91c1c' : '#ffffff',
+                                  color: isMine ? '#ffffff' : takenEntry ? '#b0b0b0' : '#222222',
+                                  fontWeight: 700,
+                                  fontSize: d.length >= 3 ? 12 : 15,
+                                  cursor: 'pointer',
+                                  display: 'flex', flexDirection: 'column',
+                                  alignItems: 'center', justifyContent: 'center',
+                                  padding: 0, gap: 1,
+                                  transition: 'background 100ms ease, color 100ms ease, border-color 100ms ease',
+                                  boxShadow: isMine ? '0 1px 2px rgba(185,28,28,0.25)' : 'none',
+                                }}
+                              >
+                                <span style={{ lineHeight: 1 }}>{d}</span>
+                                {takenEntry && !isMine && (
+                                  <span style={{ fontSize: 8, fontWeight: 500, color: '#b0b0b0', lineHeight: 1, letterSpacing: 0 }}>
+                                    {takenLabel}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const custom = prompt('Enter canoe designation:');
+                              if (custom && custom.trim()) {
+                                const d = custom.trim();
+                                updateDesignationMut({ canoeId: canoe.id, designation: d });
+                                const mapped = CANOE_NAME_BY_DESIGNATION[d];
+                                const takenNames = (canoes ?? []).map(c => c.name).filter(Boolean);
+                                const nextName = mapped ?? pickFreshCanoeName(takenNames);
+                                renameCanoeMut({ canoeId: canoe.id, name: nextName });
+                              }
+                              setOpenDesignator(null);
+                              setDesignatorAnchor(null);
+                            }}
+                            style={{
+                              flex: 1, height: 32, borderRadius: 8,
+                              border: '1px solid rgba(0,0,0,0.12)',
+                              background: '#ffffff', color: '#484848',
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                            }}
+                          >
+                            <span style={{ fontSize: 14, lineHeight: 1 }}>+</span> Custom
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateDesignationMut({ canoeId: canoe.id, designation: '' });
+                              renameCanoeMut({ canoeId: canoe.id, name: '' });
+                              setOpenDesignator(null);
+                              setDesignatorAnchor(null);
+                            }}
+                            disabled={!canoeDesignations[canoe.id]}
+                            style={{
+                              flex: 1, height: 32, borderRadius: 8,
+                              border: '1px solid rgba(185,28,28,0.25)',
+                              background: canoeDesignations[canoe.id] ? 'rgba(185,28,28,0.06)' : 'transparent',
+                              color: canoeDesignations[canoe.id] ? '#b91c1c' : '#c0c0c0',
+                              fontSize: 12, fontWeight: 600,
+                              cursor: canoeDesignations[canoe.id] ? 'pointer' : 'not-allowed',
+                            }}
+                          >
+                            Clear #
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })(),
+                document.body,
               )}
               {isAdmin && showCanoeChrome && <button
                 type="button"
