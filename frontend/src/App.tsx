@@ -235,6 +235,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     showGoingList={ctx.showGoingList}
                     setShowGoingList={ctx.setShowGoingList}
                     handleToggleAttendance={ctx.handleToggleAttendance}
+                    removeGuestMut={ctx.removeGuestMut}
                     handleAssign={ctx.handleAssign}
                     handleUnassignAll={ctx.handleUnassignAll}
                     handleReassignCanoes={ctx.handleReassignCanoes}

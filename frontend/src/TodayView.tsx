@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
@@ -59,6 +59,7 @@ interface TodayViewProps {
   showGoingList: boolean;
   setShowGoingList: (v: boolean) => void;
   handleToggleAttendance: (paddlerId: string, eventId: string) => void;
+  removeGuestMut: (args: { guestId: any }) => Promise<any>;
   handleAssign: () => void;
   handleUnassignAll: () => void;
   handleReassignCanoes: () => void;
@@ -78,7 +79,7 @@ export function TodayView({
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
   canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey,
   selectedPaddlerId,
-  showGoingList, setShowGoingList, handleToggleAttendance,
+  showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut,
   handleAssign, handleUnassignAll, handleReassignCanoes,
   handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
   canoePriority, setCanoePriority, setScrollToEventId, setActivePage,
@@ -101,6 +102,32 @@ export function TodayView({
   // widths where the card is too tight to fit them.
   const GRID_CHROME_MIN_W = 440;
   const showCanoeChrome = canoeView !== '4' || windowWidth >= GRID_CHROME_MIN_W;
+
+  // Going-menu scroll state — drives the top/bottom fade overlays that hint
+  // at "there's more above/below, scroll to see it". Recomputed when the
+  // menu opens, when the attendee list changes, and on every scroll.
+  const goingScrollRef = useRef<HTMLDivElement>(null);
+  const [goingScroll, setGoingScroll] = useState<{ atTop: boolean; atBottom: boolean; scrollable: boolean }>({ atTop: true, atBottom: true, scrollable: false });
+  const recomputeGoingScroll = useCallback(() => {
+    const el = goingScrollRef.current;
+    if (!el) return;
+    const scrollable = el.scrollHeight > el.clientHeight + 1;
+    setGoingScroll({
+      atTop: el.scrollTop <= 4,
+      atBottom: el.scrollTop + el.clientHeight >= el.scrollHeight - 4,
+      scrollable,
+    });
+  }, []);
+  useEffect(() => {
+    if (!showGoingList) return;
+    const raf = requestAnimationFrame(recomputeGoingScroll);
+    window.addEventListener("resize", recomputeGoingScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", recomputeGoingScroll);
+    };
+    // Recompute whenever the set of paddlers/guests that feeds the list changes.
+  }, [showGoingList, paddlers, eventGuests, eventAttendingPaddlerIds, recomputeGoingScroll]);
 
   return (
     <>
@@ -230,7 +257,10 @@ export function TodayView({
           </div>
         </div>
       </div>
-      {/* Expanded attendee list — dropdown anchored below the header card */}
+      {/* Expanded attendee list — dropdown anchored below the header card.
+          Sized to a fraction of the viewport so long rosters don't push the
+          canoes off-screen, and with top/bottom fade overlays that hint at
+          "there's more to scroll". Each row is tap-to-remove. */}
       <div style={{ position: 'relative', marginBottom: showGoingList ? '10px' : '0' }}>
         {showGoingList && (
           <div
@@ -238,35 +268,124 @@ export function TodayView({
             style={{
               position: 'absolute', top: 0, left: 0, right: 0,
               backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.08)', borderRadius: '12px',
-              padding: '12px 16px', zIndex: 100,
+              zIndex: 100,
               boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
+              display: 'flex', flexDirection: 'column',
+              // Cap the menu at a viewport-relative height so a long roster
+              // never pushes the canoes off the screen. 55vh leaves room
+              // for the event header above and some of the fleet below.
+              maxHeight: 'min(55vh, 480px)',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#717171', marginBottom: '8px', letterSpacing: '0.08em' }}>
-              ATTENDING ({_goingPaddlers})
+            {/* Header — count breakdown + "tap to remove" hint */}
+            <div style={{ padding: '10px 14px 8px', display: 'flex', alignItems: 'baseline', gap: 6, borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em' }}>
+                GOING
+              </span>
+              <span style={{ fontSize: '11px', color: '#717171' }}>
+                {_goingPaddlers} paddler{_goingPaddlers === 1 ? '' : 's'}
+                {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
+              </span>
+              <div style={{ flex: 1 }} />
+              {_goingCount > 0 && isAdmin && (
+                <span style={{ fontSize: '10px', color: '#9a9a9a', fontStyle: 'italic' }}>
+                  tap to remove
+                </span>
+              )}
             </div>
             {_goingCount === 0 ? (
-              <div style={{ fontSize: '14px', color: '#717171' }}>No one yet</div>
+              <div style={{ fontSize: '14px', color: '#717171', padding: '14px 16px' }}>No one yet</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '390px', overflowY: 'auto' }}>
-                {paddlers
-                  ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                  .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                  .map((p: Paddler) => (
-                    <div key={p.id} style={{ fontSize: '14px', color: '#484848' }}>
-                      {p.firstName} {p.lastName || p.lastInitial}
+              <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+                <div
+                  ref={goingScrollRef}
+                  onScroll={recomputeGoingScroll}
+                  className="scrollbar-hidden"
+                  style={{ height: '100%', overflowY: 'auto', padding: '4px 8px 8px' }}
+                >
+                  {paddlers
+                    ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
+                    .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                    .map((p: Paddler) => {
+                      const isWahine = p.gender === 'wahine';
+                      const isKane = p.gender === 'kane';
+                      const dotColor = isWahine ? '#a81a22' : isKane ? '#1f4e5e' : '#8a8a8a';
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={isAdmin && selectedEvent ? () => handleToggleAttendance(p.id, selectedEvent.id) : undefined}
+                          disabled={!isAdmin || !selectedEvent}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            width: '100%', textAlign: 'left',
+                            padding: '7px 10px',
+                            border: 'none', borderRadius: 8,
+                            background: 'transparent',
+                            color: '#222',
+                            fontSize: 13, fontWeight: 500,
+                            cursor: isAdmin && selectedEvent ? 'pointer' : 'default',
+                            transition: 'background 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { if (isAdmin && selectedEvent) e.currentTarget.style.background = 'rgba(200,32,40,0.08)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.firstName} {p.lastName || p.lastInitial}
+                          </span>
+                          {isAdmin && selectedEvent && (
+                            <span aria-hidden style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  {eventGuests && eventGuests.length > 0 && (
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '6px 2px 4px', paddingTop: '6px', fontSize: '10px', color: '#a07838', fontWeight: 700, letterSpacing: '0.1em' }}>
+                      GUESTS ({_guestCount})
                     </div>
+                  )}
+                  {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
+                    <button
+                      key={g._id}
+                      type="button"
+                      onClick={isAdmin ? () => { void removeGuestMut({ guestId: g._id }); } : undefined}
+                      disabled={!isAdmin}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        width: '100%', textAlign: 'left',
+                        padding: '7px 10px',
+                        border: 'none', borderRadius: 8,
+                        background: 'transparent',
+                        color: '#a07838',
+                        fontSize: 13, fontWeight: 500,
+                        cursor: isAdmin ? 'pointer' : 'default',
+                        transition: 'background 120ms ease',
+                      }}
+                      onMouseEnter={(e) => { if (isAdmin) e.currentTarget.style.background = 'rgba(160,120,56,0.1)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#a07838', flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {g.name}
+                        <span style={{ marginLeft: 6, fontSize: '10px', opacity: 0.7 }}>guest</span>
+                      </span>
+                      {isAdmin && (
+                        <span aria-hidden style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</span>
+                      )}
+                    </button>
                   ))}
-                {eventGuests && eventGuests.length > 0 && (
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,.08)', margin: '4px 0', paddingTop: '4px', fontSize: '12px', color: '#717171', fontWeight: 700, letterSpacing: '0.08em' }}>
-                    GUESTS ({_guestCount})
-                  </div>
+                </div>
+                {/* Top fade — shown when the list is scrolled down from its
+                    start, to hint that there's more above. */}
+                {goingScroll.scrollable && !goingScroll.atTop && (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 18, pointerEvents: 'none', background: 'linear-gradient(to bottom, #ffffff, rgba(255,255,255,0))' }} />
                 )}
-                {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                  <div key={g._id} style={{ fontSize: '14px', color: '#a07838' }}>
-                    {g.name} <span style={{ fontSize: '11px', color: '#a07838', opacity: 0.7 }}>guest</span>
-                  </div>
-                ))}
+                {/* Bottom fade — shown when there's more below the fold. */}
+                {goingScroll.scrollable && !goingScroll.atBottom && (
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, pointerEvents: 'none', background: 'linear-gradient(to top, #ffffff, rgba(255,255,255,0))' }} />
+                )}
               </div>
             )}
           </div>

@@ -494,5 +494,6 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     triggerAnimation, populatePaddlers, populateCanoes, addCanoe,
     updatePaddler, updateDesignationMut, renameCanoeMut, toggleAdminMut,
     deleteUserByPaddlerIdMut, deletePaddlerMut, setAttendanceMut,
+    removeGuestMut,
   };
 }
