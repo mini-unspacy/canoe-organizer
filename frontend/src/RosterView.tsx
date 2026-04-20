@@ -18,6 +18,7 @@ interface RosterViewProps {
   deletePaddlerMut: (args: { paddlerId: string }) => void;
   userEmailByPaddlerId: Map<string, string>;
   userRoleByPaddlerId: Map<string, string>;
+  onLogout: () => void;
 }
 
 type GenderFilter = "all" | "kane" | "wahine";
@@ -92,6 +93,7 @@ export function RosterView({
   deletePaddlerMut,
   userEmailByPaddlerId,
   userRoleByPaddlerId,
+  onLogout,
 }: RosterViewProps) {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -173,11 +175,37 @@ export function RosterView({
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.bone, fontFamily: FONT_BODY }}>
       {/* Hero header */}
       <div style={{ padding: "14px 16px 8px", borderBottom: `1px solid ${T.inkLine}` }}>
-        <div style={{ fontSize: 10, color: T.sand, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700 }}>
-          Nā mea hoe · Paddlers
-        </div>
-        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600, color: T.charcoal, lineHeight: 1.05, marginTop: 2 }}>
-          Roster
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10, color: T.sand, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700 }}>
+              Nā mea hoe · Paddlers
+            </div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600, color: T.charcoal, lineHeight: 1.05, marginTop: 2 }}>
+              Roster
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            aria-label="Sign out"
+            style={{
+              marginTop: 4,
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: `1px solid ${T.inkLine}`,
+              background: "transparent",
+              color: T.muted,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              fontFamily: FONT_BODY,
+              cursor: "pointer",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Sign out
+          </button>
         </div>
 
         {/* Search */}

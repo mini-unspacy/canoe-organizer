@@ -238,6 +238,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     deletePaddlerMut={ctx.deletePaddlerMut}
                     userEmailByPaddlerId={ctx.userEmailByPaddlerId}
                     userRoleByPaddlerId={ctx.userRoleByPaddlerId}
+                    onLogout={onLogout}
                   />
                 )}
               </div>
