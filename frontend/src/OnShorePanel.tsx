@@ -16,6 +16,76 @@ const POOL_ROW_ZOOM_STEPS: PoolRowDims[] = [
   { minH: 40, fs: 22, dot: 12, gap: 5 },
 ];
 
+// Visual chip rendered inside each Draggable. Keeping the chip as a
+// CHILD (not the draggable itself) preserves the dnd contract: the
+// outer wrapper stays block-level with no styling that confuses the
+// measurement pass (react-beautiful-dnd / @hello-pangea/dnd measures
+// the draggable's bounding box at drag-start, and sizing it via flex
+// in the same element broke the drag preview).
+const PoolChip: React.FC<{
+  label: string;
+  color: string;
+  tag: string;
+  dims: PoolRowDims;
+  isDragging?: boolean;
+  title?: string;
+}> = ({ label, color, tag, dims, isDragging, title }) => (
+  <div
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '3px 8px',
+      borderRadius: 7,
+      background: 'rgba(0,0,0,0.04)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      minHeight: dims.minH,
+      boxShadow: isDragging ? '0 6px 14px rgba(0,0,0,0.22)' : 'none',
+      opacity: isDragging ? 0.95 : 1,
+      transition: 'background 120ms ease, box-shadow 120ms ease',
+      cursor: isDragging ? 'grabbing' : 'grab',
+    }}
+  >
+    <span
+      aria-hidden
+      style={{
+        flexShrink: 0,
+        width: dims.dot,
+        height: dims.dot,
+        borderRadius: 3,
+        background: color,
+        opacity: 0.85,
+      }}
+    />
+    <span
+      style={{
+        fontSize: dims.fs,
+        lineHeight: 1,
+        fontWeight: 700,
+        color,
+        letterSpacing: '-0.01em',
+        whiteSpace: 'nowrap',
+      }}
+      title={title}
+    >
+      {label}
+    </span>
+    {tag && (
+      <span
+        style={{
+          fontSize: 8,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          color: '#9a9a9a',
+          flexShrink: 0,
+        }}
+      >
+        {tag}
+      </span>
+    )}
+  </div>
+);
+
 // Lokahi.html's On Shore bottom panel: a collapsible drawer docked above
 // the mobile tab bar that hosts the paddler pool with a notched zoom
 // slider and a sort menu. Replaces the right-hand staging sidebar on
@@ -83,7 +153,6 @@ export function OnShorePanel({
   unassignedGuests,
   guestPaddlerMap,
   pendingAssignIds,
-  animationKey,
   dragFromStaging,
   bottomOffset,
   paddlers,
@@ -587,7 +656,7 @@ export function OnShorePanel({
       )}
 
       {!collapsed && (
-        <Droppable droppableId="staging-mobile" direction="horizontal" isDropDisabled={dragFromStaging}>
+        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
@@ -649,70 +718,21 @@ export function OnShorePanel({
                             tabIndex={-1}
                             role="none"
                             aria-roledescription=""
-                            data-animation-key={animationKey}
                             style={{
                               ...dragProvided.draggableProps.style,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              padding: '3px 8px',
-                              borderRadius: 7,
-                              background: 'rgba(0,0,0,0.04)',
-                              border: '1px solid rgba(0,0,0,0.06)',
-                              minHeight: rowDims.minH,
-                              width: 'auto',
-                              maxWidth: '100%',
-                              boxShadow: dragSnapshot.isDragging
-                                ? '0 6px 14px rgba(0,0,0,0.22)'
-                                : 'none',
-                              opacity: dragSnapshot.isDragging ? 0.95 : 1,
-                              transition: 'background 120ms ease, box-shadow 120ms ease',
-                              cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
                               touchAction: 'manipulation',
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
                             }}
                           >
-                            <span
-                              aria-hidden
-                              style={{
-                                flexShrink: 0,
-                                width: rowDims.dot,
-                                height: rowDims.dot,
-                                borderRadius: 3,
-                                background: paddlerColor,
-                                opacity: 0.85,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: rowDims.fs,
-                                lineHeight: 1,
-                                fontWeight: 700,
-                                color: paddlerColor,
-                                letterSpacing: '-0.01em',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                minWidth: 0,
-                              }}
+                            <PoolChip
+                              label={paddlerLabel}
+                              color={paddlerColor}
+                              tag={typeTag}
+                              dims={rowDims}
+                              isDragging={dragSnapshot.isDragging}
                               title={paddler.firstName + (paddler.lastName ? ' ' + paddler.lastName : '')}
-                            >
-                              {paddlerLabel}
-                            </span>
-                            {typeTag && (
-                              <div
-                                style={{
-                                  fontSize: 8,
-                                  fontWeight: 700,
-                                  letterSpacing: '0.1em',
-                                  color: '#9a9a9a',
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {typeTag}
-                              </div>
-                            )}
+                            />
                           </div>
                         )}
                       </Draggable>
@@ -743,65 +763,19 @@ export function OnShorePanel({
                             aria-roledescription=""
                             style={{
                               ...dragProvided.draggableProps.style,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              padding: '3px 8px',
-                              borderRadius: 7,
-                              background: 'rgba(0,0,0,0.04)',
-                              border: '1px solid rgba(0,0,0,0.06)',
-                              minHeight: rowDims.minH,
-                              width: 'auto',
-                              maxWidth: '100%',
-                              boxShadow: dragSnapshot.isDragging
-                                ? '0 6px 14px rgba(0,0,0,0.22)'
-                                : 'none',
-                              opacity: dragSnapshot.isDragging ? 0.95 : 1,
-                              transition: 'background 120ms ease, box-shadow 120ms ease',
-                              cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
                               touchAction: 'manipulation',
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
                             }}
                           >
-                            <span
-                              aria-hidden
-                              style={{
-                                flexShrink: 0,
-                                width: rowDims.dot,
-                                height: rowDims.dot,
-                                borderRadius: 3,
-                                background: guestColor,
-                                opacity: 0.85,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: rowDims.fs,
-                                lineHeight: 1,
-                                fontWeight: 700,
-                                color: guestColor,
-                                letterSpacing: '-0.01em',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                minWidth: 0,
-                              }}
+                            <PoolChip
+                              label={paddlerLabel}
+                              color={guestColor}
+                              tag="GUEST"
+                              dims={rowDims}
+                              isDragging={dragSnapshot.isDragging}
                               title={guestPaddler.firstName + (guestPaddler.lastName ? ' ' + guestPaddler.lastName : '')}
-                            >
-                              {paddlerLabel}
-                            </span>
-                            <div
-                              style={{
-                                fontSize: 8,
-                                fontWeight: 700,
-                                letterSpacing: '0.1em',
-                                color: '#9a9a9a',
-                                flexShrink: 0,
-                              }}
-                            >
-                              GUEST
-                            </div>
+                            />
                           </div>
                         )}
                       </Draggable>
