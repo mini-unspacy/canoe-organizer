@@ -40,18 +40,18 @@ const PoolChip: React.FC<{
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const shadow = isDragging
-    ? '0 10px 22px rgba(0,0,0,0.28)'
+    ? '0 16px 32px rgba(0,0,0,0.34), 0 0 0 1.5px rgba(255,255,255,0.9)'
     : pressed
-      ? '0 5px 12px rgba(0,0,0,0.22)'
+      ? '0 10px 22px rgba(0,0,0,0.3)'
       : hovered
-        ? '0 3px 8px rgba(0,0,0,0.14)'
+        ? '0 6px 14px rgba(0,0,0,0.22)'
         : '0 1px 2px rgba(0,0,0,0.08)';
   const transform = isDragging
     ? 'none'
     : pressed
-      ? 'translateY(0) scale(0.97)'
+      ? 'translateY(-1px) scale(0.94)'
       : hovered
-        ? 'translateY(-1px)'
+        ? 'translateY(-3px) scale(1.02)'
         : 'none';
   return (
     <div

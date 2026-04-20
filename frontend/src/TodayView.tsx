@@ -18,6 +18,93 @@ const loadCanoeView = (): CanoeView => {
   return '1';
 };
 
+// Visual chip rendered inside the seat-row Draggable for an assigned
+// paddler. Mirrors OnShorePanel's PoolChip pattern: the chip is a CHILD
+// of the Draggable wrapper (not the draggable element itself) so it
+// can own the hover/press/drag shadow + transform feedback without
+// confusing @hello-pangea/dnd's measurement pass at drag-start.
+//
+// Shadow tiers for the "pick up card" affordance:
+//   resting  → flat (blends into seat row)
+//   hover    → ~4px lift + faint background bubble
+//   pressed  → stronger shadow + scale-down
+//   dragging → strongest shadow with white ring
+const SeatPaddlerChip: React.FC<{
+  label: string;
+  color: string;
+  fontSize: number;
+  title: string;
+  isDragging?: boolean;
+  isAdmin: boolean;
+}> = ({ label, color, fontSize, title, isDragging, isAdmin }) => {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const shadow = isDragging
+    ? '0 14px 28px rgba(0,0,0,0.32), 0 0 0 1.5px rgba(255,255,255,0.9)'
+    : pressed
+      ? '0 8px 18px rgba(0,0,0,0.28)'
+      : hovered
+        ? '0 4px 10px rgba(0,0,0,0.2)'
+        : 'none';
+  const transform = isDragging
+    ? 'none'
+    : pressed
+      ? 'translateY(-1px) scale(0.95)'
+      : hovered
+        ? 'translateY(-2px) scale(1.02)'
+        : 'none';
+  const bg = isDragging
+    ? 'rgba(255,255,255,0.96)'
+    : pressed
+      ? 'rgba(255,255,255,0.9)'
+      : hovered
+        ? 'rgba(255,255,255,0.7)'
+        : 'transparent';
+  return (
+    <div
+      onMouseEnter={isAdmin ? () => setHovered(true) : undefined}
+      onMouseLeave={isAdmin ? () => { setHovered(false); setPressed(false); } : undefined}
+      onMouseDown={isAdmin ? () => setPressed(true) : undefined}
+      onMouseUp={isAdmin ? () => setPressed(false) : undefined}
+      onTouchStart={isAdmin ? () => setPressed(true) : undefined}
+      onTouchEnd={isAdmin ? () => setPressed(false) : undefined}
+      onTouchCancel={isAdmin ? () => setPressed(false) : undefined}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        flex: 1,
+        minWidth: 0,
+        padding: '1px 4px',
+        borderRadius: 5,
+        background: bg,
+        boxShadow: shadow,
+        transform,
+        transition: 'box-shadow 140ms ease, transform 140ms ease, background 140ms ease',
+      }}
+    >
+      <span
+        style={{
+          fontSize,
+          lineHeight: 1,
+          fontWeight: 700,
+          color,
+          letterSpacing: '-0.01em',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          flex: 1,
+          minWidth: 0,
+          opacity: isDragging ? 0.6 : 1,
+          transition: 'opacity 120ms ease',
+        }}
+        title={title}
+      >
+        {label}
+      </span>
+    </div>
+  );
+};
+
 interface SelectedEvent {
   id: string;
   title: string;
@@ -729,26 +816,14 @@ export function TodayView({
                                     }}
                                     data-animation-key={animationKey}
                                   >
-                                    <span
-                                      style={{
-                                        fontSize: canoeView === '4' ? 13 : 18,
-                                        lineHeight: 1,
-                                        fontWeight: 700,
-                                        color: paddlerColor,
-                                        letterSpacing: '-0.01em',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        flex: 1,
-                                        minWidth: 0,
-                                        opacity: dragSnapshot.isDragging ? 0.6 : 1,
-                                        transform: dragSnapshot.isDragging ? 'scale(1.03)' : 'none',
-                                        transition: 'transform 120ms ease, opacity 120ms ease',
-                                      }}
+                                    <SeatPaddlerChip
+                                      label={paddlerLabel}
+                                      color={paddlerColor}
+                                      fontSize={canoeView === '4' ? 13 : 18}
                                       title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
-                                    >
-                                      {paddlerLabel}
-                                    </span>
+                                      isDragging={dragSnapshot.isDragging}
+                                      isAdmin={isAdmin}
+                                    />
                                   </div>
                                 )}
                               </Draggable>
