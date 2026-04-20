@@ -3,41 +3,12 @@ import { api } from "./convex_generated/api";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import type { Paddler } from "./types";
 import { getLocalToday } from "./utils";
+import { ThemedDateInput, ThemedTimeInput } from "./components/ThemedDateTime";
 
-// ---------------------------------------------------------------------------
-// Event-form date/time field styling.
-//
-// The native <input type="date"> and <input type="time"> look fine on mobile
-// (where they open the OS-native picker) but on desktop they render as tiny
-// unstyled boxes with the built-in OS calendar/clock icon crammed against the
-// right edge. These shared styles and the DateTimeFields helper below give
-// the inputs a consistent, larger, labelled presentation — a small "DATE" /
-// "TIME" caption sits above each input, the inputs themselves have a taller
-// height, subtle focus ring, and Inter font to match the rest of the UI.
-// ---------------------------------------------------------------------------
-const FIELD_ACCENT = '#005280';
-const fieldBaseStyle: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  height: 38,
-  padding: '0 10px',
-  backgroundColor: '#ffffff',
-  border: '1px solid rgba(0,0,0,0.14)',
-  borderRadius: 8,
-  color: '#222',
-  fontSize: 14,
-  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-  outline: 'none',
-  transition: 'border-color 120ms ease, box-shadow 120ms ease',
-  // Use accent-color and color-scheme so the native calendar/clock glyphs
-  // pick up the app's palette instead of the browser default blue.
-  accentColor: FIELD_ACCENT,
-  colorScheme: 'light',
-};
-function applyFocusRing(e: React.FocusEvent<HTMLInputElement>, focused: boolean) {
-  e.currentTarget.style.borderColor = focused ? FIELD_ACCENT : 'rgba(0,0,0,0.14)';
-  e.currentTarget.style.boxShadow = focused ? `0 0 0 3px rgba(0,82,128,0.14)` : 'none';
-}
+// Shared date/time pair for the event form. Date + time live side by side in
+// a two-column grid with small uppercase captions above each. Both inputs
+// swap in themed popover pickers on desktop and keep the native OS pickers
+// on mobile — see ThemedDateTime.tsx.
 function DateTimeFields({
   date, time, onDate, onTime, showDate = true,
 }: {
@@ -54,26 +25,12 @@ function DateTimeFields({
       {showDate && (
         <label style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={captionStyle}>Date</span>
-          <input
-            type="date"
-            value={date}
-            onChange={e => onDate(e.target.value)}
-            onFocus={e => applyFocusRing(e, true)}
-            onBlur={e => applyFocusRing(e, false)}
-            style={fieldBaseStyle}
-          />
+          <ThemedDateInput value={date} onChange={onDate} />
         </label>
       )}
       <label style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <span style={captionStyle}>Time</span>
-        <input
-          type="time"
-          value={time}
-          onChange={e => onTime(e.target.value)}
-          onFocus={e => applyFocusRing(e, true)}
-          onBlur={e => applyFocusRing(e, false)}
-          style={fieldBaseStyle}
-        />
+        <ThemedTimeInput value={time} onChange={onTime} />
       </label>
     </div>
   );
@@ -475,13 +432,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a8a', textTransform: 'uppercase' }}>
                     Repeat until
                   </span>
-                  <input
-                    type="date"
+                  <ThemedDateInput
                     value={eventForm.repeatUntil}
-                    onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
-                    onFocus={e => applyFocusRing(e, true)}
-                    onBlur={e => applyFocusRing(e, false)}
-                    style={fieldBaseStyle}
+                    onChange={v => setEventForm(f => ({ ...f, repeatUntil: v }))}
                   />
                 </label>
               )}
