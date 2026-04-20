@@ -227,6 +227,34 @@ button:focus-visible {
   }
 }
 
+/* Suppress text selection app-wide — selection commonly interferes
+   with @hello-pangea/dnd drags (a dragged chip can get "stuck"
+   mid-grab because the browser starts selecting text under the
+   cursor instead of letting dnd own the gesture). Form inputs and
+   anywhere marked `select-auto`/`select-text` still allow selection. */
+body,
+#root {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""],
+.select-text,
+.select-auto {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 /* Allow scrolling over drag handles; drag is blocked at container level during active drag */
 [data-rfd-drag-handle-draggable-id] {
   touch-action: manipulation;
