@@ -439,12 +439,12 @@ export function TodayView({
                 const short = designation.replace(/^[A-Za-z]+\s+/, '').trim();
                 const hasNum = short.length > 0;
                 const isEditable = isAdmin && !lockedCanoes.has(canoe.id);
-                // Flat chip: 22×22 (matches lock/× sibling buttons), no fill,
-                // no heavy outline. Numbered = red text on transparent with
-                // a faint red hairline so it still reads as tappable.
-                // Unassigned = dashed neutral outline + grey "#?" so the
-                // affordance to tap and assign is still obvious.
-                const badgeFs = short.length >= 3 ? 9 : short.length === 2 ? 11 : 13;
+                // Numbered = solid black pill, white text, sized for up to
+                // 3 chars (e.g. "700"). No "#" prefix — the black pill is
+                // distinct enough on its own.
+                // Unassigned = dashed neutral outline + grey "?" so admins
+                // can still see which canoes need a # assigned.
+                const badgeFs = short.length >= 3 ? 10 : short.length === 2 ? 12 : 13;
                 return (
                   <button
                     type="button"
@@ -452,25 +452,23 @@ export function TodayView({
                     disabled={!isEditable}
                     aria-label={hasNum ? `Canoe number ${designation}` : 'Assign canoe number'}
                     style={{
-                      width: 22, height: 22, flexShrink: 0,
-                      borderRadius: 6,
-                      border: hasNum
-                        ? '1px solid rgba(185,28,28,0.35)'
-                        : '1px dashed rgba(0,0,0,0.20)',
-                      background: 'transparent',
-                      color: hasNum ? '#b91c1c' : '#9a9a9a',
+                      minWidth: 36, height: 22, flexShrink: 0,
+                      borderRadius: 11,
+                      border: hasNum ? 'none' : '1px dashed rgba(0,0,0,0.20)',
+                      background: hasNum ? '#1a1a1a' : 'transparent',
+                      color: hasNum ? '#ffffff' : '#9a9a9a',
                       fontWeight: 700,
-                      fontSize: hasNum ? badgeFs : 9,
-                      letterSpacing: hasNum ? 0 : '0.08em',
+                      fontSize: hasNum ? badgeFs : 11,
+                      letterSpacing: hasNum ? 0 : '0.04em',
                       cursor: isEditable ? 'pointer' : 'default',
-                      padding: 0,
+                      padding: '0 7px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                       whiteSpace: 'nowrap',
                       lineHeight: 1,
                     }}
                   >
-                    {hasNum ? `#${short}` : '#?'}
+                    {hasNum ? short : '?'}
                   </button>
                 );
               })()}
