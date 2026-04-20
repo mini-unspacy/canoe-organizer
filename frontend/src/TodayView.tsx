@@ -399,27 +399,44 @@ export function TodayView({
                     .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
                     .slice(0, 40)
                     .map((p: Paddler) => (
-                      <button
+                      <div
                         key={p.id}
-                        type="button"
-                        onClick={() => { handleToggleAttendance(p.id, selectedEvent.id); setAddQuery(''); }}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
                           width: '100%', textAlign: 'left',
-                          padding: '6px 8px',
-                          border: 'none', borderRadius: 6,
+                          padding: '3px 4px 3px 8px',
+                          borderRadius: 6,
                           background: 'transparent', color: '#222',
-                          fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                          fontSize: 13, fontWeight: 500,
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,82,128,0.08)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                       >
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.gender === 'wahine' ? '#a81a22' : '#1f4e5e', flexShrink: 0 }} />
                         <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.firstName} {p.lastName || p.lastInitial}
                         </span>
-                        <span style={{ color: '#005280', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>+</span>
-                      </button>
+                        <button
+                          type="button"
+                          aria-label={`Add ${p.firstName}`}
+                          onClick={() => { handleToggleAttendance(p.id, selectedEvent.id); setAddQuery(''); }}
+                          style={{
+                            flexShrink: 0,
+                            width: 24, height: 24,
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            padding: 0,
+                            border: '1px solid rgba(0,82,128,0.45)',
+                            borderRadius: 6,
+                            background: '#ffffff',
+                            color: '#005280',
+                            fontSize: 15, fontWeight: 700, lineHeight: 1,
+                            cursor: 'pointer',
+                            transition: 'background 120ms ease, color 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = '#005280'; e.currentTarget.style.color = '#ffffff'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.color = '#005280'; }}
+                        >
+                          +
+                        </button>
+                      </div>
                     ))}
                 </div>
               </div>
@@ -484,33 +501,47 @@ export function TodayView({
                       const isKane = p.gender === 'kane';
                       const dotColor = isWahine ? '#a81a22' : isKane ? '#1f4e5e' : '#8a8a8a';
                       return (
-                        <button
+                        <div
                           key={p.id}
-                          type="button"
-                          onClick={isAdmin && selectedEvent ? () => handleToggleAttendance(p.id, selectedEvent.id) : undefined}
-                          disabled={!isAdmin || !selectedEvent}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             width: '100%', textAlign: 'left',
-                            padding: '7px 10px',
-                            border: 'none', borderRadius: 8,
+                            padding: '4px 4px 4px 10px',
+                            borderRadius: 8,
                             background: 'transparent',
                             color: '#222',
                             fontSize: 13, fontWeight: 500,
-                            cursor: isAdmin && selectedEvent ? 'pointer' : 'default',
-                            transition: 'background 120ms ease',
                           }}
-                          onMouseEnter={(e) => { if (isAdmin && selectedEvent) e.currentTarget.style.background = 'rgba(200,32,40,0.08)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
                           <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.firstName} {p.lastName || p.lastInitial}
                           </span>
                           {isAdmin && selectedEvent && (
-                            <span aria-hidden style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</span>
+                            <button
+                              type="button"
+                              aria-label={`Remove ${p.firstName}`}
+                              onClick={() => handleToggleAttendance(p.id, selectedEvent.id)}
+                              style={{
+                                flexShrink: 0,
+                                width: 24, height: 24,
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                padding: 0,
+                                border: '1px solid rgba(0,0,0,0.12)',
+                                borderRadius: 6,
+                                background: '#ffffff',
+                                color: '#717171',
+                                fontSize: 14, lineHeight: 1,
+                                cursor: 'pointer',
+                                transition: 'background 120ms ease, border-color 120ms ease, color 120ms ease',
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(200,32,40,0.10)'; e.currentTarget.style.borderColor = 'rgba(200,32,40,0.45)'; e.currentTarget.style.color = '#c82028'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; e.currentTarget.style.color = '#717171'; }}
+                            >
+                              ×
+                            </button>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   {eventGuests && eventGuests.length > 0 && (
@@ -519,24 +550,17 @@ export function TodayView({
                     </div>
                   )}
                   {eventGuests && eventGuests.length > 0 && eventGuests.map((g: any) => (
-                    <button
+                    <div
                       key={g._id}
-                      type="button"
-                      onClick={isAdmin ? () => { void removeGuestMut({ guestId: g._id }); } : undefined}
-                      disabled={!isAdmin}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8,
                         width: '100%', textAlign: 'left',
-                        padding: '7px 10px',
-                        border: 'none', borderRadius: 8,
+                        padding: '4px 4px 4px 10px',
+                        borderRadius: 8,
                         background: 'transparent',
                         color: '#a07838',
                         fontSize: 13, fontWeight: 500,
-                        cursor: isAdmin ? 'pointer' : 'default',
-                        transition: 'background 120ms ease',
                       }}
-                      onMouseEnter={(e) => { if (isAdmin) e.currentTarget.style.background = 'rgba(160,120,56,0.1)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#a07838', flexShrink: 0 }} />
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -544,9 +568,30 @@ export function TodayView({
                         <span style={{ marginLeft: 6, fontSize: '10px', opacity: 0.7 }}>guest</span>
                       </span>
                       {isAdmin && (
-                        <span aria-hidden style={{ color: '#b0b0b0', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</span>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${g.name}`}
+                          onClick={() => { void removeGuestMut({ guestId: g._id }); }}
+                          style={{
+                            flexShrink: 0,
+                            width: 24, height: 24,
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            padding: 0,
+                            border: '1px solid rgba(0,0,0,0.12)',
+                            borderRadius: 6,
+                            background: '#ffffff',
+                            color: '#717171',
+                            fontSize: 14, lineHeight: 1,
+                            cursor: 'pointer',
+                            transition: 'background 120ms ease, border-color 120ms ease, color 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(160,120,56,0.15)'; e.currentTarget.style.borderColor = 'rgba(160,120,56,0.5)'; e.currentTarget.style.color = '#a07838'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; e.currentTarget.style.color = '#717171'; }}
+                        >
+                          ×
+                        </button>
                       )}
-                    </button>
+                    </div>
                   ))}
                 </div>
                 {/* Top fade — shown when the list is scrolled down from its
