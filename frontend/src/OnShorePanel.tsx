@@ -91,7 +91,13 @@ export function OnShorePanel({
   const [zoom, setZoom] = useState<number>(() => {
     if (typeof window === "undefined") return 2;
     const raw = parseInt(window.localStorage.getItem("lokahi.onShoreZoom") || "2", 10);
-    return Number.isNaN(raw) ? 2 : Math.max(0, Math.min(4, raw));
+    // Clamp to the current step count. If a user has a stale value from
+    // before the slider was trimmed (e.g. zoom=4 when we had 5 steps),
+    // pin it to the last valid step instead of indexing past the end of
+    // POOL_ROW_ZOOM_STEPS, which would leave rowDims undefined and crash
+    // the whole drawer on render.
+    const maxIdx = POOL_ROW_ZOOM_STEPS.length - 1;
+    return Number.isNaN(raw) ? 2 : Math.max(0, Math.min(maxIdx, raw));
   });
   const [sort, setSort] = useState<OnShoreSort>(() => {
     if (typeof window === "undefined") return "default";
@@ -219,7 +225,8 @@ export function OnShorePanel({
     setPanelHeight(collapsed ? lastOpenH.current : CLOSED_H);
   };
 
-  const rowDims = POOL_ROW_ZOOM_STEPS[zoom];
+  // Belt-and-suspenders against a stale zoom index blowing up the drawer.
+  const rowDims = POOL_ROW_ZOOM_STEPS[zoom] ?? POOL_ROW_ZOOM_STEPS[POOL_ROW_ZOOM_STEPS.length - 1];
   const visiblePaddlers = sortPaddlers(
     unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
     sort
