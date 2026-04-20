@@ -322,26 +322,29 @@ export function TodayView({
               overflow: 'hidden',
             }}
           >
-            {/* Header — count breakdown + "+ paddler" / "+ guest" buttons.
-                The buttons swap in an inline picker below for admins; for
-                non-admins we fall back to the old "tap to remove" hint. */}
-            <div style={{ padding: '10px 14px 8px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(0,0,0,.06)', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em' }}>
-                GOING
-              </span>
-              <span style={{ fontSize: '11px', color: '#717171' }}>
-                {_goingPaddlers} paddler{_goingPaddlers === 1 ? '' : 's'}
-                {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
-              </span>
-              <div style={{ flex: 1 }} />
+            {/* Header — count breakdown on top, with the "+ paddler" /
+                "+ guest" action pills pinned to their own row below. This
+                keeps the buttons comfortably tappable on mobile and
+                prevents them from wrapping when the count text grows. */}
+            <div style={{ padding: '10px 14px 8px', display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em' }}>
+                  GOING
+                </span>
+                <span style={{ fontSize: '11px', color: '#717171', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {_goingPaddlers} paddler{_goingPaddlers === 1 ? '' : 's'}
+                  {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
+                </span>
+              </div>
               {isAdmin && selectedEvent && (
-                <>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     type="button"
                     onClick={() => setAddingType(addingType === 'paddler' ? null : 'paddler')}
                     style={{
-                      height: 30, padding: '0 12px',
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      flex: 1,
+                      height: 34, padding: '0 12px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                       fontSize: 13, fontWeight: 600,
                       color: addingType === 'paddler' ? '#fff' : '#005280',
                       background: addingType === 'paddler' ? '#005280' : '#ffffff',
@@ -357,8 +360,9 @@ export function TodayView({
                     type="button"
                     onClick={() => setAddingType(addingType === 'guest' ? null : 'guest')}
                     style={{
-                      height: 30, padding: '0 12px',
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      flex: 1,
+                      height: 34, padding: '0 12px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                       fontSize: 13, fontWeight: 600,
                       color: addingType === 'guest' ? '#fff' : '#a07838',
                       background: addingType === 'guest' ? '#a07838' : '#ffffff',
@@ -370,7 +374,7 @@ export function TodayView({
                     <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>+</span>
                     guest
                   </button>
-                </>
+                </div>
               )}
             </div>
             {/* Inline add picker — paddler search (filters roster to not-yet-
