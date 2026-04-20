@@ -907,14 +907,8 @@ export function TodayView({
         gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
-      {canoes?.map((canoe, canoeIdx) => {
+      {canoes?.map((canoe) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
-        // Delete is only exposed on the LAST canoe — re-assigning a middle
-        // canoe (or clearing its #) is done via the cluster menu, which
-        // avoids accidental mid-list deletions when the user meant to tap
-        // the lock icon. The last canoe is the only one that can safely be
-        // removed because there's nothing after it to shift up.
-        const isLastCanoe = canoeIdx === (canoes.length - 1);
         return (
           <div
             key={canoe._id.toString()}
@@ -1197,7 +1191,7 @@ export function TodayView({
                   }
                 </svg>
               </button>}
-              {isAdmin && showCanoeChrome && isLastCanoe && <button
+              {isAdmin && showCanoeChrome && <button
                 type="button"
                 onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
                 disabled={lockedCanoes.has(canoe.id)}
