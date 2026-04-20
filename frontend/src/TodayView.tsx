@@ -104,19 +104,41 @@ export function TodayView({
   const GRID_CHROME_MIN_W = 440;
   const showCanoeChrome = canoeView !== '4' || windowWidth >= GRID_CHROME_MIN_W;
 
-  // Going-menu scroll state — drives the top/bottom fade overlays that hint
-  // at "there's more above/below, scroll to see it". Recomputed when the
-  // menu opens, when the attendee list changes, and on every scroll.
+  // Going-menu scroll state — drives the top/bottom fade overlays AND a
+  // custom right-side thumb indicator that hints at "there's more above/
+  // below, scroll to see it". `thumbTop` + `thumbHeight` are expressed as
+  // fractions of the visible track so the thumb reflects both the list's
+  // length relative to the menu AND the current scroll position.
+  // Recomputed when the menu opens, when the attendee list changes, and
+  // on every scroll.
   const goingScrollRef = useRef<HTMLDivElement>(null);
-  const [goingScroll, setGoingScroll] = useState<{ atTop: boolean; atBottom: boolean; scrollable: boolean }>({ atTop: true, atBottom: true, scrollable: false });
+  const [goingScroll, setGoingScroll] = useState<{
+    atTop: boolean;
+    atBottom: boolean;
+    scrollable: boolean;
+    thumbTop: number;    // 0..1 fraction of track
+    thumbHeight: number; // 0..1 fraction of track
+  }>({ atTop: true, atBottom: true, scrollable: false, thumbTop: 0, thumbHeight: 1 });
   const recomputeGoingScroll = useCallback(() => {
     const el = goingScrollRef.current;
     if (!el) return;
     const scrollable = el.scrollHeight > el.clientHeight + 1;
+    // Thumb height = fraction of content that fits in the menu, clamped
+    // to a readable minimum so the pill doesn't disappear for very long
+    // lists. Thumb top = fraction of the remaining track the user has
+    // scrolled past.
+    const rawThumbH = scrollable ? el.clientHeight / el.scrollHeight : 1;
+    const thumbHeight = Math.max(0.12, Math.min(1, rawThumbH));
+    const scrollRange = Math.max(1, el.scrollHeight - el.clientHeight);
+    const thumbTop = scrollable
+      ? (el.scrollTop / scrollRange) * (1 - thumbHeight)
+      : 0;
     setGoingScroll({
       atTop: el.scrollTop <= 4,
       atBottom: el.scrollTop + el.clientHeight >= el.scrollHeight - 4,
       scrollable,
+      thumbTop,
+      thumbHeight,
     });
   }, []);
   useEffect(() => {
@@ -540,6 +562,73 @@ export function TodayView({
                 {/* Bottom fade — shown when there's more below the fold. */}
                 {goingScroll.scrollable && !goingScroll.atBottom && (
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, pointerEvents: 'none', background: 'linear-gradient(to top, #ffffff, rgba(255,255,255,0))' }} />
+                )}
+                {/* Custom scroll-track + thumb on the right edge. Only
+                    rendered when the list actually overflows the menu so
+                    it doesn't add visual noise for short rosters. The
+                    thumb reflects both the content-to-menu ratio (via
+                    height) and the user's current position (via top). */}
+                {goingScroll.scrollable && (
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      top: 6, bottom: 6, right: 3,
+                      width: 4,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {/* Faint track so users see the full scrollable range,
+                        not just the thumb. */}
+                    <div
+                      style={{
+                        position: 'absolute', inset: 0,
+                        borderRadius: 2,
+                        background: 'rgba(0,0,0,0.06)',
+                      }}
+                    />
+                    {/* Thumb — sized/positioned in fractions of the track. */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 0, right: 0,
+                        top: `${goingScroll.thumbTop * 100}%`,
+                        height: `${goingScroll.thumbHeight * 100}%`,
+                        borderRadius: 2,
+                        background: 'rgba(0,82,128,0.45)',
+                        transition: 'top 80ms ease',
+                      }}
+                    />
+                  </div>
+                )}
+                {/* "More below" chevron pill — appears at bottom-center when
+                    there's additional content past the fold, giving a
+                    clear "scroll down" affordance on top of the fade. */}
+                {goingScroll.scrollable && !goingScroll.atBottom && (
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      bottom: 6, left: '50%',
+                      transform: 'translateX(-50%)',
+                      pointerEvents: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      gap: 4,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      background: 'rgba(0,82,128,0.12)',
+                      color: '#005280',
+                      fontSize: 10, fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    <span>more</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </div>
                 )}
               </div>
             )}
