@@ -4,6 +4,7 @@ import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
 import { pickFreshCanoeName } from "./canoeNames";
+import { PaddlerChip, SEAT_CHIP_DIMS, SEAT_CHIP_DIMS_COMPACT } from "./PaddlerChip";
 
 // localStorage key used to persist the user's Fleet section view preference
 // across sessions. Matches the Lokahi mock's canoeView state.
@@ -16,93 +17,6 @@ const loadCanoeView = (): CanoeView => {
     if (v === '1' || v === '2' || v === '4') return v;
   } catch {}
   return '1';
-};
-
-// Visual chip rendered inside the seat-row Draggable for an assigned
-// paddler. Mirrors OnShorePanel's PoolChip pattern: the chip is a CHILD
-// of the Draggable wrapper (not the draggable element itself) so it
-// can own the hover/press/drag shadow + transform feedback without
-// confusing @hello-pangea/dnd's measurement pass at drag-start.
-//
-// Shadow tiers for the "pick up card" affordance:
-//   resting  → flat (blends into seat row)
-//   hover    → ~4px lift + faint background bubble
-//   pressed  → stronger shadow + scale-down
-//   dragging → strongest shadow with white ring
-const SeatPaddlerChip: React.FC<{
-  label: string;
-  color: string;
-  fontSize: number;
-  title: string;
-  isDragging?: boolean;
-  isAdmin: boolean;
-}> = ({ label, color, fontSize, title, isDragging, isAdmin }) => {
-  const [hovered, setHovered] = useState(false);
-  const [pressed, setPressed] = useState(false);
-  const shadow = isDragging
-    ? '0 14px 28px rgba(0,0,0,0.32), 0 0 0 1.5px rgba(255,255,255,0.9)'
-    : pressed
-      ? '0 8px 18px rgba(0,0,0,0.28)'
-      : hovered
-        ? '0 4px 10px rgba(0,0,0,0.2)'
-        : 'none';
-  const transform = isDragging
-    ? 'none'
-    : pressed
-      ? 'translateY(-1px) scale(0.95)'
-      : hovered
-        ? 'translateY(-2px) scale(1.02)'
-        : 'none';
-  const bg = isDragging
-    ? 'rgba(255,255,255,0.96)'
-    : pressed
-      ? 'rgba(255,255,255,0.9)'
-      : hovered
-        ? 'rgba(255,255,255,0.7)'
-        : 'transparent';
-  return (
-    <div
-      onMouseEnter={isAdmin ? () => setHovered(true) : undefined}
-      onMouseLeave={isAdmin ? () => { setHovered(false); setPressed(false); } : undefined}
-      onMouseDown={isAdmin ? () => setPressed(true) : undefined}
-      onMouseUp={isAdmin ? () => setPressed(false) : undefined}
-      onTouchStart={isAdmin ? () => setPressed(true) : undefined}
-      onTouchEnd={isAdmin ? () => setPressed(false) : undefined}
-      onTouchCancel={isAdmin ? () => setPressed(false) : undefined}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        flex: 1,
-        minWidth: 0,
-        padding: '1px 4px',
-        borderRadius: 5,
-        background: bg,
-        boxShadow: shadow,
-        transform,
-        transition: 'box-shadow 140ms ease, transform 140ms ease, background 140ms ease',
-      }}
-    >
-      <span
-        style={{
-          fontSize,
-          lineHeight: 1,
-          fontWeight: 700,
-          color,
-          letterSpacing: '-0.01em',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          flex: 1,
-          minWidth: 0,
-          opacity: isDragging ? 0.6 : 1,
-          transition: 'opacity 120ms ease',
-        }}
-        title={title}
-      >
-        {label}
-      </span>
-    </div>
-  );
 };
 
 interface SelectedEvent {
@@ -791,7 +705,7 @@ export function TodayView({
                           >
                             {seat}
                           </span>
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
                             {assignedPaddler ? (
                               <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
                                 {(provided, dragSnapshot) => (
@@ -808,21 +722,19 @@ export function TodayView({
                                       WebkitUserSelect: 'none',
                                       userSelect: 'none',
                                       visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
-                                      width: '100%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                      maxWidth: '100%',
                                       minWidth: 0,
                                     }}
                                     data-animation-key={animationKey}
                                   >
-                                    <SeatPaddlerChip
+                                    <PaddlerChip
                                       label={paddlerLabel}
                                       color={paddlerColor}
-                                      fontSize={canoeView === '4' ? 13 : 18}
-                                      title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
+                                      tag={typeTag}
+                                      dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
+                                      flat
                                       isDragging={dragSnapshot.isDragging}
-                                      isAdmin={isAdmin}
+                                      title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
                                     />
                                   </div>
                                 )}
@@ -833,19 +745,6 @@ export function TodayView({
                               </div>
                             )}
                           </div>
-                          {typeTag && canoeView !== '4' && (
-                            <div
-                              style={{
-                                fontSize: 8,
-                                fontWeight: 700,
-                                letterSpacing: '0.1em',
-                                color: '#9a9a9a',
-                                flexShrink: 0,
-                              }}
-                            >
-                              {typeTag}
-                            </div>
-                          )}
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>
                       );
