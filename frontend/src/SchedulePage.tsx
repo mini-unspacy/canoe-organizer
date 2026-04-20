@@ -4,6 +4,81 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import type { Paddler } from "./types";
 import { getLocalToday } from "./utils";
 
+// ---------------------------------------------------------------------------
+// Event-form date/time field styling.
+//
+// The native <input type="date"> and <input type="time"> look fine on mobile
+// (where they open the OS-native picker) but on desktop they render as tiny
+// unstyled boxes with the built-in OS calendar/clock icon crammed against the
+// right edge. These shared styles and the DateTimeFields helper below give
+// the inputs a consistent, larger, labelled presentation — a small "DATE" /
+// "TIME" caption sits above each input, the inputs themselves have a taller
+// height, subtle focus ring, and Inter font to match the rest of the UI.
+// ---------------------------------------------------------------------------
+const FIELD_ACCENT = '#005280';
+const fieldBaseStyle: React.CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  padding: '0 10px',
+  backgroundColor: '#ffffff',
+  border: '1px solid rgba(0,0,0,0.14)',
+  borderRadius: 8,
+  color: '#222',
+  fontSize: 14,
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+  outline: 'none',
+  transition: 'border-color 120ms ease, box-shadow 120ms ease',
+  // Use accent-color and color-scheme so the native calendar/clock glyphs
+  // pick up the app's palette instead of the browser default blue.
+  accentColor: FIELD_ACCENT,
+  colorScheme: 'light',
+};
+function applyFocusRing(e: React.FocusEvent<HTMLInputElement>, focused: boolean) {
+  e.currentTarget.style.borderColor = focused ? FIELD_ACCENT : 'rgba(0,0,0,0.14)';
+  e.currentTarget.style.boxShadow = focused ? `0 0 0 3px rgba(0,82,128,0.14)` : 'none';
+}
+function DateTimeFields({
+  date, time, onDate, onTime, showDate = true,
+}: {
+  date: string; time: string;
+  onDate: (v: string) => void; onTime: (v: string) => void;
+  showDate?: boolean;
+}) {
+  const captionStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a8a',
+    textTransform: 'uppercase', marginBottom: 4,
+  };
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: showDate ? '1fr 1fr' : '1fr', gap: 10 }}>
+      {showDate && (
+        <label style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span style={captionStyle}>Date</span>
+          <input
+            type="date"
+            value={date}
+            onChange={e => onDate(e.target.value)}
+            onFocus={e => applyFocusRing(e, true)}
+            onBlur={e => applyFocusRing(e, false)}
+            style={fieldBaseStyle}
+          />
+        </label>
+      )}
+      <label style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <span style={captionStyle}>Time</span>
+        <input
+          type="time"
+          value={time}
+          onChange={e => onTime(e.target.value)}
+          onFocus={e => applyFocusRing(e, true)}
+          onBlur={e => applyFocusRing(e, false)}
+          style={fieldBaseStyle}
+        />
+      </label>
+    </div>
+  );
+}
+
 export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null }) {
   const cutoffDate = useMemo(() => {
     const d = new Date(); d.setDate(d.getDate() - 7);
@@ -305,22 +380,13 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
                 style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
               />
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(editingEventId || eventForm.repeating === 'none') && (
-                  <input
-                    type="date"
-                    value={eventForm.date}
-                    onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
-                  />
-                )}
-                <input
-                  type="time"
-                  value={eventForm.time}
-                  onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                  style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
+              <DateTimeFields
+                showDate={!!(editingEventId || eventForm.repeating === 'none')}
+                date={eventForm.date}
+                time={eventForm.time}
+                onDate={v => setEventForm(f => ({ ...f, date: v }))}
+                onTime={v => setEventForm(f => ({ ...f, time: v }))}
+              />
               {!editingEventId && (<>
               {/* Repeating pills */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -405,15 +471,19 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               )}
               {/* Till when */}
               {eventForm.repeating !== 'none' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#717171', fontWeight: 600, flexShrink: 0 }}>till when</span>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: '#8a8a8a', textTransform: 'uppercase' }}>
+                    Repeat until
+                  </span>
                   <input
                     type="date"
                     value={eventForm.repeatUntil}
                     onChange={e => setEventForm(f => ({ ...f, repeatUntil: e.target.value }))}
-                    style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
+                    onFocus={e => applyFocusRing(e, true)}
+                    onBlur={e => applyFocusRing(e, false)}
+                    style={fieldBaseStyle}
                   />
-                </div>
+                </label>
               )}
               </>)}
               {/* Buttons */}
@@ -511,20 +581,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))}
                           style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
                         />
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <input
-                            type="date"
-                            value={eventForm.date}
-                            onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
-                          />
-                          <input
-                            type="time"
-                            value={eventForm.time}
-                            onChange={e => setEventForm(f => ({ ...f, time: e.target.value }))}
-                            style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,.12)', borderRadius: '6px', padding: '6px 10px', color: '#484848', fontSize: '14px', outline: 'none' }}
-                          />
-                        </div>
+                        <DateTimeFields
+                          date={eventForm.date}
+                          time={eventForm.time}
+                          onDate={v => setEventForm(f => ({ ...f, date: v }))}
+                          onTime={v => setEventForm(f => ({ ...f, time: v }))}
+                        />
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
