@@ -368,11 +368,6 @@ export function TodayView({
                   </button>
                 </>
               )}
-              {!isAdmin && _goingCount > 0 && (
-                <span style={{ fontSize: '10px', color: '#9a9a9a', fontStyle: 'italic' }}>
-                  tap to remove
-                </span>
-              )}
             </div>
             {/* Inline add picker — paddler search (filters roster to not-yet-
                 attending, tap to toggle them on) or guest name input
