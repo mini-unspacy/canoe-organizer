@@ -439,7 +439,12 @@ export function TodayView({
                 const short = designation.replace(/^[A-Za-z]+\s+/, '').trim();
                 const hasNum = short.length > 0;
                 const isEditable = isAdmin && !lockedCanoes.has(canoe.id);
-                const badgeFs = short.length >= 3 ? 10 : short.length === 2 ? 12 : 14;
+                // Flat chip: 22×22 (matches lock/× sibling buttons), no fill,
+                // no heavy outline. Numbered = red text on transparent with
+                // a faint red hairline so it still reads as tappable.
+                // Unassigned = dashed neutral outline + grey "#?" so the
+                // affordance to tap and assign is still obvious.
+                const badgeFs = short.length >= 3 ? 9 : short.length === 2 ? 11 : 13;
                 return (
                   <button
                     type="button"
@@ -447,13 +452,15 @@ export function TodayView({
                     disabled={!isEditable}
                     aria-label={hasNum ? `Canoe number ${designation}` : 'Assign canoe number'}
                     style={{
-                      width: 28, height: 28, flexShrink: 0,
-                      borderRadius: 8,
-                      border: hasNum ? '1.5px solid #b91c1c' : '1.5px solid rgba(0,0,0,0.15)',
-                      background: hasNum ? 'rgba(185,28,28,0.10)' : 'transparent',
+                      width: 22, height: 22, flexShrink: 0,
+                      borderRadius: 6,
+                      border: hasNum
+                        ? '1px solid rgba(185,28,28,0.35)'
+                        : '1px dashed rgba(0,0,0,0.20)',
+                      background: 'transparent',
                       color: hasNum ? '#b91c1c' : '#9a9a9a',
                       fontWeight: 700,
-                      fontSize: hasNum ? badgeFs : 10,
+                      fontSize: hasNum ? badgeFs : 9,
                       letterSpacing: hasNum ? 0 : '0.08em',
                       cursor: isEditable ? 'pointer' : 'default',
                       padding: 0,
