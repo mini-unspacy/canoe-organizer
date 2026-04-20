@@ -890,8 +890,14 @@ export function TodayView({
         gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
-      {canoes?.map((canoe) => {
+      {canoes?.map((canoe, canoeIdx) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
+        // Delete is only exposed on the LAST canoe — re-assigning a middle
+        // canoe (or clearing its #) is done via the cluster menu, which
+        // avoids accidental mid-list deletions when the user meant to tap
+        // the lock icon. The last canoe is the only one that can safely be
+        // removed because there's nothing after it to shift up.
+        const isLastCanoe = canoeIdx === (canoes.length - 1);
         return (
           <div
             key={canoe._id.toString()}
@@ -1091,9 +1097,18 @@ export function TodayView({
                   }
                 </svg>
               </button>}
-              {isAdmin && showCanoeChrome && <button
+              {isAdmin && showCanoeChrome && isLastCanoe && <button
                 type="button"
-                onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
+                onClick={() => {
+                  if (lockedCanoes.has(canoe.id)) return;
+                  // Confirm before deleting — X is easy to misclick even
+                  // when it's only on the last canoe. Uses native confirm
+                  // so it's a single small addition and blocks the delete
+                  // until the user explicitly OKs it.
+                  const label = canoeDesignations[canoe.id] || canoe.name || 'this canoe';
+                  if (!window.confirm(`Remove ${label}? This can't be undone.`)) return;
+                  handleRemoveCanoe(canoe.id);
+                }}
                 disabled={lockedCanoes.has(canoe.id)}
                 title={lockedCanoes.has(canoe.id) ? 'Unlock canoe to delete' : 'Delete canoe'}
                 aria-label="Delete canoe"
