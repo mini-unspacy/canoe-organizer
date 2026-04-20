@@ -587,7 +587,7 @@ export function OnShorePanel({
       )}
 
       {!collapsed && (
-        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+        <Droppable droppableId="staging-mobile" direction="horizontal" isDropDisabled={dragFromStaging}>
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
@@ -597,8 +597,9 @@ export function OnShorePanel({
                 overflowY: "auto",
                 padding: "4px 12px 10px",
                 display: "flex",
-                flexDirection: "column",
-                gap: rowDims.gap,
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 4 + rowDims.gap,
                 alignContent: "flex-start",
                 background: snapshot.isDraggingOver ? "rgba(251,191,36,0.12)" : "transparent",
                 transition: "background 120ms ease",
@@ -651,18 +652,20 @@ export function OnShorePanel({
                             data-animation-key={animationKey}
                             style={{
                               ...dragProvided.draggableProps.style,
-                              display: 'flex',
+                              display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              padding: '3px 6px',
+                              padding: '3px 8px',
                               borderRadius: 7,
-                              background: 'rgba(0,0,0,0.025)',
-                              border: '1px solid transparent',
+                              background: 'rgba(0,0,0,0.04)',
+                              border: '1px solid rgba(0,0,0,0.06)',
                               minHeight: rowDims.minH,
+                              width: 'auto',
+                              maxWidth: '100%',
                               boxShadow: dragSnapshot.isDragging
-                                ? '0 6px 14px rgba(0,0,0,0.18)'
+                                ? '0 6px 14px rgba(0,0,0,0.22)'
                                 : 'none',
-                              opacity: dragSnapshot.isDragging ? 0.92 : 1,
+                              opacity: dragSnapshot.isDragging ? 0.95 : 1,
                               transition: 'background 120ms ease, box-shadow 120ms ease',
                               cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
                               touchAction: 'manipulation',
@@ -679,7 +682,6 @@ export function OnShorePanel({
                                 borderRadius: 3,
                                 background: paddlerColor,
                                 opacity: 0.85,
-                                marginLeft: 1,
                               }}
                             />
                             <span
@@ -692,7 +694,6 @@ export function OnShorePanel({
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                flex: 1,
                                 minWidth: 0,
                               }}
                               title={paddler.firstName + (paddler.lastName ? ' ' + paddler.lastName : '')}
@@ -742,18 +743,20 @@ export function OnShorePanel({
                             aria-roledescription=""
                             style={{
                               ...dragProvided.draggableProps.style,
-                              display: 'flex',
+                              display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              padding: '3px 6px',
+                              padding: '3px 8px',
                               borderRadius: 7,
-                              background: 'rgba(0,0,0,0.025)',
-                              border: '1px solid transparent',
+                              background: 'rgba(0,0,0,0.04)',
+                              border: '1px solid rgba(0,0,0,0.06)',
                               minHeight: rowDims.minH,
+                              width: 'auto',
+                              maxWidth: '100%',
                               boxShadow: dragSnapshot.isDragging
-                                ? '0 6px 14px rgba(0,0,0,0.18)'
+                                ? '0 6px 14px rgba(0,0,0,0.22)'
                                 : 'none',
-                              opacity: dragSnapshot.isDragging ? 0.92 : 1,
+                              opacity: dragSnapshot.isDragging ? 0.95 : 1,
                               transition: 'background 120ms ease, box-shadow 120ms ease',
                               cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
                               touchAction: 'manipulation',
@@ -770,7 +773,6 @@ export function OnShorePanel({
                                 borderRadius: 3,
                                 background: guestColor,
                                 opacity: 0.85,
-                                marginLeft: 1,
                               }}
                             />
                             <span
@@ -783,7 +785,6 @@ export function OnShorePanel({
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                flex: 1,
                                 minWidth: 0,
                               }}
                               title={guestPaddler.firstName + (guestPaddler.lastName ? ' ' + guestPaddler.lastName : '')}
