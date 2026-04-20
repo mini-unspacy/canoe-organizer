@@ -69,14 +69,14 @@ interface TodayViewProps {
 }
 
 export function TodayView({
-  selectedEvent, isAdmin, sidebarOpen, canoes, paddlers, canoeSortedPaddlers,
-  canoeAssignmentsByCanoe, eventAssignments, eventAttendingPaddlerIds, eventGuests,
+  selectedEvent, isAdmin, canoes, paddlers, canoeSortedPaddlers,
+  canoeAssignmentsByCanoe, eventAttendingPaddlerIds, eventGuests,
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
-  canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey, boatWidth, canoeRowHeight, canoeMargin,
-  currentUser, selectedPaddlerId, showAllBoats, setShowAllBoats,
+  canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey,
+  selectedPaddlerId,
   showGoingList, setShowGoingList, handleToggleAttendance,
   handleAssign, handleUnassignAll, handleReassignCanoes,
-  handleRemoveCanoe, handleAddCanoeAfter, addCanoe, triggerAnimation,
+  handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
   canoePriority, setCanoePriority, setScrollToEventId, setActivePage,
 }: TodayViewProps) {
   const [openDesignator, setOpenDesignator] = useState<string | null>(null);
@@ -410,7 +410,7 @@ export function TodayView({
         gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
-      {canoes?.map((canoe, index) => {
+      {canoes?.map((canoe) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         return (
           <div

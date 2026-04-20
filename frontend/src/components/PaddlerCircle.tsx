@@ -88,7 +88,7 @@ export const PaddlerCircle: React.FC<{
   // tag in the top-right when the paddler has a relevant note or seat hint.
   // We approximate that here off primary seat preference: seat 1 -> STEER.
   const pref = paddler.seatPreference || '';
-  const primarySeat = pref.split('').map(Number).find(n => n >= 1 && n <= 6);
+  const primarySeat = pref.split('').map(Number).find((n: number) => n >= 1 && n <= 6);
   const roleTag = primarySeat === 1 ? 'STEER' : null;
 
   return (

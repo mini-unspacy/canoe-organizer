@@ -32,7 +32,7 @@ interface OnShorePanelProps {
   /** Currently selected event id; disables + Add when null. */
   selectedEventId: string | undefined;
   /** Paddler ids already attending today — filtered out of the picker. */
-  eventAttendingPaddlerIds: Set<string> | undefined;
+  eventAttendingPaddlerIds: Set<string> | null;
   /** Called when user picks a paddler to add to today's event. */
   onAddPaddler: (paddlerId: string) => void;
 }
