@@ -387,7 +387,7 @@ export function TodayView({
                     outline: 'none', background: '#fff',
                   }}
                 />
-                <div style={{ maxHeight: 160, overflowY: 'auto', marginTop: 6 }} className="scrollbar-hidden">
+                <div style={{ maxHeight: 160, overflowY: 'auto', overflowX: 'hidden', marginTop: 6 }} className="scrollbar-hidden">
                   {(paddlers || [])
                     .filter((p: Paddler) => !eventAttendingPaddlerIds?.has(p.id))
                     .filter((p: Paddler) => {
@@ -403,7 +403,7 @@ export function TodayView({
                         key={p.id}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
-                          width: '100%', textAlign: 'left',
+                          width: '100%', boxSizing: 'border-box', textAlign: 'left',
                           padding: '3px 4px 3px 8px',
                           borderRadius: 6,
                           background: 'transparent', color: '#222',
@@ -491,7 +491,7 @@ export function TodayView({
                   ref={goingScrollRef}
                   onScroll={recomputeGoingScroll}
                   className="scrollbar-hidden"
-                  style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '4px 8px 8px' }}
+                  style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '4px 8px 8px' }}
                 >
                   {paddlers
                     ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
@@ -505,7 +505,7 @@ export function TodayView({
                           key={p.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
-                            width: '100%', textAlign: 'left',
+                            width: '100%', boxSizing: 'border-box', textAlign: 'left',
                             padding: '4px 4px 4px 10px',
                             borderRadius: 8,
                             background: 'transparent',
@@ -554,7 +554,7 @@ export function TodayView({
                       key={g._id}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8,
-                        width: '100%', textAlign: 'left',
+                        width: '100%', boxSizing: 'border-box', textAlign: 'left',
                         padding: '4px 4px 4px 10px',
                         borderRadius: 8,
                         background: 'transparent',
