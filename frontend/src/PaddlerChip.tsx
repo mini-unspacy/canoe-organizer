@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Shared visual dims for the paddler chip. Exposed so both the On Shore
 // pool (with a zoom slider) and the canoe seat rows can select a matching
@@ -49,6 +49,30 @@ export const PaddlerChip: React.FC<{
 }> = ({ label, color, tag, dims, flat, isDragging, title }) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
+
+  // Defensive: if dnd captures the pointer and the chip never receives
+  // mouseup/touchend, `pressed` would otherwise stay true forever and
+  // leave the chip visibly stuck in its grabbed state. A window-level
+  // mouseup/touchend listener reliably clears it, even when the real
+  // events were captured elsewhere. Also clear on unmount.
+  useEffect(() => {
+    if (!pressed) return;
+    const clear = () => setPressed(false);
+    window.addEventListener('mouseup', clear);
+    window.addEventListener('touchend', clear);
+    window.addEventListener('touchcancel', clear);
+    return () => {
+      window.removeEventListener('mouseup', clear);
+      window.removeEventListener('touchend', clear);
+      window.removeEventListener('touchcancel', clear);
+    };
+  }, [pressed]);
+
+  // While dnd is dragging the chip, suppress local hover/press visuals
+  // and don't apply any transform — dnd owns the drag preview's
+  // transform via draggableProps.style on the wrapper. Applying our
+  // own transform on the child here would layer on top of dnd's and
+  // shift the element under the cursor mid-drag.
   const shadow = isDragging
     ? '0 16px 32px rgba(0,0,0,0.34), 0 0 0 1.5px rgba(255,255,255,0.9)'
     : pressed
@@ -56,13 +80,15 @@ export const PaddlerChip: React.FC<{
       : hovered
         ? '0 6px 14px rgba(0,0,0,0.22)'
         : flat ? 'none' : '0 1px 2px rgba(0,0,0,0.08)';
-  const transform = isDragging
+  // Only hover transforms the chip. Pressed keeps the element's
+  // position stable so @hello-pangea/dnd's drag-start threshold check
+  // isn't confused by an element shifting under the cursor between
+  // mousedown and the 5px drag threshold being crossed.
+  const transform = isDragging || pressed
     ? 'none'
-    : pressed
-      ? 'translateY(-1px) scale(0.94)'
-      : hovered
-        ? 'translateY(-3px) scale(1.02)'
-        : 'none';
+    : hovered
+      ? 'translateY(-3px) scale(1.02)'
+      : 'none';
   const restBg = flat ? 'transparent' : 'rgba(0,0,0,0.04)';
   const restBorder = flat ? '1px solid transparent' : '1px solid rgba(0,0,0,0.06)';
   const bg = isDragging
@@ -84,7 +110,6 @@ export const PaddlerChip: React.FC<{
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: dims.gap + 3,
         padding: '3px 8px',
         borderRadius: 7,
         background: bg,
@@ -96,19 +121,9 @@ export const PaddlerChip: React.FC<{
         transition: 'box-shadow 140ms ease, transform 140ms ease, background 140ms ease',
         cursor: isDragging ? 'grabbing' : 'grab',
         maxWidth: '100%',
+        gap: dims.gap + 3,
       }}
     >
-      <span
-        aria-hidden
-        style={{
-          flexShrink: 0,
-          width: dims.dot,
-          height: dims.dot,
-          borderRadius: 3,
-          background: color,
-          opacity: 0.85,
-        }}
-      />
       <span
         style={{
           fontSize: dims.fs,
@@ -117,8 +132,10 @@ export const PaddlerChip: React.FC<{
           color,
           letterSpacing: '-0.01em',
           whiteSpace: 'nowrap',
+          // Truncate by clipping — no trailing ellipsis, which just
+          // eats horizontal space inside an already-tight seat row.
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          textOverflow: 'clip',
           minWidth: 0,
         }}
         title={title}

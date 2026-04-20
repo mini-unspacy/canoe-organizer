@@ -705,7 +705,7 @@ export function TodayView({
                           >
                             {seat}
                           </span>
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                             {assignedPaddler ? (
                               <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
                                 {(provided, dragSnapshot) => (
