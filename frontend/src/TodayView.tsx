@@ -152,22 +152,37 @@ export function TodayView({
     // Recompute whenever the set of paddlers/guests that feeds the list changes.
   }, [showGoingList, paddlers, eventGuests, eventAttendingPaddlerIds, recomputeGoingScroll]);
 
-  // Going-menu inline add UI state — clicking "+ paddler" or "+ guest" in
-  // the menu header swaps in a small picker/input below the header.
+  // Going-menu inline add UI state — tapping the "+" button opens a small
+  // popover with "Paddler" / "Guest" choices; selecting one sets
+  // `addingType`, which swaps in the search panel or guest-name input.
   const [addingType, setAddingType] = useState<null | 'paddler' | 'guest'>(null);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [addQuery, setAddQuery] = useState('');
   const [guestName, setGuestName] = useState('');
   const addPaddlerInputRef = useRef<HTMLInputElement>(null);
   const addGuestInputRef = useRef<HTMLInputElement>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
   // Focus the relevant input when the picker opens.
   useEffect(() => {
     if (addingType === 'paddler') addPaddlerInputRef.current?.focus();
     if (addingType === 'guest') addGuestInputRef.current?.focus();
   }, [addingType]);
+  // Close the add-type popover on click outside.
+  useEffect(() => {
+    if (!addMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
+        setAddMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [addMenuOpen]);
   // Reset the inline add UI whenever the menu itself closes.
   useEffect(() => {
     if (!showGoingList) {
       setAddingType(null);
+      setAddMenuOpen(false);
       setAddQuery('');
       setGuestName('');
     }
@@ -322,58 +337,100 @@ export function TodayView({
               overflow: 'hidden',
             }}
           >
-            {/* Header — count breakdown on top, with the "+ paddler" /
-                "+ guest" action pills pinned to their own row below. This
-                keeps the buttons comfortably tappable on mobile and
-                prevents them from wrapping when the count text grows. */}
-            <div style={{ padding: '10px 14px 8px', display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid rgba(0,0,0,.06)' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em' }}>
-                  GOING
-                </span>
-                <span style={{ fontSize: '11px', color: '#717171', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {_goingPaddlers} paddler{_goingPaddlers === 1 ? '' : 's'}
-                  {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
-                </span>
-              </div>
+            {/* Header — count breakdown, with a single "+" button on the
+                right that opens a popover offering "Paddler" / "Guest".
+                This keeps the header compact on narrow viewports while
+                still giving both adds a clear tap target in the popover. */}
+            <div style={{ padding: '10px 14px 8px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em', flexShrink: 0 }}>
+                GOING
+              </span>
+              <span style={{ fontSize: '11px', color: '#717171', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {_goingPaddlers} paddler{_goingPaddlers === 1 ? '' : 's'}
+                {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
+              </span>
+              <div style={{ flex: 1 }} />
               {isAdmin && selectedEvent && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div ref={addMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
                   <button
                     type="button"
-                    onClick={() => setAddingType(addingType === 'paddler' ? null : 'paddler')}
+                    onClick={() => {
+                      if (addingType) { setAddingType(null); return; }
+                      setAddMenuOpen(v => !v);
+                    }}
+                    aria-label="Add paddler or guest"
+                    aria-expanded={addMenuOpen || !!addingType}
                     style={{
-                      flex: 1,
-                      height: 34, padding: '0 12px',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      fontSize: 13, fontWeight: 600,
-                      color: addingType === 'paddler' ? '#fff' : '#005280',
-                      background: addingType === 'paddler' ? '#005280' : '#ffffff',
-                      border: `1px solid ${addingType === 'paddler' ? '#005280' : 'rgba(0,82,128,0.45)'}`,
-                      borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
-                      boxShadow: addingType === 'paddler' ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
+                      width: 32, height: 32,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 0,
+                      fontSize: 20, fontWeight: 700, lineHeight: 1,
+                      color: (addMenuOpen || addingType) ? '#fff' : '#005280',
+                      background: (addMenuOpen || addingType) ? '#005280' : '#ffffff',
+                      border: `1px solid ${(addMenuOpen || addingType) ? '#005280' : 'rgba(0,82,128,0.45)'}`,
+                      borderRadius: 8, cursor: 'pointer',
+                      boxShadow: (addMenuOpen || addingType) ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
+                      transition: 'transform 120ms ease, background 120ms ease, color 120ms ease',
+                      transform: addingType ? 'rotate(45deg)' : 'none',
                     }}
                   >
-                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>+</span>
-                    paddler
+                    +
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setAddingType(addingType === 'guest' ? null : 'guest')}
-                    style={{
-                      flex: 1,
-                      height: 34, padding: '0 12px',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      fontSize: 13, fontWeight: 600,
-                      color: addingType === 'guest' ? '#fff' : '#a07838',
-                      background: addingType === 'guest' ? '#a07838' : '#ffffff',
-                      border: `1px solid ${addingType === 'guest' ? '#a07838' : 'rgba(160,120,56,0.5)'}`,
-                      borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
-                      boxShadow: addingType === 'guest' ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>+</span>
-                    guest
-                  </button>
+                  {addMenuOpen && (
+                    <div
+                      role="menu"
+                      style={{
+                        position: 'absolute', right: 0, top: '100%',
+                        marginTop: 6,
+                        zIndex: 110,
+                        minWidth: 140,
+                        background: '#ffffff',
+                        border: '1px solid rgba(0,0,0,.08)',
+                        borderRadius: 10,
+                        padding: 4,
+                        boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 6px 16px rgba(0,0,0,.08), 0 12px 32px rgba(0,0,0,.12)',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setAddingType('paddler'); setAddMenuOpen(false); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          width: '100%', padding: '8px 10px',
+                          border: 'none', borderRadius: 6,
+                          background: 'transparent',
+                          color: '#005280',
+                          fontSize: 13, fontWeight: 600, textAlign: 'left',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,82,128,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#005280' }} />
+                        Paddler
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setAddingType('guest'); setAddMenuOpen(false); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          width: '100%', padding: '8px 10px',
+                          border: 'none', borderRadius: 6,
+                          background: 'transparent',
+                          color: '#a07838',
+                          fontSize: 13, fontWeight: 600, textAlign: 'left',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(160,120,56,0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#a07838' }} />
+                        Guest
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
