@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { PaddlerCircle, GuestPaddlerCircle, ON_SHORE_ZOOM_STEPS } from "./components/PaddlerCircle";
 import type { Paddler } from "./types";
+
+// Size steps for the On Shore pool rows. The pool now mirrors the
+// canoe seat-row layout, and the zoom slider scales the row height and
+// font size so paddlers stay readable on small phones. Zoom step 2
+// (the default) matches the canoe seat row sizing exactly (minHeight
+// 28 ~= seat's 26, name text 18px/serif-neighbor 16px).
+type PoolRowDims = { minH: number; fs: number; dot: number; gap: number };
+const POOL_ROW_ZOOM_STEPS: PoolRowDims[] = [
+  { minH: 22, fs: 14, dot: 8,  gap: 2 },
+  { minH: 25, fs: 16, dot: 9,  gap: 3 },
+  { minH: 28, fs: 18, dot: 10, gap: 3 },
+  { minH: 34, fs: 20, dot: 11, gap: 4 },
+  { minH: 40, fs: 22, dot: 12, gap: 5 },
+];
 
 // Lokahi.html's On Shore bottom panel: a collapsible drawer docked above
 // the mobile tab bar that hosts the paddler pool with a notched zoom
@@ -220,7 +233,7 @@ export function OnShorePanel({
     setPanelHeight(collapsed ? lastOpenH.current : CLOSED_H);
   };
 
-  const dims = ON_SHORE_ZOOM_STEPS[zoom];
+  const rowDims = POOL_ROW_ZOOM_STEPS[zoom];
   const visiblePaddlers = sortPaddlers(
     unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
     sort
@@ -584,8 +597,8 @@ export function OnShorePanel({
                 overflowY: "auto",
                 padding: "4px 12px 10px",
                 display: "flex",
-                flexWrap: "wrap",
-                gap: 4 + zoom,
+                flexDirection: "column",
+                gap: rowDims.gap,
                 alignContent: "flex-start",
                 background: snapshot.isDraggingOver ? "rgba(251,191,36,0.12)" : "transparent",
                 transition: "background 120ms ease",
@@ -606,38 +619,112 @@ export function OnShorePanel({
                 </div>
               ) : (
                 <>
-                  {visiblePaddlers.map((paddler, index) => (
-                    <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
-                      {(dragProvided, dragSnapshot) => (
-                        <div
-                          ref={dragProvided.innerRef}
-                          {...dragProvided.draggableProps}
-                          {...dragProvided.dragHandleProps}
-                          tabIndex={-1}
-                          role="none"
-                          aria-roledescription=""
-                          style={{
-                            ...dragProvided.draggableProps.style,
-                            touchAction: "manipulation",
-                            WebkitUserSelect: "none",
-                            userSelect: "none",
-                          }}
-                        >
-                          <PaddlerCircle
-                            paddler={paddler}
-                            isDragging={dragSnapshot.isDragging}
-                            animationKey={animationKey}
-                            animationDelay={index * 20}
-                            dims={dims}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {visiblePaddlers.map((paddler, index) => {
+                    // Mirror the seat-row layout from TodayView so the pool
+                    // reads as "rows of paddlers" that visually match the
+                    // canoe seats they'll be dropped into. Gender drives the
+                    // name color (wahine red / kane teal), the paddler's
+                    // type becomes the tiny RC/CS/VC tag on the right.
+                    const pFirst = paddler.firstName || '';
+                    const pLi = (paddler.lastInitial || paddler.lastName?.[0] || '').toUpperCase();
+                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Paddler');
+                    const paddlerColor = paddler.gender === 'wahine'
+                      ? '#a81a22'
+                      : paddler.gender === 'kane'
+                        ? '#1f4e5e'
+                        : '#2a2a2a';
+                    const typeTag =
+                      paddler.type === 'racer' ? 'RC'
+                        : paddler.type === 'casual' ? 'CS'
+                        : paddler.type === 'very-casual' ? 'VC'
+                        : '';
+                    return (
+                      <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
+                        {(dragProvided, dragSnapshot) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            {...dragProvided.dragHandleProps}
+                            tabIndex={-1}
+                            role="none"
+                            aria-roledescription=""
+                            data-animation-key={animationKey}
+                            style={{
+                              ...dragProvided.draggableProps.style,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '3px 6px',
+                              borderRadius: 7,
+                              background: 'rgba(0,0,0,0.025)',
+                              border: '1px solid transparent',
+                              minHeight: rowDims.minH,
+                              boxShadow: dragSnapshot.isDragging
+                                ? '0 6px 14px rgba(0,0,0,0.18)'
+                                : 'none',
+                              opacity: dragSnapshot.isDragging ? 0.92 : 1,
+                              transition: 'background 120ms ease, box-shadow 120ms ease',
+                              cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                              touchAction: 'manipulation',
+                              WebkitUserSelect: 'none',
+                              userSelect: 'none',
+                            }}
+                          >
+                            <span
+                              aria-hidden
+                              style={{
+                                flexShrink: 0,
+                                width: rowDims.dot,
+                                height: rowDims.dot,
+                                borderRadius: 3,
+                                background: paddlerColor,
+                                opacity: 0.85,
+                                marginLeft: 1,
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: rowDims.fs,
+                                lineHeight: 1,
+                                fontWeight: 700,
+                                color: paddlerColor,
+                                letterSpacing: '-0.01em',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                              title={paddler.firstName + (paddler.lastName ? ' ' + paddler.lastName : '')}
+                            >
+                              {paddlerLabel}
+                            </span>
+                            {typeTag && (
+                              <div
+                                style={{
+                                  fontSize: 8,
+                                  fontWeight: 700,
+                                  letterSpacing: '0.1em',
+                                  color: '#9a9a9a',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {typeTag}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {unassignedGuests.map((guest: any, gi: number) => {
                     const guestId = `guest-${guest._id}`;
                     const guestPaddler = guestPaddlerMap.get(guestId);
                     if (!guestPaddler) return null;
+                    const pFirst = guestPaddler.firstName || '';
+                    const pLi = (guestPaddler.lastInitial || guestPaddler.lastName?.[0] || '').toUpperCase();
+                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Guest');
+                    const guestColor = '#a07838';
                     return (
                       <Draggable
                         key={guestId}
@@ -655,16 +742,65 @@ export function OnShorePanel({
                             aria-roledescription=""
                             style={{
                               ...dragProvided.draggableProps.style,
-                              touchAction: "manipulation",
-                              WebkitUserSelect: "none",
-                              userSelect: "none",
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '3px 6px',
+                              borderRadius: 7,
+                              background: 'rgba(0,0,0,0.025)',
+                              border: '1px solid transparent',
+                              minHeight: rowDims.minH,
+                              boxShadow: dragSnapshot.isDragging
+                                ? '0 6px 14px rgba(0,0,0,0.18)'
+                                : 'none',
+                              opacity: dragSnapshot.isDragging ? 0.92 : 1,
+                              transition: 'background 120ms ease, box-shadow 120ms ease',
+                              cursor: dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                              touchAction: 'manipulation',
+                              WebkitUserSelect: 'none',
+                              userSelect: 'none',
                             }}
                           >
-                            <GuestPaddlerCircle
-                              paddler={guestPaddler}
-                              isDragging={dragSnapshot.isDragging}
-                              dims={dims}
+                            <span
+                              aria-hidden
+                              style={{
+                                flexShrink: 0,
+                                width: rowDims.dot,
+                                height: rowDims.dot,
+                                borderRadius: 3,
+                                background: guestColor,
+                                opacity: 0.85,
+                                marginLeft: 1,
+                              }}
                             />
+                            <span
+                              style={{
+                                fontSize: rowDims.fs,
+                                lineHeight: 1,
+                                fontWeight: 700,
+                                color: guestColor,
+                                letterSpacing: '-0.01em',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                              title={guestPaddler.firstName + (guestPaddler.lastName ? ' ' + guestPaddler.lastName : '')}
+                            >
+                              {paddlerLabel}
+                            </span>
+                            <div
+                              style={{
+                                fontSize: 8,
+                                fontWeight: 700,
+                                letterSpacing: '0.1em',
+                                color: '#9a9a9a',
+                                flexShrink: 0,
+                              }}
+                            >
+                              GUEST
+                            </div>
                           </div>
                         )}
                       </Draggable>
