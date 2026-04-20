@@ -22,6 +22,13 @@ const POOL_ROW_ZOOM_STEPS: PoolRowDims[] = [
 // measurement pass (react-beautiful-dnd / @hello-pangea/dnd measures
 // the draggable's bounding box at drag-start, and sizing it via flex
 // in the same element broke the drag preview).
+//
+// The chip gets three shadow tiers so the user gets visual feedback
+// about grabbing:
+//   resting  → subtle 1px shadow
+//   hover    → ~3px lift (indicates "grabbable")
+//   pressed  → stronger shadow + slight scale-down (indicates "held")
+//   dragging → strongest shadow (dnd has taken over)
 const PoolChip: React.FC<{
   label: string;
   color: string;
@@ -29,62 +36,88 @@ const PoolChip: React.FC<{
   dims: PoolRowDims;
   isDragging?: boolean;
   title?: string;
-}> = ({ label, color, tag, dims, isDragging, title }) => (
-  <div
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 6,
-      padding: '3px 8px',
-      borderRadius: 7,
-      background: 'rgba(0,0,0,0.04)',
-      border: '1px solid rgba(0,0,0,0.06)',
-      minHeight: dims.minH,
-      boxShadow: isDragging ? '0 6px 14px rgba(0,0,0,0.22)' : 'none',
-      opacity: isDragging ? 0.95 : 1,
-      transition: 'background 120ms ease, box-shadow 120ms ease',
-      cursor: isDragging ? 'grabbing' : 'grab',
-    }}
-  >
-    <span
-      aria-hidden
+}> = ({ label, color, tag, dims, isDragging, title }) => {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const shadow = isDragging
+    ? '0 10px 22px rgba(0,0,0,0.28)'
+    : pressed
+      ? '0 5px 12px rgba(0,0,0,0.22)'
+      : hovered
+        ? '0 3px 8px rgba(0,0,0,0.14)'
+        : '0 1px 2px rgba(0,0,0,0.08)';
+  const transform = isDragging
+    ? 'none'
+    : pressed
+      ? 'translateY(0) scale(0.97)'
+      : hovered
+        ? 'translateY(-1px)'
+        : 'none';
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setPressed(false); }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      onTouchCancel={() => setPressed(false)}
       style={{
-        flexShrink: 0,
-        width: dims.dot,
-        height: dims.dot,
-        borderRadius: 3,
-        background: color,
-        opacity: 0.85,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '3px 8px',
+        borderRadius: 7,
+        background: 'rgba(0,0,0,0.04)',
+        border: '1px solid rgba(0,0,0,0.06)',
+        minHeight: dims.minH,
+        boxShadow: shadow,
+        opacity: isDragging ? 0.95 : 1,
+        transform,
+        transition: 'box-shadow 140ms ease, transform 140ms ease, background 140ms ease',
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
-    />
-    <span
-      style={{
-        fontSize: dims.fs,
-        lineHeight: 1,
-        fontWeight: 700,
-        color,
-        letterSpacing: '-0.01em',
-        whiteSpace: 'nowrap',
-      }}
-      title={title}
     >
-      {label}
-    </span>
-    {tag && (
+      <span
+        aria-hidden
+        style={{
+          flexShrink: 0,
+          width: dims.dot,
+          height: dims.dot,
+          borderRadius: 3,
+          background: color,
+          opacity: 0.85,
+        }}
+      />
       <span
         style={{
-          fontSize: 8,
+          fontSize: dims.fs,
+          lineHeight: 1,
           fontWeight: 700,
-          letterSpacing: '0.1em',
-          color: '#9a9a9a',
-          flexShrink: 0,
+          color,
+          letterSpacing: '-0.01em',
+          whiteSpace: 'nowrap',
         }}
+        title={title}
       >
-        {tag}
+        {label}
       </span>
-    )}
-  </div>
-);
+      {tag && (
+        <span
+          style={{
+            fontSize: 8,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            color: '#9a9a9a',
+            flexShrink: 0,
+          }}
+        >
+          {tag}
+        </span>
+      )}
+    </div>
+  );
+};
 
 // Lokahi.html's On Shore bottom panel: a collapsible drawer docked above
 // the mobile tab bar that hosts the paddler pool with a notched zoom
