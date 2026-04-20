@@ -319,7 +319,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             animationKey={ctx.animationKey}
             dragFromStaging={ctx.dragFromStaging}
             dragIsActive={ctx.isDragging}
-            bottomOffset={navHidden ? 8 : navH}
+            bottomOffset={navHidden ? 0 : navH}
           />
         )}
 
