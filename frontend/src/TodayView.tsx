@@ -1199,16 +1199,7 @@ export function TodayView({
               </button>}
               {isAdmin && showCanoeChrome && isLastCanoe && <button
                 type="button"
-                onClick={() => {
-                  if (lockedCanoes.has(canoe.id)) return;
-                  // Confirm before deleting — X is easy to misclick even
-                  // when it's only on the last canoe. Uses native confirm
-                  // so it's a single small addition and blocks the delete
-                  // until the user explicitly OKs it.
-                  const label = canoeDesignations[canoe.id] || canoe.name || 'this canoe';
-                  if (!window.confirm(`Remove ${label}? This can't be undone.`)) return;
-                  handleRemoveCanoe(canoe.id);
-                }}
+                onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
                 disabled={lockedCanoes.has(canoe.id)}
                 title={lockedCanoes.has(canoe.id) ? 'Unlock canoe to delete' : 'Delete canoe'}
                 aria-label="Delete canoe"
