@@ -74,7 +74,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   }, [isNarrow, ctx.dataLoading, ctx.hasNoData]);
 
   return (
-    <DragDropContext onDragEnd={ctx.onDragEnd} onDragStart={ctx.handleDragStart}>
+    <DragDropContext
+      onDragEnd={ctx.onDragEnd}
+      onDragStart={ctx.handleDragStart}
+      // Disable dnd's built-in auto-scroller. Picking up a paddler in the
+      // ON SHORE drawer (anchored to the bottom of the viewport) puts the
+      // pointer near the bottom edge of the canoe-area scroll container
+      // above, which the auto-scroller interprets as "user wants to scroll
+      // down" and starts scrolling the canoes immediately — even before
+      // the user has actually dragged the chip anywhere. The canoe grid
+      // is sized to fit the viewport anyway, so auto-scroll isn't needed.
+      autoScrollerOptions={{ disabled: true }}
+    >
       <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <main style={{ height: '100%', overflow: 'hidden', boxSizing: 'border-box', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
           {ctx.dataLoading ? (
