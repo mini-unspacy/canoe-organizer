@@ -684,8 +684,8 @@ export function TodayView({
                             gap: canoeView === '4' ? 4 : 6,
                             padding: canoeView === '4' ? '1px 4px' : '2px 6px',
                             borderRadius: 7,
-                            background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? '#ffffff' : 'rgba(0,0,0,0.03)',
-                            border: `1px ${active || hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.18)'}`,
+                            background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
+                            border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
                             transition: 'background 120ms ease, border-color 120ms ease',
                             minHeight: canoeView === '4' ? 22 : 26,
                           }}
