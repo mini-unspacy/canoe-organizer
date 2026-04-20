@@ -340,31 +340,35 @@ export function TodayView({
                     type="button"
                     onClick={() => setAddingType(addingType === 'paddler' ? null : 'paddler')}
                     style={{
-                      height: 22, padding: '0 8px',
-                      display: 'inline-flex', alignItems: 'center', gap: 3,
-                      fontSize: 11, fontWeight: 600,
-                      color: addingType === 'paddler' ? '#fff' : '#484848',
+                      height: 30, padding: '0 12px',
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 13, fontWeight: 600,
+                      color: addingType === 'paddler' ? '#fff' : '#005280',
                       background: addingType === 'paddler' ? '#005280' : '#ffffff',
-                      border: `1px solid ${addingType === 'paddler' ? '#005280' : 'rgba(0,0,0,0.12)'}`,
-                      borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
+                      border: `1px solid ${addingType === 'paddler' ? '#005280' : 'rgba(0,82,128,0.45)'}`,
+                      borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+                      boxShadow: addingType === 'paddler' ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
                     }}
                   >
-                    + paddler
+                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>+</span>
+                    paddler
                   </button>
                   <button
                     type="button"
                     onClick={() => setAddingType(addingType === 'guest' ? null : 'guest')}
                     style={{
-                      height: 22, padding: '0 8px',
-                      display: 'inline-flex', alignItems: 'center', gap: 3,
-                      fontSize: 11, fontWeight: 600,
-                      color: addingType === 'guest' ? '#fff' : '#484848',
+                      height: 30, padding: '0 12px',
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 13, fontWeight: 600,
+                      color: addingType === 'guest' ? '#fff' : '#a07838',
                       background: addingType === 'guest' ? '#a07838' : '#ffffff',
-                      border: `1px solid ${addingType === 'guest' ? '#a07838' : 'rgba(0,0,0,0.12)'}`,
-                      borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
+                      border: `1px solid ${addingType === 'guest' ? '#a07838' : 'rgba(160,120,56,0.5)'}`,
+                      borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+                      boxShadow: addingType === 'guest' ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
                     }}
                   >
-                    + guest
+                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1 }}>+</span>
+                    guest
                   </button>
                 </>
               )}
