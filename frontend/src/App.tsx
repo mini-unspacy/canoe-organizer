@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext } from "@hello-pangea/dnd";
+import type { DragStart, DropResult } from "@hello-pangea/dnd";
 
 import LoginPage from "./LoginPage";
 import OnboardingPage from "./OnboardingPage";
@@ -73,18 +74,34 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     return () => { ro?.disconnect(); window.removeEventListener('resize', measure); };
   }, [isNarrow, ctx.dataLoading, ctx.hasNoData]);
 
+  // Picking up a chip in the ON SHORE drawer puts the pointer at the
+  // bottom of the viewport — below the canoe-area scroll container.
+  // dnd's auto-scroller reads "pointer past bottom edge" as "user wants
+  // to scroll down" and starts scrolling the canoes before the user has
+  // dragged anywhere. Fix: imperatively set scrollRef.overflowY = hidden
+  // at onBeforeDragStart time so the library doesn't register scrollRef
+  // as a scrollable container for this particular drag. The React JSX
+  // value will re-assert after drag ends. For drags that originate in a
+  // canoe seat, we leave scrollRef scrollable so auto-scroll can bring
+  // off-screen canoes into view as the user drags.
+  const onBeforeDragStart = useCallback((start: DragStart) => {
+    if (start.source.droppableId.startsWith('staging-') && scrollRef.current) {
+      scrollRef.current.style.overflowY = 'hidden';
+    }
+  }, []);
+  const onDragEndWithRestore = useCallback((result: DropResult) => {
+    if (scrollRef.current) {
+      // Clear the inline override — React's style prop will take over.
+      scrollRef.current.style.overflowY = '';
+    }
+    ctx.onDragEnd(result);
+  }, [ctx]);
+
   return (
     <DragDropContext
-      onDragEnd={ctx.onDragEnd}
+      onBeforeDragStart={onBeforeDragStart}
       onDragStart={ctx.handleDragStart}
-      // Disable dnd's built-in auto-scroller. Picking up a paddler in the
-      // ON SHORE drawer (anchored to the bottom of the viewport) puts the
-      // pointer near the bottom edge of the canoe-area scroll container
-      // above, which the auto-scroller interprets as "user wants to scroll
-      // down" and starts scrolling the canoes immediately — even before
-      // the user has actually dragged the chip anywhere. The canoe grid
-      // is sized to fit the viewport anyway, so auto-scroll isn't needed.
-      autoScrollerOptions={{ disabled: true }}
+      onDragEnd={onDragEndWithRestore}
     >
       <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <main style={{ height: '100%', overflow: 'hidden', boxSizing: 'border-box', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
@@ -188,7 +205,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
 
               {/* MIDDLE COLUMN */}
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
-              <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: ctx.isDragging ? 'hidden' : 'auto', overflowX: 'hidden', height: '100%', boxSizing: 'border-box', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
+              <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%', boxSizing: 'border-box', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
