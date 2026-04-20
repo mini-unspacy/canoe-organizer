@@ -583,7 +583,7 @@ export function TodayView({
                 </div>
                 </>
               )}
-              {isAdmin && <button
+              {isAdmin && canoeView !== '4' && <button
                 type="button"
                 onClick={() => setLockedCanoes(prev => {
                   const next = new Set(prev);
@@ -612,7 +612,7 @@ export function TodayView({
                   }
                 </svg>
               </button>}
-              {isAdmin && <button
+              {isAdmin && canoeView !== '4' && <button
                 type="button"
                 onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
                 disabled={lockedCanoes.has(canoe.id)}
@@ -654,18 +654,12 @@ export function TodayView({
                     {(provided, snapshot) => {
                       const active = snapshot.isDraggingOver;
                       const hasPaddler = !!assignedPaddler;
-                      const typeTag =
-                        assignedPaddler && 'type' in assignedPaddler && assignedPaddler.type
-                          ? (assignedPaddler.type === 'racer' ? 'RC'
-                              : assignedPaddler.type === 'casual' ? 'CS'
-                              : assignedPaddler.type === 'very-casual' ? 'VC' : '')
-                          : '';
-                      // Compose the paddler's seat label as "FirstnameL." (no
-                      // space) — e.g. "SharinC." — so the draggable fills the
-                      // seat row vertically with type instead of a chip card.
+                      // Compose the paddler's seat label as "FirstnameL" (no
+                      // space, no trailing period) — e.g. "SharinC" — so the
+                      // name reads clean in the tight iPhone grid rows.
                       const pFirst = assignedPaddler?.firstName || '';
                       const pLi = (assignedPaddler?.lastInitial || assignedPaddler?.lastName?.[0] || '').toUpperCase();
-                      const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Guest');
+                      const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}` : (pFirst || 'Guest');
                       const isGuest = assignedPaddler?.id?.startsWith('guest-');
                       const paddlerColor = isGuest
                         ? '#a07838'
@@ -682,8 +676,8 @@ export function TodayView({
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: canoeView === '4' ? 4 : 6,
-                            padding: canoeView === '4' ? '1px 4px' : '2px 6px',
+                            gap: canoeView === '4' ? 2 : 3,
+                            padding: canoeView === '4' ? '1px 3px' : '2px 4px',
                             borderRadius: 7,
                             background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
                             border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
@@ -730,7 +724,6 @@ export function TodayView({
                                     <PaddlerChip
                                       label={paddlerLabel}
                                       color={paddlerColor}
-                                      tag={typeTag}
                                       dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
                                       flat
                                       isDragging={dragSnapshot.isDragging}
@@ -739,11 +732,11 @@ export function TodayView({
                                   </div>
                                 )}
                               </Draggable>
-                            ) : (
-                              <div style={{ fontSize: '11px', fontWeight: 500, color: active ? '#c82028' : '#9a9a9a', fontStyle: 'italic', letterSpacing: '0.2px' }}>
-                                {active ? 'drop here' : 'open seat'}
+                            ) : active ? (
+                              <div style={{ fontSize: '11px', fontWeight: 500, color: '#c82028', fontStyle: 'italic', letterSpacing: '0.2px' }}>
+                                drop here
                               </div>
-                            )}
+                            ) : null}
                           </div>
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>

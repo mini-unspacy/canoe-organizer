@@ -12,7 +12,6 @@ export const POOL_ROW_ZOOM_STEPS: PaddlerRowDims[] = [
   { minH: 25, fs: 16, dot: 9,  gap: 3 },
   { minH: 28, fs: 18, dot: 10, gap: 3 },
   { minH: 34, fs: 20, dot: 11, gap: 4 },
-  { minH: 40, fs: 22, dot: 12, gap: 5 },
 ];
 
 // Default pool zoom (step 2). The canoe seat rows size-match to this
@@ -41,12 +40,11 @@ export const SEAT_CHIP_DIMS_COMPACT = POOL_ROW_ZOOM_STEPS[0];
 export const PaddlerChip: React.FC<{
   label: string;
   color: string;
-  tag: string;
   dims: PaddlerRowDims;
   flat?: boolean;
   isDragging?: boolean;
   title?: string;
-}> = ({ label, color, tag, dims, flat, isDragging, title }) => {
+}> = ({ label, color, dims, flat, isDragging, title }) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
@@ -142,19 +140,6 @@ export const PaddlerChip: React.FC<{
       >
         {label}
       </span>
-      {tag && (
-        <span
-          style={{
-            fontSize: 8,
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            color: '#9a9a9a',
-            flexShrink: 0,
-          }}
-        >
-          {tag}
-        </span>
-      )}
     </div>
   );
 };

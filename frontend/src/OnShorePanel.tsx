@@ -610,21 +610,15 @@ export function OnShorePanel({
                     // Mirror the seat-row layout from TodayView so the pool
                     // reads as "rows of paddlers" that visually match the
                     // canoe seats they'll be dropped into. Gender drives the
-                    // name color (wahine red / kane teal), the paddler's
-                    // type becomes the tiny RC/CS/VC tag on the right.
+                    // name color (wahine red / kane teal).
                     const pFirst = paddler.firstName || '';
                     const pLi = (paddler.lastInitial || paddler.lastName?.[0] || '').toUpperCase();
-                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Paddler');
+                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}` : (pFirst || 'Paddler');
                     const paddlerColor = paddler.gender === 'wahine'
                       ? '#a81a22'
                       : paddler.gender === 'kane'
                         ? '#1f4e5e'
                         : '#2a2a2a';
-                    const typeTag =
-                      paddler.type === 'racer' ? 'RC'
-                        : paddler.type === 'casual' ? 'CS'
-                        : paddler.type === 'very-casual' ? 'VC'
-                        : '';
                     return (
                       <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
                         {(dragProvided, dragSnapshot) => (
@@ -645,7 +639,6 @@ export function OnShorePanel({
                             <PaddlerChip
                               label={paddlerLabel}
                               color={paddlerColor}
-                              tag={typeTag}
                               dims={rowDims}
                               isDragging={dragSnapshot.isDragging}
                               title={paddler.firstName + (paddler.lastName ? ' ' + paddler.lastName : '')}
@@ -661,7 +654,7 @@ export function OnShorePanel({
                     if (!guestPaddler) return null;
                     const pFirst = guestPaddler.firstName || '';
                     const pLi = (guestPaddler.lastInitial || guestPaddler.lastName?.[0] || '').toUpperCase();
-                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}.` : (pFirst || 'Guest');
+                    const paddlerLabel = pFirst && pLi ? `${pFirst}${pLi}` : (pFirst || 'Guest');
                     const guestColor = '#a07838';
                     return (
                       <Draggable
@@ -688,7 +681,6 @@ export function OnShorePanel({
                             <PaddlerChip
                               label={paddlerLabel}
                               color={guestColor}
-                              tag="GUEST"
                               dims={rowDims}
                               isDragging={dragSnapshot.isDragging}
                               title={guestPaddler.firstName + (guestPaddler.lastName ? ' ' + guestPaddler.lastName : '')}
@@ -709,13 +701,13 @@ export function OnShorePanel({
   );
 }
 
-// Five-step zoom slider. The previous dotted version had tiny 4-12px hit
+// Four-step zoom slider. The previous dotted version had tiny 4-12px hit
 // targets that were fiddly on touch. We now render a real draggable thumb
-// that snaps to the 5 steps, with visible tick marks underneath so the
+// that snaps to the 4 steps, with visible tick marks underneath so the
 // notched feel from the mock is preserved.
 function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => void }) {
-  const TRACK_W = 84;
-  const STEPS = 5;
+  const TRACK_W = 72;
+  const STEPS = 4;
   const clamp = (n: number) => Math.max(0, Math.min(STEPS - 1, n));
   const fromX = (x: number, trackLeft: number) => {
     const frac = (x - trackLeft) / TRACK_W;
@@ -761,12 +753,6 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         borderRadius: 8,
       }}
     >
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
       <div
         ref={trackRef}
         role="slider"
@@ -797,7 +783,7 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         {/* Filled portion up to the thumb */}
         <div style={{ position: "absolute", left: 0, top: "50%", height: 2, width: thumbLeft, transform: "translateY(-50%)", background: "#c82028", borderRadius: 2 }} />
         {/* Tick marks */}
-        {[0, 1, 2, 3, 4].map(n => {
+        {[0, 1, 2, 3].map(n => {
           const left = (n / (STEPS - 1)) * TRACK_W;
           return (
             <div
