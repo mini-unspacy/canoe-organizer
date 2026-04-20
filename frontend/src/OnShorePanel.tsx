@@ -31,14 +31,6 @@ interface OnShorePanelProps {
   dragIsActive: boolean;
   /** Distance in px to leave below the panel (height of the mobile tab bar). */
   bottomOffset: number;
-  /** Full roster — used as the search pool for the + Add picker. */
-  paddlers: Paddler[] | undefined;
-  /** Currently selected event id; disables + Add when null. */
-  selectedEventId: string | undefined;
-  /** Paddler ids already attending today — filtered out of the picker. */
-  eventAttendingPaddlerIds: Set<string> | null;
-  /** Called when user picks a paddler to add to today's event. */
-  onAddPaddler: (paddlerId: string) => void;
 }
 
 function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
@@ -77,10 +69,6 @@ export function OnShorePanel({
   dragFromStaging,
   dragIsActive,
   bottomOffset,
-  paddlers,
-  selectedEventId,
-  eventAttendingPaddlerIds,
-  onAddPaddler,
 }: OnShorePanelProps) {
   const [panelHeight, setPanelHeight] = useState<number>(() => {
     if (typeof window === "undefined") return 360;
@@ -111,13 +99,6 @@ export function OnShorePanel({
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // + Add paddler picker state — local to the drawer, not hoisted.
-  const [addOpen, setAddOpen] = useState(false);
-  const [addQuery, setAddQuery] = useState("");
-  const addInputRef = useRef<HTMLInputElement>(null);
-  const addPanelRef = useRef<HTMLDivElement>(null);
-  const canAdd = Boolean(selectedEventId);
 
   // Collapsed is a computed property of height, with a small tolerance so
   // that near-closed drag targets snap visually to "closed" styling.
@@ -150,26 +131,6 @@ export function OnShorePanel({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
-
-  // Close the + Add picker on click-outside
-  useEffect(() => {
-    if (!addOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (addPanelRef.current && !addPanelRef.current.contains(e.target as Node)) {
-        setAddOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [addOpen]);
-
-  // When the drawer collapses, dismiss any open + Add picker.
-  useEffect(() => {
-    if (collapsed && addOpen) {
-      setAddOpen(false);
-      setAddQuery("");
-    }
-  }, [collapsed, addOpen]);
 
   // Keep the panel reasonable when the viewport is resized (e.g. phone
   // rotation). Clamps to the current FULL max and, if it lands above that,
@@ -325,45 +286,6 @@ export function OnShorePanel({
           <span style={{ fontWeight: 800, letterSpacing: 0 }}>{count}</span>
         </button>
 
-        {/* + Add paddler — sits next to the ON SHORE pill so it stays
-            clear of the centered drag grip. Only shown when the drawer
-            is open; the ON SHORE pill is the collapsed-state handle. */}
-        {!collapsed && (
-          <button
-            type="button"
-            onClick={() => {
-              if (!canAdd) return;
-              setAddOpen(v => !v);
-              setAddQuery("");
-              setTimeout(() => addInputRef.current?.focus(), 60);
-            }}
-            aria-label="Add paddler to today's event"
-            title={canAdd ? "Add paddler to today's event" : "Select an event first"}
-            disabled={!canAdd}
-            style={{
-              height: 24,
-              padding: "0 9px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              borderRadius: 12,
-              border: "none",
-              background: canAdd ? (addOpen ? "#7a1318" : "#1f7a4f") : "#c7c3bc",
-              color: "#fff",
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              cursor: canAdd ? "pointer" : "not-allowed",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              transition: "background 120ms ease",
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1, letterSpacing: 0 }}>+</span>
-            <span>Add</span>
-          </button>
-        )}
-
         {/* Center drag grip — sits horizontally centered in the row and is
             the ONLY place that resizes the drawer. */}
         <div
@@ -484,135 +406,6 @@ export function OnShorePanel({
           </>
         )}
       </div>
-
-      {!collapsed && addOpen && (
-        <div
-          ref={addPanelRef}
-          style={{
-            flexShrink: 0,
-            borderBottom: "1px solid rgba(0,0,0,.08)",
-            background: "#fff",
-            padding: "8px 12px 10px",
-            boxShadow: "inset 0 1px 0 rgba(0,0,0,0.04), 0 4px 10px -6px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div style={{ position: "relative" }}>
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#717171"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input
-              ref={addInputRef}
-              type="text"
-              value={addQuery}
-              onChange={(e) => setAddQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") { setAddOpen(false); setAddQuery(""); }
-              }}
-              placeholder="search paddler to add…"
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "7px 28px 7px 28px",
-                fontSize: 13,
-                borderRadius: 8,
-                border: "1px solid rgba(0,0,0,.12)",
-                background: "#faf9f7",
-                color: "#222",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            {addQuery && (
-              <button
-                type="button"
-                onClick={() => { setAddQuery(""); addInputRef.current?.focus(); }}
-                aria-label="Clear search"
-                style={{
-                  position: "absolute",
-                  right: 4,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  border: "none",
-                  background: "transparent",
-                  color: "#717171",
-                  fontSize: 14,
-                  lineHeight: 1,
-                  padding: 4,
-                  cursor: "pointer",
-                }}
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <div style={{ marginTop: 6, maxHeight: 180, overflowY: "auto" }}>
-            {(() => {
-              const q = addQuery.toLowerCase().trim();
-              if (!paddlers) return null;
-              if (!q) {
-                return (
-                  <div style={{ fontSize: 12, color: "#8a8a8a", padding: "6px 8px", fontStyle: "italic" }}>
-                    Type a name to find a paddler
-                  </div>
-                );
-              }
-              const matches = paddlers
-                .filter((p) => {
-                  if (eventAttendingPaddlerIds?.has(p.id)) return false;
-                  const full = `${p.firstName || ""} ${p.lastName || ""}`.toLowerCase();
-                  return full.includes(q);
-                })
-                .slice(0, 8);
-              if (matches.length === 0) {
-                return (
-                  <div style={{ fontSize: 12, color: "#8a8a8a", padding: "6px 8px", fontStyle: "italic" }}>
-                    No matches
-                  </div>
-                );
-              }
-              return matches.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    onAddPaddler(p.id);
-                    setAddOpen(false);
-                    setAddQuery("");
-                  }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "8px 10px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#222",
-                    background: "transparent",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(200,32,40,0.08)"; e.currentTarget.style.color = "#c82028"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#222"; }}
-                >
-                  {p.firstName}{p.lastName ? ` ${p.lastName[0]}.` : ""}
-                </button>
-              ));
-            })()}
-          </div>
-        </div>
-      )}
 
       {/* Drop zone is ALWAYS mounted — even when the drawer is collapsed —
           so that @hello-pangea/dnd can measure it and accept drops from
@@ -810,10 +603,11 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         alignItems: "center",
         gap: 8,
         padding: "0 8px",
-        height: 28,
+        height: 24,
         background: "#fff",
         border: "1px solid rgba(0,0,0,.12)",
-        borderRadius: 8,
+        borderRadius: 7,
+        boxSizing: "border-box",
       }}
     >
       {showIcon && (
@@ -842,7 +636,7 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         style={{
           position: "relative",
           width: TRACK_W,
-          height: 24,
+          height: 20,
           cursor: "pointer",
           touchAction: "none",
           display: "flex",

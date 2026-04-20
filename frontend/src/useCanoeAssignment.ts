@@ -33,6 +33,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const toggleAttendanceMut = useMutation(api.attendance.toggleAttendance);
   const setAttendanceMut = useMutation(api.attendance.setAttendance);
   const removeGuestMut = useMutation(api.eventGuests.removeGuest);
+  const addGuestMut = useMutation(api.eventGuests.addGuest);
   const allEvents = useQuery(api.events.getEvents);
   const allUsers = useQuery(api.auth.getAllUsers);
   const updateDesignationMut = useMutation(api.canoes.updateDesignation);
@@ -494,6 +495,6 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     triggerAnimation, populatePaddlers, populateCanoes, addCanoe,
     updatePaddler, updateDesignationMut, renameCanoeMut, toggleAdminMut,
     deleteUserByPaddlerIdMut, deletePaddlerMut, setAttendanceMut,
-    removeGuestMut,
+    removeGuestMut, addGuestMut,
   };
 }

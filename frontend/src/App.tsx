@@ -236,6 +236,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     setShowGoingList={ctx.setShowGoingList}
                     handleToggleAttendance={ctx.handleToggleAttendance}
                     removeGuestMut={ctx.removeGuestMut}
+                    addGuestMut={ctx.addGuestMut}
                     handleAssign={ctx.handleAssign}
                     handleUnassignAll={ctx.handleUnassignAll}
                     handleReassignCanoes={ctx.handleReassignCanoes}
@@ -319,13 +320,6 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             dragFromStaging={ctx.dragFromStaging}
             dragIsActive={ctx.isDragging}
             bottomOffset={navHidden ? 8 : navH}
-            paddlers={ctx.paddlers}
-            selectedEventId={ctx.selectedEvent?.id}
-            eventAttendingPaddlerIds={ctx.eventAttendingPaddlerIds}
-            onAddPaddler={(paddlerId: string) => {
-              if (!ctx.selectedEvent) return;
-              void ctx.setAttendanceMut({ paddlerId, eventId: ctx.selectedEvent.id, attending: true });
-            }}
           />
         )}
 

@@ -60,6 +60,7 @@ interface TodayViewProps {
   setShowGoingList: (v: boolean) => void;
   handleToggleAttendance: (paddlerId: string, eventId: string) => void;
   removeGuestMut: (args: { guestId: any }) => Promise<any>;
+  addGuestMut: (args: { eventId: string; name: string }) => Promise<any>;
   handleAssign: () => void;
   handleUnassignAll: () => void;
   handleReassignCanoes: () => void;
@@ -79,7 +80,7 @@ export function TodayView({
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
   canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey,
   selectedPaddlerId,
-  showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut,
+  showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut, addGuestMut,
   handleAssign, handleUnassignAll, handleReassignCanoes,
   handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
   canoePriority, setCanoePriority, setScrollToEventId, setActivePage,
@@ -128,6 +129,27 @@ export function TodayView({
     };
     // Recompute whenever the set of paddlers/guests that feeds the list changes.
   }, [showGoingList, paddlers, eventGuests, eventAttendingPaddlerIds, recomputeGoingScroll]);
+
+  // Going-menu inline add UI state — clicking "+ paddler" or "+ guest" in
+  // the menu header swaps in a small picker/input below the header.
+  const [addingType, setAddingType] = useState<null | 'paddler' | 'guest'>(null);
+  const [addQuery, setAddQuery] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const addPaddlerInputRef = useRef<HTMLInputElement>(null);
+  const addGuestInputRef = useRef<HTMLInputElement>(null);
+  // Focus the relevant input when the picker opens.
+  useEffect(() => {
+    if (addingType === 'paddler') addPaddlerInputRef.current?.focus();
+    if (addingType === 'guest') addGuestInputRef.current?.focus();
+  }, [addingType]);
+  // Reset the inline add UI whenever the menu itself closes.
+  useEffect(() => {
+    if (!showGoingList) {
+      setAddingType(null);
+      setAddQuery('');
+      setGuestName('');
+    }
+  }, [showGoingList]);
 
   return (
     <>
@@ -278,8 +300,10 @@ export function TodayView({
               overflow: 'hidden',
             }}
           >
-            {/* Header — count breakdown + "tap to remove" hint */}
-            <div style={{ padding: '10px 14px 8px', display: 'flex', alignItems: 'baseline', gap: 6, borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+            {/* Header — count breakdown + "+ paddler" / "+ guest" buttons.
+                The buttons swap in an inline picker below for admins; for
+                non-admins we fall back to the old "tap to remove" hint. */}
+            <div style={{ padding: '10px 14px 8px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(0,0,0,.06)', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#222', letterSpacing: '0.08em' }}>
                 GOING
               </span>
@@ -288,21 +312,152 @@ export function TodayView({
                 {_guestCount > 0 ? ` + ${_guestCount} guest${_guestCount === 1 ? '' : 's'}` : ''}
               </span>
               <div style={{ flex: 1 }} />
-              {_goingCount > 0 && isAdmin && (
+              {isAdmin && selectedEvent && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setAddingType(addingType === 'paddler' ? null : 'paddler')}
+                    style={{
+                      height: 22, padding: '0 8px',
+                      display: 'inline-flex', alignItems: 'center', gap: 3,
+                      fontSize: 11, fontWeight: 600,
+                      color: addingType === 'paddler' ? '#fff' : '#484848',
+                      background: addingType === 'paddler' ? '#005280' : '#ffffff',
+                      border: `1px solid ${addingType === 'paddler' ? '#005280' : 'rgba(0,0,0,0.12)'}`,
+                      borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    + paddler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddingType(addingType === 'guest' ? null : 'guest')}
+                    style={{
+                      height: 22, padding: '0 8px',
+                      display: 'inline-flex', alignItems: 'center', gap: 3,
+                      fontSize: 11, fontWeight: 600,
+                      color: addingType === 'guest' ? '#fff' : '#484848',
+                      background: addingType === 'guest' ? '#a07838' : '#ffffff',
+                      border: `1px solid ${addingType === 'guest' ? '#a07838' : 'rgba(0,0,0,0.12)'}`,
+                      borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    + guest
+                  </button>
+                </>
+              )}
+              {!isAdmin && _goingCount > 0 && (
                 <span style={{ fontSize: '10px', color: '#9a9a9a', fontStyle: 'italic' }}>
                   tap to remove
                 </span>
               )}
             </div>
+            {/* Inline add picker — paddler search (filters roster to not-yet-
+                attending, tap to toggle them on) or guest name input
+                (Enter to add). Swapped in below the header, above the list. */}
+            {isAdmin && selectedEvent && addingType === 'paddler' && (
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(0,0,0,.06)', background: '#faf9f7' }}>
+                <input
+                  ref={addPaddlerInputRef}
+                  type="text"
+                  value={addQuery}
+                  onChange={(e) => setAddQuery(e.target.value)}
+                  placeholder="Search roster…"
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '6px 10px', fontSize: 13,
+                    border: '1px solid rgba(0,0,0,0.12)', borderRadius: 6,
+                    outline: 'none', background: '#fff',
+                  }}
+                />
+                <div style={{ maxHeight: 160, overflowY: 'auto', marginTop: 6 }} className="scrollbar-hidden">
+                  {(paddlers || [])
+                    .filter((p: Paddler) => !eventAttendingPaddlerIds?.has(p.id))
+                    .filter((p: Paddler) => {
+                      const q = addQuery.trim().toLowerCase();
+                      if (!q) return true;
+                      const full = `${p.firstName} ${p.lastName || p.lastInitial || ''}`.toLowerCase();
+                      return full.includes(q);
+                    })
+                    .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
+                    .slice(0, 40)
+                    .map((p: Paddler) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => { handleToggleAttendance(p.id, selectedEvent.id); setAddQuery(''); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          width: '100%', textAlign: 'left',
+                          padding: '6px 8px',
+                          border: 'none', borderRadius: 6,
+                          background: 'transparent', color: '#222',
+                          fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,82,128,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.gender === 'wahine' ? '#a81a22' : '#1f4e5e', flexShrink: 0 }} />
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.firstName} {p.lastName || p.lastInitial}
+                        </span>
+                        <span style={{ color: '#005280', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>+</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+            {isAdmin && selectedEvent && addingType === 'guest' && (
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(0,0,0,.06)', background: '#faf9f7' }}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const name = guestName.trim();
+                    if (!name) return;
+                    void addGuestMut({ eventId: selectedEvent.id, name });
+                    setGuestName('');
+                  }}
+                  style={{ display: 'flex', gap: 6 }}
+                >
+                  <input
+                    ref={addGuestInputRef}
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Guest name…"
+                    style={{
+                      flex: 1, boxSizing: 'border-box',
+                      padding: '6px 10px', fontSize: 13,
+                      border: '1px solid rgba(0,0,0,0.12)', borderRadius: 6,
+                      outline: 'none', background: '#fff',
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!guestName.trim()}
+                    style={{
+                      height: 30, padding: '0 12px',
+                      fontSize: 12, fontWeight: 600,
+                      color: '#fff',
+                      background: guestName.trim() ? '#a07838' : '#d6d1c8',
+                      border: 'none', borderRadius: 6,
+                      cursor: guestName.trim() ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Add
+                  </button>
+                </form>
+              </div>
+            )}
             {_goingCount === 0 ? (
               <div style={{ fontSize: '14px', color: '#717171', padding: '14px 16px' }}>No one yet</div>
             ) : (
-              <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+              <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <div
                   ref={goingScrollRef}
                   onScroll={recomputeGoingScroll}
                   className="scrollbar-hidden"
-                  style={{ height: '100%', overflowY: 'auto', padding: '4px 8px 8px' }}
+                  style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '4px 8px 8px' }}
                 >
                   {paddlers
                     ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
