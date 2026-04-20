@@ -25,6 +25,10 @@ interface OnShorePanelProps {
   pendingAssignIds: Set<string>;
   animationKey: number;
   dragFromStaging: boolean;
+  /** True while any dnd drag is in flight — used to auto-open the drawer
+   *  when a paddler is being dragged from a canoe seat so the user has a
+   *  visible drop target to release onto. */
+  dragIsActive: boolean;
   /** Distance in px to leave below the panel (height of the mobile tab bar). */
   bottomOffset: number;
   /** Full roster — used as the search pool for the + Add picker. */
@@ -71,6 +75,7 @@ export function OnShorePanel({
   guestPaddlerMap,
   pendingAssignIds,
   dragFromStaging,
+  dragIsActive,
   bottomOffset,
   paddlers,
   selectedEventId,
@@ -177,6 +182,27 @@ export function OnShorePanel({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // When a drag starts FROM a canoe seat (i.e. not from staging), bump the
+  // drawer open to SMALL if it was collapsed so the user has a visible
+  // On Shore drop zone to release onto. Restore the previous collapsed
+  // height once the drag ends. Without this, the staging-mobile Droppable
+  // still renders, but the 32px-tall collapsed drawer is too small to
+  // aim at with a finger, and there's no visual affordance that the
+  // drop is possible.
+  const preDragHeight = useRef<number | null>(null);
+  useEffect(() => {
+    if (dragIsActive && !dragFromStaging && collapsed && preDragHeight.current === null) {
+      preDragHeight.current = panelHeight;
+      setPanelHeight(getSmallH());
+    } else if (!dragIsActive && preDragHeight.current !== null) {
+      setPanelHeight(preDragHeight.current);
+      preDragHeight.current = null;
+    }
+    // We intentionally don't include `collapsed` or `panelHeight` in deps —
+    // we only want the edge transitions on dragIsActive to trigger this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragIsActive, dragFromStaging]);
 
   // Drag-to-resize state. We track startY/startH plus a "moved" flag so a
   // tap (no drag) toggles open/closed while an actual drag sets a height.
@@ -384,10 +410,16 @@ export function OnShorePanel({
                 type="button"
                 onClick={() => setMenuOpen(v => !v)}
                 style={{
+                  // Fixed width so rotating between Default/Ability/Gender
+                  // etc. doesn't change the button's size and shove the
+                  // whole zoom-slider row sideways every time the sort
+                  // option changes.
+                  width: 78,
                   height: 24,
                   padding: "0 8px",
                   display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "flex-start",
                   gap: 4,
                   borderRadius: 7,
                   border: "1px solid rgba(0,0,0,.12)",
@@ -396,12 +428,15 @@ export function OnShorePanel({
                   fontSize: 10,
                   fontWeight: 600,
                   cursor: "pointer",
+                  boxSizing: "border-box",
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M3 6h18M7 12h10M10 18h4" />
                 </svg>
-                {sortLabels[sort]}
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {sortLabels[sort]}
+                </span>
               </button>
               {menuOpen && (
                 <div
@@ -579,25 +614,33 @@ export function OnShorePanel({
         </div>
       )}
 
-      {!collapsed && (
-        <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
-          {(provided, snapshot) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                padding: "4px 12px 10px",
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 4 + rowDims.gap,
-                alignContent: "flex-start",
-                background: snapshot.isDraggingOver ? "rgba(251,191,36,0.12)" : "transparent",
-                transition: "background 120ms ease",
-              }}
-            >
+      {/* Drop zone is ALWAYS mounted — even when the drawer is collapsed —
+          so that @hello-pangea/dnd can measure it and accept drops from
+          canoe seats. When collapsed the effect above auto-opens the
+          drawer to SMALL during a drag so the user can see the target. */}
+      <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            style={{
+              flex: 1,
+              overflowY: collapsed ? "hidden" : "auto",
+              // Keep the drop zone laid out even when the drawer is
+              // visually collapsed so dnd can still measure it. When
+              // collapsed it has 0 height (flex:1 of a collapsed parent)
+              // but the auto-open effect expands the drawer on drag start
+              // so it becomes a real target before the user can release.
+              padding: collapsed ? 0 : "4px 12px 10px",
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 4 + rowDims.gap,
+              alignContent: "flex-start",
+              background: snapshot.isDraggingOver ? "rgba(251,191,36,0.12)" : "transparent",
+              transition: "background 120ms ease",
+            }}
+          >
               {visiblePaddlers.length === 0 && unassignedGuests.length === 0 ? (
                 <div
                   style={{
@@ -703,7 +746,6 @@ export function OnShorePanel({
             </div>
           )}
         </Droppable>
-      )}
     </div>
   );
 }
@@ -711,10 +753,24 @@ export function OnShorePanel({
 // Four-step zoom slider. The previous dotted version had tiny 4-12px hit
 // targets that were fiddly on touch. We now render a real draggable thumb
 // that snaps to the 4 steps, with visible tick marks underneath so the
-// notched feel from the mock is preserved.
+// notched feel from the mock is preserved. The little "roster" icon on
+// the left is purely decorative — at true iPhone widths the header row
+// is tight enough that it overlaps the center drag grip, so we hide it
+// below ZOOM_ICON_MIN_W and show it at desktop-small and wider.
+const ZOOM_ICON_MIN_W = 440;
 function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => void }) {
   const TRACK_W = 72;
   const STEPS = 4;
+  const [showIcon, setShowIcon] = useState(typeof window !== "undefined" ? window.innerWidth >= ZOOM_ICON_MIN_W : true);
+  useEffect(() => {
+    const onResize = () => setShowIcon(window.innerWidth >= ZOOM_ICON_MIN_W);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, []);
   const clamp = (n: number) => Math.max(0, Math.min(STEPS - 1, n));
   const fromX = (x: number, trackLeft: number) => {
     const frac = (x - trackLeft) / TRACK_W;
@@ -760,6 +816,14 @@ function NotchedZoom({ zoom, setZoom }: { zoom: number; setZoom: (n: number) => 
         borderRadius: 8,
       }}
     >
+      {showIcon && (
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      )}
       <div
         ref={trackRef}
         role="slider"

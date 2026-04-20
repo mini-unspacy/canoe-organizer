@@ -51,6 +51,9 @@ interface TodayViewProps {
   canoeMargin: number;
   currentUser: { email: string; role: string; paddlerId: string };
   selectedPaddlerId: string | null;
+  /** Live window width — used to hide grid-view chrome only when the
+   *  viewport is too narrow to fit it without overlap. */
+  windowWidth: number;
   showAllBoats: boolean;
   setShowAllBoats: (v: boolean) => void;
   showGoingList: boolean;
@@ -79,6 +82,7 @@ export function TodayView({
   handleAssign, handleUnassignAll, handleReassignCanoes,
   handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
   canoePriority, setCanoePriority, setScrollToEventId, setActivePage,
+  windowWidth,
 }: TodayViewProps) {
   const [openDesignator, setOpenDesignator] = useState<string | null>(null);
   const [sortPillOpen, setSortPillOpen] = useState(false);
@@ -90,6 +94,13 @@ export function TodayView({
   useEffect(() => {
     try { window.localStorage.setItem(CANOE_VIEW_LS_KEY, canoeView); } catch {}
   }, [canoeView]);
+
+  // In 4-col grid view each canoe card is super narrow; the lock + X
+  // buttons collide with the canoe name below this width. Keep them on
+  // desktop-small and wider tablets — they only vanish at true iPhone
+  // widths where the card is too tight to fit them.
+  const GRID_CHROME_MIN_W = 440;
+  const showCanoeChrome = canoeView !== '4' || windowWidth >= GRID_CHROME_MIN_W;
 
   return (
     <>
@@ -583,7 +594,7 @@ export function TodayView({
                 </div>
                 </>
               )}
-              {isAdmin && canoeView !== '4' && <button
+              {isAdmin && showCanoeChrome && <button
                 type="button"
                 onClick={() => setLockedCanoes(prev => {
                   const next = new Set(prev);
@@ -612,7 +623,7 @@ export function TodayView({
                   }
                 </svg>
               </button>}
-              {isAdmin && canoeView !== '4' && <button
+              {isAdmin && showCanoeChrome && <button
                 type="button"
                 onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
                 disabled={lockedCanoes.has(canoe.id)}
@@ -668,59 +679,64 @@ export function TodayView({
                           : assignedPaddler?.gender === 'kane'
                             ? '#1f4e5e'
                             : '#2a2a2a';
+                      // The Droppable is the outer seat cell. When a
+                      // paddler is assigned, the WHOLE row becomes the
+                      // Draggable wrapper — including the seat number —
+                      // so pressing anywhere on the row (not just on the
+                      // paddler name) grabs the paddler. This makes seat
+                      // rows much easier to hit on iPhone.
+                      const seatNumberStyle: React.CSSProperties = {
+                        flexShrink: 0,
+                        fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
+                        fontSize: canoeView === '4' ? '13px' : '16px',
+                        fontWeight: 600,
+                        color: hasPaddler ? '#2a2a2a' : '#484848',
+                        lineHeight: 1,
+                        width: canoeView === '4' ? '10px' : '12px',
+                        textAlign: 'right',
+                      };
+                      const rowInnerStyle: React.CSSProperties = {
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: canoeView === '4' ? 2 : 3,
+                        padding: canoeView === '4' ? '1px 3px' : '2px 4px',
+                        borderRadius: 7,
+                        background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
+                        border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
+                        transition: 'background 120ms ease, border-color 120ms ease',
+                        minHeight: canoeView === '4' ? 22 : 26,
+                        boxSizing: 'border-box',
+                      };
                       return (
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          style={{
-                            position: 'relative',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: canoeView === '4' ? 2 : 3,
-                            padding: canoeView === '4' ? '1px 3px' : '2px 4px',
-                            borderRadius: 7,
-                            background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
-                            border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
-                            transition: 'background 120ms ease, border-color 120ms ease',
-                            minHeight: canoeView === '4' ? 22 : 26,
-                          }}
+                          style={{ position: 'relative' }}
                         >
-                          <span
-                            style={{
-                              flexShrink: 0,
-                              fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
-                              fontSize: canoeView === '4' ? '13px' : '16px',
-                              fontWeight: 600,
-                              color: hasPaddler ? '#2a2a2a' : '#484848',
-                              lineHeight: 1,
-                              width: canoeView === '4' ? '10px' : '12px',
-                              textAlign: 'right',
-                            }}
-                          >
-                            {seat}
-                          </span>
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                            {assignedPaddler ? (
-                              <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
-                                {(provided, dragSnapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    tabIndex={-1}
-                                    role="none"
-                                    aria-roledescription=""
-                                    style={{
-                                      ...provided.draggableProps.style,
-                                      touchAction: 'manipulation',
-                                      WebkitUserSelect: 'none',
-                                      userSelect: 'none',
-                                      visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
-                                      maxWidth: '100%',
-                                      minWidth: 0,
-                                    }}
-                                    data-animation-key={animationKey}
-                                  >
+                          {assignedPaddler ? (
+                            <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
+                              {(dp, dragSnapshot) => (
+                                <div
+                                  ref={dp.innerRef}
+                                  {...dp.draggableProps}
+                                  {...dp.dragHandleProps}
+                                  tabIndex={-1}
+                                  role="none"
+                                  aria-roledescription=""
+                                  style={{
+                                    ...dp.draggableProps.style,
+                                    ...rowInnerStyle,
+                                    touchAction: 'manipulation',
+                                    WebkitUserSelect: 'none',
+                                    userSelect: 'none',
+                                    cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                    visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
+                                    width: '100%',
+                                  }}
+                                  data-animation-key={animationKey}
+                                >
+                                  <span style={seatNumberStyle}>{seat}</span>
+                                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                                     <PaddlerChip
                                       label={paddlerLabel}
                                       color={paddlerColor}
@@ -730,14 +746,21 @@ export function TodayView({
                                       title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
                                     />
                                   </div>
-                                )}
-                              </Draggable>
-                            ) : active ? (
-                              <div style={{ fontSize: '11px', fontWeight: 500, color: '#c82028', fontStyle: 'italic', letterSpacing: '0.2px' }}>
-                                drop here
+                                </div>
+                              )}
+                            </Draggable>
+                          ) : (
+                            <div style={rowInnerStyle}>
+                              <span style={seatNumberStyle}>{seat}</span>
+                              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                                {active ? (
+                                  <div style={{ fontSize: '11px', fontWeight: 500, color: '#c82028', fontStyle: 'italic', letterSpacing: '0.2px' }}>
+                                    drop here
+                                  </div>
+                                ) : null}
                               </div>
-                            ) : null}
-                          </div>
+                            </div>
+                          )}
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>
                       );

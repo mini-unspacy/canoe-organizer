@@ -218,6 +218,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     setCanoePriority={ctx.setCanoePriority}
                     setScrollToEventId={ctx.setScrollToEventId}
                     setActivePage={ctx.setActivePage}
+                    windowWidth={ctx.windowWidth}
                   />
                 )}
 
@@ -287,6 +288,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             pendingAssignIds={ctx.pendingAssignIds}
             animationKey={ctx.animationKey}
             dragFromStaging={ctx.dragFromStaging}
+            dragIsActive={ctx.isDragging}
             bottomOffset={navHidden ? 8 : navH}
             paddlers={ctx.paddlers}
             selectedEventId={ctx.selectedEvent?.id}
