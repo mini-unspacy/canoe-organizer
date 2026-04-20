@@ -123,7 +123,7 @@ export function TodayView({
           ? { text: 'OTHER', color: '#6b6558', bg: 'rgba(107,101,88,0.18)' }
           : null;
       return (
-    <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px' }}>
+    <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px', boxSizing: 'border-box' }}>
       {/* Event info card — serif title + stacked date stamp, matches the mock */}
       <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', alignItems: 'flex-start' }}>
