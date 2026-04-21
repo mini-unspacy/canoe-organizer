@@ -310,11 +310,13 @@ export function TodayView({
             </div>
             <div style={{ flex: 1 }} />
             <div
+              className="btn-zoom"
               onClick={(e) => { e.stopPropagation(); setShowGoingList(!showGoingList); }}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '6px',
                 padding: '4px 10px', borderRadius: '999px',
-                background: '#faf9f7', border: '1px solid rgba(0,0,0,.08)',
+                background: showGoingList ? 'rgba(0,82,128,0.08)' : '#faf9f7',
+                border: `1px solid ${showGoingList ? '#005280' : 'rgba(0,0,0,.08)'}`,
                 cursor: 'pointer', userSelect: 'none', flexShrink: 0,
               }}
             >
@@ -323,10 +325,10 @@ export function TodayView({
                 background: '#5a8a5f', boxShadow: '0 0 0 2px rgba(90,138,95,0.22)',
                 flexShrink: 0,
               }} />
-              <span style={{ fontSize: '12px', color: '#222222', fontWeight: 600 }}>
+              <span style={{ fontSize: '12px', color: showGoingList ? '#005280' : '#222222', fontWeight: 600 }}>
                 {_goingCount} going
               </span>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={showGoingList ? '#005280' : '#717171'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showGoingList ? 'rotate(90deg)' : 'none', transition: 'transform 160ms ease' }}>
                 <path d="M9 6l6 6-6 6" />
               </svg>
             </div>
