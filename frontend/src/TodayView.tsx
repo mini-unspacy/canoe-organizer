@@ -1332,7 +1332,16 @@ export function TodayView({
                 red tint when the drop target is active, with the seat
                 number colored red only when a paddler is seated. Paddlers
                 get a small RC/CS/VC type tag on the right. */}
-            <div style={{ padding: canoeView === '4' ? '0' : '0 2px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: canoeView === '4' ? '2px' : '3px' }}>
+            {/* Seats column: the flex gap that used to sit BETWEEN rows
+                is now absorbed as internal padding on each Droppable
+                (see seatHitPad below). This removes the hit-test dead
+                zone between rows that made dragging a paddler onto an
+                already-occupied seat feel sticky — the user had to
+                "aim around" the existing paddler because between-row
+                space belonged to no Droppable. With gap: 0 and internal
+                padding, adjacent Droppables touch edge-to-edge and the
+                cursor is always inside some Droppable's hit box. */}
+            <div style={{ padding: canoeView === '4' ? '0' : '0 2px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
               {Array.from({ length: 6 }).map((_, i) => {
                 const seat = i + 1;
                 const assignment = canoeEventAssignments.find(a => a.seat === seat);
@@ -1409,18 +1418,39 @@ export function TodayView({
                         paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
                         paddingRight: seatNumPad,
                         borderRadius: 7,
-                        background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
+                        background: active ? 'rgba(200,32,40,0.18)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
                         border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
-                        transition: 'background 120ms ease, border-color 120ms ease',
+                        // Louder drop affordance when a paddler is being
+                        // dragged over this seat: outline + soft red halo
+                        // so the target is unmissable even when the
+                        // dragged preview is partially covering the row.
+                        // Use outline (not a thicker border) so the row's
+                        // border-box height doesn't jump mid-drag.
+                        outline: active ? '2px solid #c82028' : 'none',
+                        outlineOffset: active ? '-1px' : '0',
+                        boxShadow: active ? '0 0 0 4px rgba(200,32,40,0.16)' : 'none',
+                        transition: 'background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, outline-color 120ms ease',
                         minHeight: canoeView === '4' ? 26 : 34,
                         boxSizing: 'border-box',
                       };
+                      // Half the former flex-gap becomes padding at the
+                      // top and bottom of each Droppable, so adjacent
+                      // Droppables meet edge-to-edge. The visual row
+                      // (rowInnerStyle) stays the same size inside; only
+                      // the hit box grows. Without this, the cursor
+                      // crossing the ~3px gap between rows landed in a
+                      // no-Droppable dead zone, which is what made
+                      // dragging onto an occupied seat feel like you
+                      // had to go AROUND the existing paddler.
+                      const seatHitPad = canoeView === '4' ? 1 : 1.5;
                       return (
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
                           style={{
                             position: 'relative',
+                            paddingTop: seatHitPad,
+                            paddingBottom: seatHitPad,
                             // CRITICAL: reserve the row's height on the
                             // OUTER wrapper. When the Draggable child is
                             // lifted by pangea it becomes position:fixed
@@ -1430,8 +1460,12 @@ export function TodayView({
                             // without this minHeight the wrapper would
                             // collapse to 0px mid-drag, shifting every
                             // seat below it up by one row-height.
+                            // minHeight is the content-box height of the
+                            // row; with paddingTop+paddingBottom the
+                            // border-box height grows by 2*seatHitPad,
+                            // preserving the pre-change visual spacing.
                             minHeight: rowInnerStyle.minHeight,
-                            boxSizing: 'border-box',
+                            boxSizing: 'content-box',
                           }}
                         >
                           {/* Seat # is rendered here (a sibling of the
@@ -1471,7 +1505,20 @@ export function TodayView({
                                     WebkitUserSelect: 'none',
                                     userSelect: 'none',
                                     cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
-                                    visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
+                                    // When a DIFFERENT paddler is being
+                                    // dragged over this occupied seat,
+                                    // dim the sitting paddler to 30%
+                                    // instead of hiding it outright.
+                                    // That keeps the "this paddler will
+                                    // be displaced by the swap" affordance
+                                    // visible, so the user sees a clear
+                                    // target instead of a suddenly-empty
+                                    // row. We still keep it from
+                                    // intercepting pointer events during
+                                    // the drag via pangea's automatic
+                                    // pointer-events:none on non-dragging
+                                    // Draggables.
+                                    opacity: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 0.3 : 1,
                                     width: '100%',
                                     ...dp.draggableProps.style,
                                   }}
