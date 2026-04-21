@@ -7,6 +7,28 @@ import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
 import { pickFreshCanoeName } from "./canoeNames";
 import { PaddlerChip, SEAT_CHIP_DIMS, SEAT_CHIP_DIMS_COMPACT } from "./PaddlerChip";
 
+// Animated counter — plays a small slide-in when the value changes,
+// direction based on whether it went up or down. The number is wrapped
+// in an overflow:hidden inline-block so the translate effect stays
+// within its own box.
+function AnimatedNumber({ value }: { value: number }) {
+  const prevRef = useRef<number>(value);
+  const direction =
+    value > prevRef.current ? 'up' : value < prevRef.current ? 'down' : null;
+  useEffect(() => { prevRef.current = value; }, [value]);
+  return (
+    <span style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'baseline' }}>
+      <span
+        key={value}
+        className={direction === 'up' ? 'count-roll-up' : direction === 'down' ? 'count-roll-down' : undefined}
+        style={{ display: 'inline-block' }}
+      >
+        {value}
+      </span>
+    </span>
+  );
+}
+
 // localStorage key used to persist the user's Fleet section view preference
 // across sessions. Matches the Lokahi mock's canoeView state.
 const CANOE_VIEW_LS_KEY = 'lokahi.canoeView';
@@ -327,7 +349,7 @@ export function TodayView({
                 flexShrink: 0,
               }} />
               <span style={{ fontSize: '12px', color: showGoingList ? '#005280' : '#222222', fontWeight: 600 }}>
-                {_goingCount} going
+                <AnimatedNumber value={_goingCount} /> going
               </span>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={showGoingList ? '#005280' : '#717171'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showGoingList ? 'rotate(90deg)' : 'none', transition: 'transform 160ms ease' }}>
                 <path d="M9 6l6 6-6 6" />
