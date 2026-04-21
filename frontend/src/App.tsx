@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "./convex_generated/api";
 import { DragDropContext } from "@hello-pangea/dnd";
-import type { DragStart, DropResult } from "@hello-pangea/dnd";
+import type { DragStart, DropResult, Sensor, SensorAPI } from "@hello-pangea/dnd";
 
 import LoginPage from "./LoginPage";
 import OnboardingPage from "./OnboardingPage";
@@ -85,13 +85,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // canoe seat, we leave scrollRef scrollable so auto-scroll can bring
   // off-screen canoes into view as the user drags.
   const onBeforeDragStart = useCallback((start: DragStart) => {
-    console.log('[DND] onBeforeDragStart', { src: start.source.droppableId, id: start.draggableId });
     if (start.source.droppableId.startsWith('staging-') && scrollRef.current) {
       scrollRef.current.style.overflowY = 'hidden';
     }
   }, []);
   const onDragEndWithRestore = useCallback((result: DropResult) => {
-    console.log('[DND] onDragEnd', { src: result.source?.droppableId, dest: result.destination?.droppableId, id: result.draggableId, reason: result.reason });
     if (scrollRef.current) {
       // Clear the inline override — React's style prop will take over.
       scrollRef.current.style.overflowY = '';
@@ -99,15 +97,61 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     ctx.onDragEnd(result);
   }, [ctx]);
 
+  // ─── STUCK-DRAG RECOVERY ───
+  // @hello-pangea/dnd has a rare failure mode where, on mouseup at the
+  // end of a drag originating from inside a canoe seat, the library
+  // never runs its drop handler and never fires onDragEnd. The result
+  // is: the Draggable stays rendered at position:fixed with a transform
+  // lock, ctx.isDragging stays true, touchAction:none stays on the
+  // wrapper, and the whole UI is frozen. We haven't root-caused what
+  // nudges the library's internal state off the rails, so we install a
+  // safety net: register a no-op custom sensor so we can capture the
+  // library's SensorAPI, then watch for window mouseup while dragging.
+  // If onDragEnd hasn't fired ~500ms after mouseup, call
+  // api.tryReleaseLock() — which dispatches FLUSH internally, triggering
+  // the library's own publisher.abort() path, which fires onDragEnd
+  // with reason CANCEL and releases all the DOM locks.
+  const sensorApiRef = useRef<SensorAPI | null>(null);
+  const captureSensor: Sensor = useCallback((api: SensorAPI) => {
+    sensorApiRef.current = api;
+  }, []);
+  const sensors = useMemo<Sensor[]>(() => [captureSensor], [captureSensor]);
+
+  const isDraggingRef = useRef(ctx.isDragging);
+  isDraggingRef.current = ctx.isDragging;
+  useEffect(() => {
+    const onMouseUp = () => {
+      if (!isDraggingRef.current) return;
+      setTimeout(() => {
+        if (!isDraggingRef.current) return;
+        // Library failed to deliver onDragEnd within the grace period —
+        // force-abort so the drop-lock clears.
+        const api = sensorApiRef.current;
+        if (api && api.isLockClaimed()) {
+          api.tryReleaseLock();
+        }
+      }, 500);
+    };
+    window.addEventListener('mouseup', onMouseUp, true);
+    window.addEventListener('touchend', onMouseUp, true);
+    window.addEventListener('touchcancel', onMouseUp, true);
+    return () => {
+      window.removeEventListener('mouseup', onMouseUp, true);
+      window.removeEventListener('touchend', onMouseUp, true);
+      window.removeEventListener('touchcancel', onMouseUp, true);
+    };
+  }, []);
+
   return (
     <DragDropContext
       onBeforeDragStart={onBeforeDragStart}
       onDragStart={ctx.handleDragStart}
       onDragEnd={onDragEndWithRestore}
+      sensors={sensors}
     >
       <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <main style={{ height: '100%', overflow: 'hidden', boxSizing: 'border-box', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
-          {ctx.dataLoading ? (
+          {ctx.dataLoading && !ctx.isDragging ? (
             <LokahiSplash />
           ) : ctx.hasNoData ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>

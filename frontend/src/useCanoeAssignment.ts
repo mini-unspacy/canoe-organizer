@@ -18,8 +18,33 @@ interface SelectedEvent {
 
 export function useCanoeAssignment(currentUser: { email: string; role: string; paddlerId: string }) {
   const isAdmin = currentUser.role === 'admin';
-  const canoes = useQuery(api.canoes.getCanoes);
-  const paddlers = useQuery(api.paddlers.getPaddlers);
+  // ─── DRAG STABILITY LAYER ───
+  // @hello-pangea/dnd has a footgun: if a Draggable unmounts mid-drag
+  // (e.g. because one of these Convex queries blips back to undefined
+  // during a reconnect), the library's lock resets the internal phase
+  // to IDLE, the subsequent window-mouseup no-ops, onDragEnd never
+  // fires, and a position:fixed drag clone is stranded on the page with
+  // touchAction:none locking the entire UI. We defend against that by
+  // caching the last non-undefined snapshot of each query and, while a
+  // drag is in flight, substituting the cached snapshot whenever the
+  // live query is undefined so the render tree stays intact and the
+  // Draggables never unmount. isDragging is declared up here (rather
+  // than with the other drag state below) so the substitution is
+  // available before any memo that consumes these values.
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragFromStaging, setDragFromStaging] = useState(false);
+  const _canoesLive = useQuery(api.canoes.getCanoes);
+  const _paddlersLive = useQuery(api.paddlers.getPaddlers);
+  const lastCanoesRef = useRef(_canoesLive);
+  const lastPaddlersRef = useRef(_paddlersLive);
+  if (_canoesLive !== undefined) lastCanoesRef.current = _canoesLive;
+  if (_paddlersLive !== undefined) lastPaddlersRef.current = _paddlersLive;
+  // Always prefer the cached snapshot when live is undefined — not just
+  // during a drag. Convex reconnect blips that flash empty lists unmount
+  // the Draggable tree, which the library can't recover from. Cheap
+  // loading UX win too.
+  const canoes = _canoesLive === undefined ? lastCanoesRef.current : _canoesLive;
+  const paddlers = _paddlersLive === undefined ? lastPaddlersRef.current : _paddlersLive;
   const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
   const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
   const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers);
@@ -111,10 +136,15 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     return new Set<string>(eventAttendance.map((a: { paddlerId: string }) => a.paddlerId));
   }, [eventAttendance]);
 
-  const eventAssignments = useQuery(
+  const _eventAssignmentsLive = useQuery(
     api.eventAssignments.getEventAssignments,
     selectedEvent ? { eventId: selectedEvent.id } : "skip"
   );
+  const lastEventAssignmentsRef = useRef(_eventAssignmentsLive);
+  if (_eventAssignmentsLive !== undefined) lastEventAssignmentsRef.current = _eventAssignmentsLive;
+  const eventAssignments = _eventAssignmentsLive === undefined
+    ? lastEventAssignmentsRef.current
+    : _eventAssignmentsLive;
 
   const eventGuests = useQuery(
     api.eventGuests.getByEvent,
@@ -170,15 +200,36 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
 
   const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
 
-  const [isDragging, setIsDragging] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
-  const [dragFromStaging, setDragFromStaging] = useState(false);
+
+  // Watchdog: if a drag somehow gets stranded (library swallowed
+  // onDragEnd because of a mid-drag remount, for example), force the
+  // drag state off after a generous timeout so touchAction:none is
+  // cleared and the UI stops being frozen. Belt-and-suspenders on top
+  // of the stability layer above.
+  const dragWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearDragWatchdog = useCallback(() => {
+    if (dragWatchdogRef.current) {
+      clearTimeout(dragWatchdogRef.current);
+      dragWatchdogRef.current = null;
+    }
+  }, []);
 
   const handleDragStart = useCallback((start: DragStart) => {
-    console.log('[DND] onDragStart', { src: start.source.droppableId, id: start.draggableId });
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
-  }, []);
+    clearDragWatchdog();
+    dragWatchdogRef.current = setTimeout(() => {
+      // Last-resort belt-and-suspenders: if 15 seconds have elapsed and
+      // the drag still hasn't resolved (neither a normal drop nor the
+      // mouseup-based recovery in App.tsx fired), force-clear our state
+      // so at minimum touchAction:none is removed and the UI thaws.
+      setIsDragging(false);
+      setDragFromStaging(false);
+    }, 15000);
+  }, [clearDragWatchdog]);
+
+  useEffect(() => clearDragWatchdog, [clearDragWatchdog]);
 
   useEffect(() => {
     const handler = () => {
@@ -301,6 +352,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   }, [canoePriority]);
 
   const onDragEnd = async (result: DropResult) => {
+    clearDragWatchdog();
     setIsDragging(false);
     setDragFromStaging(false);
     const { source, destination, draggableId } = result;
@@ -356,16 +408,8 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     if (source.droppableId === destination.droppableId) return;
 
     if (destination.droppableId.startsWith("staging-")) {
-      console.log('[DND] staging-drop path', { oldCanoeId, oldSeat, draggableId, currentAssignment });
       if (oldCanoeId && oldSeat) {
-        try {
-          console.log('[DND] calling unassignPaddler');
-          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
-          console.log('[DND] unassignPaddler resolved');
-        } catch (err) {
-          console.error('[DND] unassignPaddler threw', err);
-          throw err;
-        }
+        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
       }
       return;
     }
