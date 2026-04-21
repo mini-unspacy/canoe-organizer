@@ -916,6 +916,11 @@ export function TodayView({
       }}>
       {canoes?.map((canoe, canoeIdx) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
+        // Seat-fill flourish: when all 6 seats are filled the card takes on a
+        // soft green halo in place of the neutral shadow, and the FULL badge
+        // below pops in with a spring scale.
+        const fillCount = canoeEventAssignments.length;
+        const isFull = fillCount === 6;
         return (
           <div
             key={canoe._id.toString()}
@@ -927,13 +932,38 @@ export function TodayView({
               backgroundColor: '#ffffff',
               borderRadius: '14px',
               padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
-              boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
+              boxShadow: isFull
+                ? '0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18)'
+                : '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
               minWidth: 0,
               // Stagger the entry: each card delays 40ms more than the last,
               // capped at 8 cards so a huge fleet doesn't feel sluggish.
               animationDelay: `${Math.min(canoeIdx, 8) * 40}ms`,
+              transition: 'box-shadow 320ms ease',
             }}
           >
+            {/* Seat-fill flourish — FULL pill pops in when all 6 seats are
+                taken. Keying on isFull so it remounts (replaying the pop
+                animation) whenever the canoe crosses back to full. */}
+            {isFull && (
+              <span
+                key="full-badge"
+                className="seat-full-pop"
+                aria-label="All seats filled"
+                style={{
+                  position: 'absolute', top: -8, right: 8, zIndex: 5,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '3px 8px', borderRadius: 999,
+                  background: '#2f7a47', color: '#ffffff',
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                  boxShadow: '0 2px 8px rgba(47,122,71,0.35)',
+                  border: '1px solid rgba(255,255,255,0.5)',
+                }}
+              >
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ffffff' }} />
+                FULL
+              </span>
+            )}
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
                 designation · fill count ... 6-bar status strip · lock icon.
                 Mirrors the mock's CanoeCard header. */}
