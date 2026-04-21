@@ -21,7 +21,7 @@ function DateTimeFields({
     textTransform: 'uppercase', marginBottom: 4,
   };
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: showDate ? '1fr 1fr' : '1fr', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: showDate ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gap: 10, minWidth: 0 }}>
       {showDate && (
         <label style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={captionStyle}>Date</span>
