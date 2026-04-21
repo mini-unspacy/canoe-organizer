@@ -108,6 +108,14 @@ export const PaddlerChip: React.FC<{
       style={{
         display: 'inline-flex',
         alignItems: 'center',
+        // box-sizing: border-box so dims.minH is the ACTUAL rendered
+        // height of the chip. With the default content-box, a chip with
+        // minH=28 + padding 3+3 + border 1+1 renders at 36px — 8px
+        // taller than expected. Consumers (seat rows, pool rows) size
+        // themselves around the chip's minH, so letting it mean "actual
+        // height" lets those containers size correctly without having
+        // to add +8 everywhere.
+        boxSizing: 'border-box',
         padding: '3px 8px',
         borderRadius: 7,
         background: bg,
