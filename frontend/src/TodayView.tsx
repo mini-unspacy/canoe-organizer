@@ -1494,7 +1494,21 @@ export function TodayView({
                               normally when grabbed; drops from elsewhere
                               pass through to the outer Droppable. */}
                           {assignedPaddler && (
+                            // KEY by paddler id (not seat) so that when a
+                            // swap changes the occupant of this seat,
+                            // React fully unmounts the old paddler-host +
+                            // its Draggable and mounts a fresh pair.
+                            // Without a key here React reuses the same
+                            // Draggable instance across the swap (only
+                            // the draggableId prop changes), and pangea
+                            // ends up with stale internal state on the
+                            // reused instance — manifests as the
+                            // swapped-in paddler being un-grabbable.
+                            // pangea's docs explicitly recommend keying
+                            // each Draggable by its draggableId for
+                            // exactly this reason.
                             <Droppable
+                              key={assignedPaddler.id}
                               droppableId={`paddler-host-canoe-${canoe.id}-seat-${seat}`}
                               isDropDisabled={true}
                             >
@@ -1517,7 +1531,7 @@ export function TodayView({
                                     display: 'flex',
                                   }}
                                 >
-                                  <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
+                                  <Draggable key={assignedPaddler.id} draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
                                     {(dp, dragSnapshot) => (
                                       <div
                                         ref={dp.innerRef}
