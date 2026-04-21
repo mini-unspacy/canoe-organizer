@@ -767,6 +767,7 @@ export function TodayView({
               as a fourth pill since the feature is useful). */}
           <button
             type="button"
+            className="btn-zoom"
             onClick={() => { triggerAnimation(); handleAssign(); }}
             title="Auto-assign paddlers to seats"
             style={{
@@ -784,6 +785,7 @@ export function TodayView({
           </button>
           <button
             type="button"
+            className="btn-zoom"
             onClick={() => { triggerAnimation(); handleUnassignAll(); }}
             title="Clear all assignments"
             style={{
@@ -802,6 +804,7 @@ export function TodayView({
           <div ref={sortPillRef} style={{ position: 'relative' }}>
             <button
               type="button"
+              className="btn-zoom"
               onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
               title="Change sort priority"
               style={{
@@ -945,6 +948,7 @@ export function TodayView({
                 return (
                   <button
                     type="button"
+                    className={isEditable ? "btn-zoom" : undefined}
                     onClick={(e) => {
                       if (!isEditable) return;
                       // Toggle closed if we're clicking the same canoe's
@@ -1070,6 +1074,7 @@ export function TodayView({
                               <button
                                 key={d}
                                 type="button"
+                                className="btn-zoom"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const nextDesignation = isMine ? '' : d;
@@ -1110,6 +1115,7 @@ export function TodayView({
                         <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                           <button
                             type="button"
+                            className="btn-zoom"
                             onClick={(e) => {
                               e.stopPropagation();
                               const custom = prompt('Enter canoe designation:');
@@ -1136,6 +1142,7 @@ export function TodayView({
                           </button>
                           <button
                             type="button"
+                            className={canoeDesignations[canoe.id] ? "btn-zoom" : undefined}
                             onClick={(e) => {
                               e.stopPropagation();
                               updateDesignationMut({ canoeId: canoe.id, designation: '' });
@@ -1164,6 +1171,7 @@ export function TodayView({
               )}
               {isAdmin && showCanoeChrome && <button
                 type="button"
+                className="btn-zoom-sm"
                 onClick={() => setLockedCanoes(prev => {
                   const next = new Set(prev);
                   if (next.has(canoe.id)) next.delete(canoe.id);
@@ -1193,6 +1201,7 @@ export function TodayView({
               </button>}
               {isAdmin && showCanoeChrome && <button
                 type="button"
+                className={lockedCanoes.has(canoe.id) ? undefined : "btn-zoom-sm"}
                 onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
                 disabled={lockedCanoes.has(canoe.id)}
                 title={lockedCanoes.has(canoe.id) ? 'Unlock canoe to delete' : 'Delete canoe'}

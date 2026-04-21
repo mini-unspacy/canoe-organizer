@@ -280,3 +280,56 @@ select,
 .scrollbar-hidden::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Opera */
 }
+
+/* Subtle hover-zoom for interactive buttons. Uses !important on the
+   transition so it always wins over inline styles — we include opacity /
+   background / border / color alongside transform so existing inline
+   hover tweaks (onMouseEnter opacity changes, etc.) still animate. */
+.btn-zoom {
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease !important;
+  transform-origin: center;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-zoom:hover {
+    transform: scale(1.06);
+  }
+}
+.btn-zoom:active {
+  transform: scale(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-zoom:hover,
+  .btn-zoom:active {
+    transform: none;
+  }
+}
+/* Softer variant for small icon buttons — less dramatic scale */
+.btn-zoom-sm {
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease !important;
+  transform-origin: center;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-zoom-sm:hover {
+    transform: scale(1.14);
+  }
+}
+.btn-zoom-sm:active {
+  transform: scale(0.92);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-zoom-sm:hover,
+  .btn-zoom-sm:active {
+    transform: none;
+  }
+}

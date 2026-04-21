@@ -282,6 +282,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
         {/* Floating + event button (admin only) */}
         {isAdmin && <div style={{ position: 'sticky', top: '8px', zIndex: 20, float: 'right' }}>
           <span
+            className="btn-zoom"
             onClick={() => {
               setEditingEventId(null);
               setEventForm({ title: '', date: '', time: '', location: '', eventType: 'practice', repeating: 'none', weekdays: [], monthdays: [], repeatUntil: '' });
@@ -309,6 +310,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 {(['practice', 'race', 'other'] as const).map(t => (
                   <button
                     key={t}
+                    className="btn-zoom"
                     onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
                     style={{
                       padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
@@ -351,6 +353,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 {(['none', 'weekly', 'monthly'] as const).map(r => (
                   <button
                     key={r}
+                    className="btn-zoom"
                     onClick={() => setEventForm(f => ({ ...f, repeating: r, weekdays: [], monthdays: [], repeatUntil: r !== 'none' && !f.repeatUntil ? getLocalToday() : f.repeatUntil }))}
                     style={{
                       padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
@@ -373,6 +376,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     return (
                       <button
                         key={day}
+                        className="btn-zoom"
                         onClick={() => {
                           setEventForm(f => ({
                             ...f,
@@ -404,6 +408,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     return (
                       <button
                         key={day}
+                        className="btn-zoom"
                         onClick={() => {
                           setEventForm(f => ({
                             ...f,
@@ -442,12 +447,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
               {/* Buttons */}
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button
+                  className="btn-zoom"
                   onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
                   style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#ffffff', color: '#717171', cursor: 'pointer', transition: 'all 0.15s' }}
                 >
                   Cancel
                 </button>
                 <button
+                  className="btn-zoom"
                   onClick={async () => {
                     if (!eventForm.title || !eventForm.time) return;
                     const startDate = eventForm.date || getLocalToday();
@@ -506,6 +513,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           {(['practice', 'race', 'other'] as const).map(t => (
                             <button
                               key={t}
+                              className="btn-zoom"
                               onClick={() => setEventForm(f => ({ ...f, eventType: t }))}
                               style={{
                                 padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
@@ -542,12 +550,14 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                         />
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
+                            className="btn-zoom"
                             onClick={() => { setShowEventForm(false); setEditingEventId(null); }}
                             style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: '1px solid rgba(0,0,0,.12)', backgroundColor: '#ffffff', color: '#717171', cursor: 'pointer', transition: 'all 0.15s' }}
                           >
                             Cancel
                           </button>
                           <button
+                            className="btn-zoom"
                             onClick={async () => {
                               if (!eventForm.title || !eventForm.time) return;
                               await updateEventMut({
@@ -662,6 +672,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                       {isAdmin && (
                         <>
                           <svg
+                            className="btn-zoom-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingEventId(evt.id);
@@ -682,6 +693,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
                           <svg
+                            className="btn-zoom-sm"
                             onClick={(e) => { e.stopPropagation(); deleteEventMut({ eventId: evt.id }); }}
                             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a928a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                             style={{ cursor: 'pointer', padding: 4, boxSizing: 'content-box' }}
