@@ -20,6 +20,7 @@ const ACCENT_SOFT = 'rgba(0,82,128,0.10)';
 
 const baseFieldStyle: React.CSSProperties = {
   width: '100%',
+  minWidth: 0,
   boxSizing: 'border-box',
   height: 38,
   padding: '0 10px',
@@ -127,7 +128,7 @@ function ChipButton({
         boxShadow: open ? `0 0 0 3px ${ACCENT_RING}` : 'none',
       }}
     >
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>
         {displayValue || placeholder}
       </span>
       {icon}

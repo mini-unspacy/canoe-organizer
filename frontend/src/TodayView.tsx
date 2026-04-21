@@ -16,15 +16,17 @@ function AnimatedNumber({ value }: { value: number }) {
   const direction =
     value > prevRef.current ? 'up' : value < prevRef.current ? 'down' : null;
   useEffect(() => { prevRef.current = value; }, [value]);
+  // No outer wrapper — inline-block with overflow:hidden broke baseline
+  // alignment with adjacent text. The keyed span alone re-mounts on value
+  // change, which replays the slide animation. The slide is only a few px
+  // so clipping isn't needed.
   return (
-    <span style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'baseline' }}>
-      <span
-        key={value}
-        className={direction === 'up' ? 'count-roll-up' : direction === 'down' ? 'count-roll-down' : undefined}
-        style={{ display: 'inline-block' }}
-      >
-        {value}
-      </span>
+    <span
+      key={value}
+      className={direction === 'up' ? 'count-roll-up' : direction === 'down' ? 'count-roll-down' : undefined}
+      style={{ display: 'inline-block' }}
+    >
+      {value}
     </span>
   );
 }
@@ -263,7 +265,7 @@ export function TodayView({
     <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px', boxSizing: 'border-box' }}>
       {/* Event info card — serif title + stacked date stamp, matches the mock.
           Warm cream→white gradient for subtle depth, plus breathe-in on mount. */}
-      <div className="breathe-in" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #fcfaf5 55%, #ffffff 100%)', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
+      <div className="breathe-in" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #fcfaf5 55%, #ffffff 100%)', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)', position: 'relative', zIndex: 20 }}>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', alignItems: 'flex-start' }}>
         <div
           onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }}
@@ -998,23 +1000,35 @@ export function TodayView({
                 taken. Keying on isFull so it remounts (replaying the pop
                 animation) whenever the canoe crosses back to full. */}
             {isFull && (
-              <span
-                key="full-badge"
-                className="seat-full-pop"
-                aria-label="All seats filled"
+              // Outer div handles horizontal centering via left:50% + translate.
+              // Inner span carries the seat-full-pop animation (which uses
+              // transform: scale()), so we keep the two transforms on separate
+              // elements to avoid conflict.
+              <div
+                aria-hidden="true"
                 style={{
-                  position: 'absolute', top: -8, right: 8, zIndex: 5,
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '3px 8px', borderRadius: 999,
-                  background: '#2f7a47', color: '#ffffff',
-                  fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                  boxShadow: '0 2px 8px rgba(47,122,71,0.35)',
-                  border: '1px solid rgba(255,255,255,0.5)',
+                  position: 'absolute', top: -8, left: '50%',
+                  transform: 'translateX(-50%)', zIndex: 5,
+                  pointerEvents: 'none',
                 }}
               >
-                <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ffffff' }} />
-                FULL
-              </span>
+                <span
+                  key="full-badge"
+                  className="seat-full-pop"
+                  aria-label="All seats filled"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '3px 8px', borderRadius: 999,
+                    background: '#2f7a47', color: '#ffffff',
+                    fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                    boxShadow: '0 2px 8px rgba(47,122,71,0.35)',
+                    border: '1px solid rgba(255,255,255,0.5)',
+                  }}
+                >
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ffffff' }} />
+                  FULL
+                </span>
+              </div>
             )}
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
                 designation · fill count ... 6-bar status strip · lock icon.

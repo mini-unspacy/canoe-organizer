@@ -311,7 +311,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           {showEventForm && !editingEventId && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowEventForm(false)} />
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '260px', backgroundColor: '#ffffff', borderRadius: '8px', padding: '12px', border: '1px solid rgba(0,0,0,.12)', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)' }}>
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', zIndex: 20, width: '320px', maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', backgroundColor: '#ffffff', borderRadius: '8px', padding: '12px', border: '1px solid rgba(0,0,0,.12)', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.08)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Event type selector */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
