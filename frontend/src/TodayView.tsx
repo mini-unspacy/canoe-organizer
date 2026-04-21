@@ -975,6 +975,10 @@ export function TodayView({
         // below pops in with a spring scale.
         const fillCount = canoeEventAssignments.length;
         const isFull = fillCount === 6;
+        // Only the LAST canoe in the fleet shows an X delete button.
+        // Removing canoes out of order would leave gaps / re-order the
+        // line-up, so admins must delete from the end.
+        const isLastCanoe = !!canoes && canoeIdx === canoes.length - 1;
         return (
           <div
             key={canoe._id.toString()}
@@ -1300,7 +1304,7 @@ export function TodayView({
                   }
                 </svg>
               </button>}
-              {isAdmin && showCanoeChrome && <button
+              {isAdmin && showCanoeChrome && isLastCanoe && <button
                 type="button"
                 className={lockedCanoes.has(canoe.id) ? undefined : "btn-zoom-sm"}
                 onClick={() => { if (!lockedCanoes.has(canoe.id)) handleRemoveCanoe(canoe.id); }}
