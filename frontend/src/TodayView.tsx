@@ -1419,7 +1419,20 @@ export function TodayView({
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          style={{ position: 'relative' }}
+                          style={{
+                            position: 'relative',
+                            // CRITICAL: reserve the row's height on the
+                            // OUTER wrapper. When the Draggable child is
+                            // lifted by pangea it becomes position:fixed
+                            // and leaves the normal layout. The absolute-
+                            // positioned seat # doesn't take flow space
+                            // and the placeholder is display:none, so
+                            // without this minHeight the wrapper would
+                            // collapse to 0px mid-drag, shifting every
+                            // seat below it up by one row-height.
+                            minHeight: rowInnerStyle.minHeight,
+                            boxSizing: 'border-box',
+                          }}
                         >
                           {/* Seat # is rendered here (a sibling of the
                               Draggable, not a child) so it stays anchored
