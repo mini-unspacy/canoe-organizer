@@ -333,3 +333,196 @@ select,
     transform: none;
   }
 }
+
+/* ────────────────────────────────────────────────────────────
+   Card entry: staggered fade + slide-up.
+   Apply .breathe-in to any element that should ease in when it
+   first mounts. Use inline style animationDelay for stagger. */
+@keyframes breathe-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+.breathe-in {
+  animation: breathe-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathe-in { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Hover lift: subtle shadow + translateY on hover. Pairs with
+   .btn-zoom for a double punch, or use alone on cards/rows that
+   shouldn't scale. */
+.hover-lift {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms ease,
+    border-color 180ms ease !important;
+  will-change: transform, box-shadow;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.05),
+      0 4px 12px rgba(0,0,0,0.06),
+      0 12px 28px rgba(0,0,0,0.10);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift:hover { transform: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Shimmer skeleton. Gradient sweeps across the placeholder. */
+@keyframes shimmer-sweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #efece6 0%,
+    #f7f5f0 30%,
+    #efece6 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.4s linear infinite;
+  border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer { animation: none; background: #efece6; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Live pulse: a small colored dot that gently breathes,
+   hinting at real-time data. */
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46,107,128,0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(46,107,128,0);  }
+  100% { box-shadow: 0 0 0 0 rgba(46,107,128,0);    }
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #2e6b80;
+  animation: live-pulse 2s ease-out infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Today pulse: red variant of the live dot for the schedule
+   today-marker. */
+@keyframes today-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(237,28,36,0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(237,28,36,0);  }
+  100% { box-shadow: 0 0 0 0 rgba(237,28,36,0);    }
+}
+.today-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #ed1c24;
+  animation: today-pulse 1.8s ease-out infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .today-dot { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Seat-fill flourish: triggered by re-keying the icon wrapper
+   when fillCount transitions to full. One-shot pop. */
+@keyframes seat-full-pop {
+  0%   { transform: scale(1);    filter: none; }
+  40%  { transform: scale(1.22); filter: drop-shadow(0 0 6px rgba(47,122,71,0.55)); }
+  100% { transform: scale(1);    filter: none; }
+}
+.seat-full-pop {
+  animation: seat-full-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seat-full-pop { animation: none; }
+}
+
+/* Glow sweep for the seat-count bar when the canoe fills. */
+@keyframes seat-bar-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(47,122,71,0); }
+  50%      { box-shadow: 0 0 8px rgba(47,122,71,0.55); }
+}
+.seat-bar-glow {
+  animation: seat-bar-glow 800ms ease-in-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seat-bar-glow { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Page transition: soft crossfade when the active tab
+   changes. The outgoing page unmounts; the incoming page
+   plays this animation on mount. */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-fade-in {
+  animation: page-fade-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-in { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Count-roll: number tick animation for smooth going-count
+   changes. The roller stacks digits vertically and slides. */
+@keyframes count-roll-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes count-roll-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+.count-roll-up   { animation: count-roll-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.count-roll-down { animation: count-roll-down 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .count-roll-up, .count-roll-down { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Press ripple: a subtle radial flash when a button is tapped.
+   Pure CSS — uses ::after pseudo-element triggered by :active.
+   Works best on buttons with overflow:hidden and positioned
+   context; for pills we rely on the existing border-radius to
+   clip naturally. */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: scale(1);
+  pointer-events: none;
+  z-index: -1;
+}
+.btn-ripple:active::after {
+  animation: ripple-flash 420ms ease-out;
+}
+@keyframes ripple-flash {
+  0%   { opacity: 0.25; transform: scale(1);   }
+  100% { opacity: 0;    transform: scale(40);  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-ripple:active::after { animation: none; }
+}
