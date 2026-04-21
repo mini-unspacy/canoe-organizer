@@ -142,33 +142,9 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   );
   const lastEventAssignmentsRef = useRef(_eventAssignmentsLive);
   if (_eventAssignmentsLive !== undefined) lastEventAssignmentsRef.current = _eventAssignmentsLive;
-  const liveEventAssignments = _eventAssignmentsLive === undefined
+  const eventAssignments = _eventAssignmentsLive === undefined
     ? lastEventAssignmentsRef.current
     : _eventAssignmentsLive;
-  // ─── DRAG FREEZE LAYER ───
-  // The per-seat Draggable is rendered conditionally on assignedPaddler
-  // (truthy → <Draggable>, falsy → empty-seat placeholder). When the
-  // Convex mutation in onDragEnd resolves mid drop-animation, the live
-  // eventAssignments query updates: the Draggable for the moving paddler
-  // unmounts from its source seat and remounts at the destination. That
-  // unmount strands the library's position:fixed drop clone because the
-  // library's internal registry still thinks the Draggable is at the
-  // source. To prevent that, we snapshot eventAssignments at drag start
-  // and serve all renders from the frozen snapshot until the drop
-  // animation has fully completed — ~500ms after onDragEnd fires. During
-  // the freeze the Draggable tree is stable, so the library can finish
-  // its cleanup; after the freeze, the live query (which already has the
-  // new assignment) takes over and the Draggables remount in their new
-  // homes with no drag in flight.
-  const [freezeTick, setFreezeTick] = useState(0); // force re-renders on freeze/thaw
-  const frozenEventAssignmentsRef = useRef<typeof liveEventAssignments | null>(null);
-  const thawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Consume freezeTick so lint doesn't mark it unused; its only purpose is
-  // to trigger re-renders when freeze/thaw toggles.
-  void freezeTick;
-  const eventAssignments = frozenEventAssignmentsRef.current !== null
-    ? frozenEventAssignmentsRef.current
-    : liveEventAssignments;
 
   const eventGuests = useQuery(
     api.eventGuests.getByEvent,
@@ -242,16 +218,6 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
-    // Snapshot the pre-drag assignment state and freeze renders to it
-    // until onDragEnd schedules the thaw. This keeps the Draggable tree
-    // stable through the library's drop animation so the drop clone
-    // can't be stranded by a mid-animation unmount/remount.
-    if (thawTimerRef.current) {
-      clearTimeout(thawTimerRef.current);
-      thawTimerRef.current = null;
-    }
-    frozenEventAssignmentsRef.current = lastEventAssignmentsRef.current ?? [];
-    setFreezeTick(t => t + 1);
     clearDragWatchdog();
     dragWatchdogRef.current = setTimeout(() => {
       // Last-resort belt-and-suspenders: if 15 seconds have elapsed and
@@ -260,19 +226,10 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
       // so at minimum touchAction:none is removed and the UI thaws.
       setIsDragging(false);
       setDragFromStaging(false);
-      frozenEventAssignmentsRef.current = null;
-      setFreezeTick(t => t + 1);
     }, 15000);
   }, [clearDragWatchdog]);
 
   useEffect(() => clearDragWatchdog, [clearDragWatchdog]);
-
-  useEffect(() => () => {
-    if (thawTimerRef.current) {
-      clearTimeout(thawTimerRef.current);
-      thawTimerRef.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     const handler = () => {
@@ -398,17 +355,6 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     clearDragWatchdog();
     setIsDragging(false);
     setDragFromStaging(false);
-    // Keep eventAssignments frozen through the library's ~250ms drop
-    // animation so Draggables don't unmount mid-animation when the
-    // Convex mutation below resolves and pushes the new assignment.
-    // 500ms is comfortably past the animation end. If thaw fires before
-    // the mutation resolves, that's fine: the library is already idle.
-    if (thawTimerRef.current) clearTimeout(thawTimerRef.current);
-    thawTimerRef.current = setTimeout(() => {
-      frozenEventAssignmentsRef.current = null;
-      thawTimerRef.current = null;
-      setFreezeTick(t => t + 1);
-    }, 500);
     const { source, destination, draggableId } = result;
     if (!destination) return;
 
