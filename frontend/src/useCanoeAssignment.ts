@@ -420,6 +420,8 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     const destSeat = parseInt(destParts[3]);
     if (lockedCanoes.has(destCanoeId) || isNaN(destSeat)) return;
     if (!canoes?.find((c: Canoe) => c.id === destCanoeId)) return;
+    // Self-drop: source is paddler-host-canoe-X-seat-Y, dest is canoe-X-seat-Y — never string-equal, so compare by id/seat.
+    if (oldCanoeId === destCanoeId && oldSeat === destSeat) return;
 
     const destAssignments = canoeAssignmentsByCanoe.get(destCanoeId) || [];
     const existingAssignment = destAssignments.find(a => a.seat === destSeat);

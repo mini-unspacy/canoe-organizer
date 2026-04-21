@@ -1443,6 +1443,14 @@ export function TodayView({
                       // dragging onto an occupied seat feel like you
                       // had to go AROUND the existing paddler.
                       const seatHitPad = canoeView === '4' ? 1 : 1.5;
+                      // Dim the sitting paddler when a DIFFERENT paddler is
+                      // being dragged over this seat, so the swap target is
+                      // obvious. draggingOverWith is the id of the dragged
+                      // item when it's over this (outer) Droppable; if it
+                      // equals the sitting paddler's id, the sitting paddler
+                      // is being dragged over its own seat, so don't dim.
+                      const overWith = snapshot.draggingOverWith;
+                      const someoneElseOver = !!(snapshot.isDraggingOver && overWith && overWith !== assignedPaddler?.id);
                       return (
                         <div
                           ref={provided.innerRef}
@@ -1451,21 +1459,6 @@ export function TodayView({
                             position: 'relative',
                             paddingTop: seatHitPad,
                             paddingBottom: seatHitPad,
-                            // CRITICAL: reserve the row's height on the
-                            // OUTER wrapper. When the Draggable child is
-                            // lifted by pangea it becomes position:fixed
-                            // and leaves the normal layout. The absolute-
-                            // positioned seat # doesn't take flow space
-                            // and the placeholder is display:none, so
-                            // without this minHeight the wrapper would
-                            // collapse to 0px mid-drag, shifting every
-                            // seat below it up by one row-height.
-                            // minHeight is the content-box height of the
-                            // row; with paddingTop+paddingBottom the
-                            // border-box height grows by 2*seatHitPad,
-                            // preserving the pre-change visual spacing.
-                            minHeight: rowInnerStyle.minHeight,
-                            boxSizing: 'content-box',
                           }}
                         >
                           {/* Seat # is rendered here (a sibling of the
@@ -1476,71 +1469,120 @@ export function TodayView({
                               the number's visual column) remains a single
                               grab target for the Draggable beneath. */}
                           <span style={seatNumberStyle}>{seat}</span>
-                          {assignedPaddler ? (
-                            <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
-                              {(dp, dragSnapshot) => (
+                          {/* Visual drop-target row — ALWAYS a flow element
+                              (never a Draggable), so the outer Droppable
+                              `canoe-X-seat-Y` is always a Draggable-free
+                              list from pangea's perspective. This is the
+                              key fix for drop-over-occupied-seat feeling
+                              sticky: when a Droppable contains a Draggable,
+                              pangea treats it as a reorderable list and
+                              runs insertion-index displacement math on the
+                              sitting paddler as the cursor moves over it.
+                              By moving the sitting Draggable into a
+                              SEPARATE drop-disabled Droppable below
+                              (paddler-host-...), dropping onto an occupied
+                              seat looks identical to dropping onto an
+                              empty seat from pangea's perspective. */}
+                          <div style={rowInnerStyle}>
+                            <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
+                          </div>
+                          {/* Paddler overlay — absolute over the visual
+                              row. Its Droppable is drop-DISABLED so pangea
+                              never considers it a drop target and never
+                              runs list-reorder math on the Draggable
+                              inside. The Draggable still lifts/moves
+                              normally when grabbed; drops from elsewhere
+                              pass through to the outer Droppable. */}
+                          {assignedPaddler && (
+                            <Droppable
+                              droppableId={`paddler-host-canoe-${canoe.id}-seat-${seat}`}
+                              isDropDisabled={true}
+                            >
+                              {(hostProvided) => (
                                 <div
-                                  ref={dp.innerRef}
-                                  {...dp.draggableProps}
-                                  {...dp.dragHandleProps}
-                                  tabIndex={-1}
-                                  role="none"
-                                  aria-roledescription=""
-                                  // dp.draggableProps.style MUST come last in
-                                  // this spread: pangea drives the drop
-                                  // animation via `transition: transform ...`
-                                  // on this element, and listens for that
-                                  // transform transition to end before
-                                  // dispatching DROP_COMPLETE. If our
-                                  // rowInnerStyle.transition (which only
-                                  // covers background + border-color) were
-                                  // spread after, it'd clobber pangea's
-                                  // transform transition, onTransitionEnd
-                                  // would never fire, and the drag clone
-                                  // would stay position:fixed forever —
-                                  // causing the stuck-drag UI lockup.
+                                  ref={hostProvided.innerRef}
+                                  {...hostProvided.droppableProps}
                                   style={{
-                                    ...rowInnerStyle,
-                                    touchAction: 'manipulation',
-                                    WebkitUserSelect: 'none',
-                                    userSelect: 'none',
-                                    cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
-                                    // When a DIFFERENT paddler is being
-                                    // dragged over this occupied seat,
-                                    // dim the sitting paddler to 30%
-                                    // instead of hiding it outright.
-                                    // That keeps the "this paddler will
-                                    // be displaced by the swap" affordance
-                                    // visible, so the user sees a clear
-                                    // target instead of a suddenly-empty
-                                    // row. We still keep it from
-                                    // intercepting pointer events during
-                                    // the drag via pangea's automatic
-                                    // pointer-events:none on non-dragging
-                                    // Draggables.
-                                    opacity: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 0.3 : 1,
-                                    width: '100%',
-                                    ...dp.draggableProps.style,
+                                    position: 'absolute',
+                                    top: seatHitPad,
+                                    bottom: seatHitPad,
+                                    left: 0,
+                                    right: 0,
+                                    // pointer-events: none so the wrapper
+                                    // doesn't swallow clicks outside the
+                                    // Draggable. The Draggable re-enables
+                                    // pointer-events below so it stays
+                                    // grab-able.
+                                    pointerEvents: 'none',
+                                    display: 'flex',
                                   }}
-                                  data-animation-key={animationKey}
                                 >
-                                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                                    <PaddlerChip
-                                      label={paddlerLabel}
-                                      color={paddlerColor}
-                                      dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
-                                      flat
-                                      isDragging={dragSnapshot.isDragging}
-                                      title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
-                                    />
-                                  </div>
+                                  <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
+                                    {(dp, dragSnapshot) => (
+                                      <div
+                                        ref={dp.innerRef}
+                                        {...dp.draggableProps}
+                                        {...dp.dragHandleProps}
+                                        tabIndex={-1}
+                                        role="none"
+                                        aria-roledescription=""
+                                        // dp.draggableProps.style MUST come last:
+                                        // pangea drives the drop animation via
+                                        // `transition: transform ...` on this
+                                        // element and listens for the
+                                        // transform transition-end to dispatch
+                                        // DROP_COMPLETE. If our transition were
+                                        // spread after, it'd clobber pangea's
+                                        // and drops would hang.
+                                        style={{
+                                          // Layout matches the visual row
+                                          // below so the chip sits exactly
+                                          // where it does in the flow layer.
+                                          // Background/border/outline are
+                                          // TRANSPARENT here — the visual
+                                          // row below provides the drop
+                                          // affordance, and the dragged
+                                          // clone should be just the chip,
+                                          // not a tinted row.
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          paddingTop: canoeView === '4' ? 1 : 2,
+                                          paddingBottom: canoeView === '4' ? 1 : 2,
+                                          paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
+                                          paddingRight: seatNumPad,
+                                          minHeight: canoeView === '4' ? 26 : 34,
+                                          boxSizing: 'border-box',
+                                          background: 'transparent',
+                                          border: '1px solid transparent',
+                                          borderRadius: 7,
+                                          touchAction: 'manipulation',
+                                          WebkitUserSelect: 'none',
+                                          userSelect: 'none',
+                                          cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                          opacity: (someoneElseOver && !dragSnapshot.isDragging) ? 0.3 : 1,
+                                          width: '100%',
+                                          pointerEvents: 'auto',
+                                          ...dp.draggableProps.style,
+                                        }}
+                                        data-animation-key={animationKey}
+                                      >
+                                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                                          <PaddlerChip
+                                            label={paddlerLabel}
+                                            color={paddlerColor}
+                                            dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
+                                            flat
+                                            isDragging={dragSnapshot.isDragging}
+                                            title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                  <div style={{ display: 'none' }}>{hostProvided.placeholder}</div>
                                 </div>
                               )}
-                            </Draggable>
-                          ) : (
-                            <div style={rowInnerStyle}>
-                              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
-                            </div>
+                            </Droppable>
                           )}
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
                         </div>
