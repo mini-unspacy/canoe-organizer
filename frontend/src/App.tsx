@@ -207,6 +207,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
               <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%', boxSizing: 'border-box', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
                 {ctx.activePage === 'today' && (
+                  <div className="page-fade-in">
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
                     isAdmin={ctx.isAdmin}
@@ -250,15 +251,21 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     setActivePage={ctx.setActivePage}
                     windowWidth={ctx.windowWidth}
                   />
+                  </div>
                 )}
 
-                {ctx.activePage === 'schedule' && <SchedulePage isAdmin={ctx.isAdmin} scrollPosRef={ctx.scheduleScrollPosRef} scrollToEventId={ctx.scrollToEventId} onSelectEvent={(evt) => {
-                  ctx.setSelectedEvent(evt);
-                  ctx.setScrollToEventId(null);
-                  ctx.setActivePage('today');
-                }} />}
+                {ctx.activePage === 'schedule' && (
+                  <div className="page-fade-in">
+                    <SchedulePage isAdmin={ctx.isAdmin} scrollPosRef={ctx.scheduleScrollPosRef} scrollToEventId={ctx.scrollToEventId} onSelectEvent={(evt) => {
+                      ctx.setSelectedEvent(evt);
+                      ctx.setScrollToEventId(null);
+                      ctx.setActivePage('today');
+                    }} />
+                  </div>
+                )}
 
                 {ctx.activePage === 'roster' && ctx.paddlers && (
+                  <div className="page-fade-in">
                   <RosterView
                     paddlers={ctx.paddlers}
                     isAdmin={ctx.isAdmin}
@@ -271,6 +278,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     userRoleByPaddlerId={ctx.userRoleByPaddlerId}
                     onLogout={onLogout}
                   />
+                  </div>
                 )}
               </div>
               </div>
