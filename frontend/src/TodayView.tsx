@@ -1347,6 +1347,17 @@ export function TodayView({
                         width: canoeView === '4' ? '10px' : '12px',
                         textAlign: 'right',
                       };
+                      // Seat row height is sized to the FILLED state so
+                      // empty + filled rows render at the same height and
+                      // the canoe doesn't shift when a paddler is dropped
+                      // in. A filled row contains a PaddlerChip with its
+                      // own minHeight (SEAT_CHIP_DIMS.minH = 28 regular,
+                      // SEAT_CHIP_DIMS_COMPACT.minH = 22 compact), and
+                      // because box-sizing is border-box the row's
+                      // minHeight must equal chip.minH + row-padding-y +
+                      // row-border-y so the chip fits without pushing the
+                      // row taller. Regular: 28 + 4 + 2 = 34. Compact:
+                      // 22 + 2 + 2 = 26.
                       const rowInnerStyle: React.CSSProperties = {
                         display: 'flex',
                         alignItems: 'center',
@@ -1356,7 +1367,7 @@ export function TodayView({
                         background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
                         border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
                         transition: 'background 120ms ease, border-color 120ms ease',
-                        minHeight: canoeView === '4' ? 22 : 26,
+                        minHeight: canoeView === '4' ? 26 : 34,
                         boxSizing: 'border-box',
                       };
                       return (
