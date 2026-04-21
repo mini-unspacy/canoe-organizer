@@ -1375,8 +1375,20 @@ export function TodayView({
                                   tabIndex={-1}
                                   role="none"
                                   aria-roledescription=""
+                                  // dp.draggableProps.style MUST come last in
+                                  // this spread: pangea drives the drop
+                                  // animation via `transition: transform ...`
+                                  // on this element, and listens for that
+                                  // transform transition to end before
+                                  // dispatching DROP_COMPLETE. If our
+                                  // rowInnerStyle.transition (which only
+                                  // covers background + border-color) were
+                                  // spread after, it'd clobber pangea's
+                                  // transform transition, onTransitionEnd
+                                  // would never fire, and the drag clone
+                                  // would stay position:fixed forever —
+                                  // causing the stuck-drag UI lockup.
                                   style={{
-                                    ...dp.draggableProps.style,
                                     ...rowInnerStyle,
                                     touchAction: 'manipulation',
                                     WebkitUserSelect: 'none',
@@ -1384,6 +1396,7 @@ export function TodayView({
                                     cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
                                     visibility: (snapshot.isDraggingOver && !snapshot.draggingFromThisWith) ? 'hidden' : 'visible',
                                     width: '100%',
+                                    ...dp.draggableProps.style,
                                   }}
                                   data-animation-key={animationKey}
                                 >
