@@ -500,6 +500,12 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
             const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
             return `${names[parseInt(mo, 10) - 1]} ${y}`;
           })();
+          // Only render skeleton rows in the current month while events are loading,
+          // so we don't flash shimmer rows in every empty past/future month.
+          const isLoading = events === null;
+          const now = new Date();
+          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const showSkeleton = isLoading && !group && m.month === currentMonthKey;
           return (
             <div key={m.month} ref={el => { monthRefs.current[m.month] = el; }} style={{ marginBottom: 18 }}>
               {/* Section label with hairline rule — matches mock's SectionLabel */}
@@ -777,7 +783,31 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                   )}
                   </div>
                 );
-              }) : (
+              }) : showSkeleton ? (
+                <>
+                  {[0, 1, 2].map(i => (
+                    <div
+                      key={`skel-${i}`}
+                      style={{
+                        display: 'flex', gap: 12, alignItems: 'center',
+                        padding: '10px 12px',
+                        background: '#f5f3ef',
+                        border: '1px solid #e3e0da',
+                        borderRadius: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 44, flexShrink: 0, gap: 4 }}>
+                        <div className="shimmer" style={{ width: 28, height: 8 }} />
+                        <div className="shimmer" style={{ width: 22, height: 18 }} />
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                        <div className="shimmer" style={{ width: '60%', height: 14 }} />
+                        <div className="shimmer" style={{ width: '35%', height: 10 }} />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
                 <div style={{ padding: '8px 0', fontSize: 12, color: '#8a8275' }}>—</div>
               )}
               </div>

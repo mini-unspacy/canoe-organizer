@@ -914,6 +914,36 @@ export function TodayView({
         gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
+      {canoes === undefined && (
+        <>
+          {[0, 1, 2, 3].map(i => (
+            <div
+              key={`canoe-skel-${i}`}
+              style={{
+                display: 'flex', flexDirection: 'column',
+                backgroundColor: '#ffffff',
+                borderRadius: 14,
+                padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
+                boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
+                minWidth: 0,
+                gap: 6,
+                minHeight: canoeView === '4' ? 140 : 200,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div className="shimmer" style={{ width: 14, height: 14, borderRadius: 3 }} />
+                <div className="shimmer" style={{ width: '55%', height: 14 }} />
+              </div>
+              <div className="shimmer" style={{ width: '100%', height: 6, marginTop: 4 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+                {[0, 1, 2, 3, 4, 5].map(s => (
+                  <div key={s} className="shimmer" style={{ width: '100%', height: canoeView === '4' ? 14 : 18 }} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
       {canoes?.map((canoe, canoeIdx) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         // Seat-fill flourish: when all 6 seats are filled the card takes on a
