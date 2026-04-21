@@ -1144,14 +1144,32 @@ export function TodayView({
                             const isMine = canoeDesignations[canoe.id] === d;
                             const takenEntry = Object.entries(canoeDesignations).find(([cid, v]) => v === d && cid !== canoe.id);
                             const takenByCanoe = takenEntry ? (canoes ?? []).find(c => c.id === takenEntry[0]) : undefined;
-                            const takenLabel = takenByCanoe?.name ? takenByCanoe.name.slice(0, 4) : (takenEntry ? '—' : '');
+                            // Always show a canoe name under every # button.
+                            // If the # is currently taken by another canoe,
+                            // show that canoe's actual name (admin may have
+                            // customized it). Otherwise fall back to the
+                            // canonical mapping from CANOE_NAME_BY_DESIGNATION.
+                            const canonicalName = CANOE_NAME_BY_DESIGNATION[d] ?? '';
+                            const nameLabel = takenByCanoe?.name
+                              ? takenByCanoe.name.slice(0, 4)
+                              : canonicalName
+                                ? canonicalName.slice(0, 4)
+                                : (takenEntry ? '—' : '');
                             return (
                               <button
                                 key={d}
                                 type="button"
-                                className="btn-zoom"
+                                // A canoe # can only be assigned to one
+                                // canoe at a time — so if another canoe
+                                // already has this #, disable the button.
+                                // The admin has to clear the other canoe's
+                                // # first (via Clear # on that canoe) to
+                                // free it up.
+                                className={takenEntry && !isMine ? undefined : "btn-zoom"}
+                                disabled={!!takenEntry && !isMine}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  if (takenEntry && !isMine) return;
                                   const nextDesignation = isMine ? '' : d;
                                   updateDesignationMut({ canoeId: canoe.id, designation: nextDesignation });
                                   const nextName = nextDesignation
@@ -1161,7 +1179,7 @@ export function TodayView({
                                   setOpenDesignator(null);
                                   setDesignatorAnchor(null);
                                 }}
-                                title={takenEntry ? `Currently on ${takenByCanoe?.name ?? 'another canoe'} — tap to reassign` : d}
+                                title={takenEntry ? `Currently on ${takenByCanoe?.name ?? 'another canoe'} — clear its # first` : d}
                                 style={{
                                   width: 40, height: 40, borderRadius: 10,
                                   border: `1px solid ${isMine ? '#b91c1c' : 'rgba(0,0,0,0.10)'}`,
@@ -1169,7 +1187,8 @@ export function TodayView({
                                   color: isMine ? '#ffffff' : takenEntry ? '#b0b0b0' : '#222222',
                                   fontWeight: 700,
                                   fontSize: d.length >= 3 ? 12 : 15,
-                                  cursor: 'pointer',
+                                  cursor: takenEntry && !isMine ? 'not-allowed' : 'pointer',
+                                  opacity: takenEntry && !isMine ? 0.55 : 1,
                                   display: 'flex', flexDirection: 'column',
                                   alignItems: 'center', justifyContent: 'center',
                                   padding: 0, gap: 1,
@@ -1178,9 +1197,16 @@ export function TodayView({
                                 }}
                               >
                                 <span style={{ lineHeight: 1 }}>{d}</span>
-                                {takenEntry && !isMine && (
-                                  <span style={{ fontSize: 8, fontWeight: 500, color: '#b0b0b0', lineHeight: 1, letterSpacing: 0 }}>
-                                    {takenLabel}
+                                {nameLabel && (
+                                  <span style={{
+                                    fontSize: 8, fontWeight: 500, lineHeight: 1, letterSpacing: 0,
+                                    color: isMine
+                                      ? 'rgba(255,255,255,0.85)'
+                                      : takenEntry
+                                        ? '#b0b0b0'
+                                        : '#9a9a9a',
+                                  }}>
+                                    {nameLabel}
                                   </span>
                                 )}
                               </button>
