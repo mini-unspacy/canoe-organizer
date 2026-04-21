@@ -1454,13 +1454,7 @@ export function TodayView({
                           ) : (
                             <div style={rowInnerStyle}>
                               <span style={seatNumberStyle}>{seat}</span>
-                              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                                {active ? (
-                                  <div style={{ fontSize: '11px', fontWeight: 500, color: '#c82028', fontStyle: 'italic', letterSpacing: '0.2px' }}>
-                                    drop here
-                                  </div>
-                                ) : null}
-                              </div>
+                              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
                             </div>
                           )}
                           <div style={{ display: 'none' }}>{provided.placeholder}</div>
