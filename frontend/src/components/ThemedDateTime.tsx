@@ -159,16 +159,19 @@ function DesktopDateInput({ value, onChange }: { value: string; onChange: (v: st
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
-    const onViewportChange = () => setOpen(false);
+    // Only close on resize — NOT on scroll. A capture-phase scroll listener
+    // would fire whenever the user scrolls inside the popover's own columns
+    // (hour / minute lists) and immediately close it, making the picker
+    // unusable. Outer page scrolls are rare during editing and the portal
+    // anchor tolerates a bit of drift; users can click outside to dismiss.
+    const onResize = () => setOpen(false);
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
-    window.addEventListener('resize', onViewportChange);
-    window.addEventListener('scroll', onViewportChange, true);
+    window.addEventListener('resize', onResize);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', onViewportChange);
-      window.removeEventListener('scroll', onViewportChange, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [open]);
 
@@ -384,16 +387,19 @@ function DesktopTimeInput({ value, onChange }: { value: string; onChange: (v: st
       setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    const onViewportChange = () => setOpen(false);
+    // Only close on resize — NOT on scroll. A capture-phase scroll listener
+    // would fire whenever the user scrolls inside the popover's own columns
+    // (hour / minute lists) and immediately close it, making the picker
+    // unusable. Outer page scrolls are rare during editing and the portal
+    // anchor tolerates a bit of drift; users can click outside to dismiss.
+    const onResize = () => setOpen(false);
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
-    window.addEventListener('resize', onViewportChange);
-    window.addEventListener('scroll', onViewportChange, true);
+    window.addEventListener('resize', onResize);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', onViewportChange);
-      window.removeEventListener('scroll', onViewportChange, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [open]);
 

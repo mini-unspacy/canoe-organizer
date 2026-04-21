@@ -400,7 +400,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   };
 
   const handleRemoveCanoe = (canoeId: string) => {
-    if (!canoes || canoes.length <= 1) return;
+    if (!canoes) return;
     removeCanoe({ canoeId });
   };
 
