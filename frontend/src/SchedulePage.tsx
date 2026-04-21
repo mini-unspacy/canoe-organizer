@@ -613,8 +613,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                     style={{
                       display: 'flex', gap: 12, alignItems: 'center',
                       padding: '10px 12px',
-                      background: '#f5f3ef',
+                      background: isToday ? 'linear-gradient(90deg, rgba(237,28,36,0.06) 0%, #f5f3ef 45%)' : '#f5f3ef',
                       border: '1px solid #e3e0da',
+                      borderLeft: isToday ? '3px solid #ed1c24' : '1px solid #e3e0da',
                       borderRadius: 12,
                       opacity: isPast ? 0.45 : 1,
                       cursor: onSelectEvent ? 'pointer' : 'default',
@@ -667,7 +668,17 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                           <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: typeLabel.color, background: typeLabel.bg, padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>{typeLabel.text}</span>
                         )}
                         {isToday && (
-                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#2f7a47', background: 'rgba(47,122,71,0.2)', padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 2 }}>TODAY</span>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 8, fontWeight: 800, letterSpacing: '0.15em',
+                            color: '#b8181e', background: 'rgba(237,28,36,0.12)',
+                            padding: '2px 5px 2px 4px', borderRadius: 3,
+                            flexShrink: 0, marginTop: 2,
+                            border: '1px solid rgba(237,28,36,0.25)',
+                          }}>
+                            <span className="today-dot" aria-hidden="true" style={{ width: 5, height: 5 }} />
+                            TODAY
+                          </span>
                         )}
                         <div style={{ fontSize: 14, color: '#1a1a1a', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.2, flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {evt.title}
