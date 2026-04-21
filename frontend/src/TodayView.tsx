@@ -999,37 +999,8 @@ export function TodayView({
             {/* Seat-fill flourish — FULL pill pops in when all 6 seats are
                 taken. Keying on isFull so it remounts (replaying the pop
                 animation) whenever the canoe crosses back to full. */}
-            {isFull && (
-              // Outer div handles horizontal centering via left:50% + translate.
-              // Inner span carries the seat-full-pop animation (which uses
-              // transform: scale()), so we keep the two transforms on separate
-              // elements to avoid conflict.
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute', top: -8, left: '50%',
-                  transform: 'translateX(-50%)', zIndex: 5,
-                  pointerEvents: 'none',
-                }}
-              >
-                <span
-                  key="full-badge"
-                  className="seat-full-pop"
-                  aria-label="All seats filled"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '3px 8px', borderRadius: 999,
-                    background: '#2f7a47', color: '#ffffff',
-                    fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                    boxShadow: '0 2px 8px rgba(47,122,71,0.35)',
-                    border: '1px solid rgba(255,255,255,0.5)',
-                  }}
-                >
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ffffff' }} />
-                  FULL
-                </span>
-              </div>
-            )}
+            {/* Seat-fill flourish — the green halo boxShadow on the card is
+                the entire indicator; no separate badge. */}
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over
                 designation · fill count ... 6-bar status strip · lock icon.
                 Mirrors the mock's CanoeCard header. */}

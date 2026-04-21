@@ -526,3 +526,18 @@ select,
 @media (prefers-reduced-motion: reduce) {
   .btn-ripple:active::after { animation: none; }
 }
+
+/* ────────────────────────────────────────────────────────────
+   Date/Time field layout. Side by side on wider viewports,
+   stacked on narrow mobile where native date/time inputs
+   have an intrinsic width that blows out half a column. */
+.date-time-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+.date-time-grid.single { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 420px) {
+  .date-time-grid { grid-template-columns: minmax(0, 1fr); }
+}
