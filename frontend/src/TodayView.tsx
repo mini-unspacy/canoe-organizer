@@ -1357,20 +1357,32 @@ export function TodayView({
                           : assignedPaddler?.gender === 'kane'
                             ? '#1f4e5e'
                             : '#2a2a2a';
-                      // The Droppable is the outer seat cell. When a
-                      // paddler is assigned, the WHOLE row becomes the
-                      // Draggable wrapper — including the seat number —
-                      // so pressing anywhere on the row (not just on the
-                      // paddler name) grabs the paddler. This makes seat
-                      // rows much easier to hit on iPhone.
+                      // The seat number belongs to the SLOT (Droppable),
+                      // not to the paddler (Draggable), so it's rendered
+                      // outside the Draggable and absolute-positioned
+                      // over the row. Two wins: (1) the dragged clone is
+                      // just the paddler chip — the seat # doesn't ride
+                      // along with the cursor. (2) the seat # stays
+                      // visible in its slot even while the paddler is
+                      // mid-drag. pointer-events: none so clicks/taps
+                      // on the number area pass through to the Draggable
+                      // beneath, preserving whole-row hit targeting.
+                      const seatNumColWidth = canoeView === '4' ? 10 : 12;
+                      const seatNumPad = canoeView === '4' ? 3 : 4;
+                      const seatNumGap = canoeView === '4' ? 2 : 3;
                       const seatNumberStyle: React.CSSProperties = {
-                        flexShrink: 0,
+                        position: 'absolute',
+                        left: seatNumPad,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        zIndex: 1,
                         fontFamily: '"Playfair Display", "Cormorant Garamond", Georgia, serif',
                         fontSize: canoeView === '4' ? '13px' : '16px',
                         fontWeight: 600,
                         color: hasPaddler ? '#2a2a2a' : '#484848',
                         lineHeight: 1,
-                        width: canoeView === '4' ? '10px' : '12px',
+                        width: seatNumColWidth,
                         textAlign: 'right',
                       };
                       // Seat row height is sized to the FILLED state so
@@ -1384,11 +1396,18 @@ export function TodayView({
                       // row-border-y so the chip fits without pushing the
                       // row taller. Regular: 28 + 4 + 2 = 34. Compact:
                       // 22 + 2 + 2 = 26.
+                      //
+                      // paddingLeft reserves space for the absolute-
+                      // positioned seat number: seat-num-pad + seat-num-
+                      // width + seat-num-gap. Without this, the chip
+                      // would overlap the seat #.
                       const rowInnerStyle: React.CSSProperties = {
                         display: 'flex',
                         alignItems: 'center',
-                        gap: canoeView === '4' ? 2 : 3,
-                        padding: canoeView === '4' ? '1px 3px' : '2px 4px',
+                        paddingTop: canoeView === '4' ? 1 : 2,
+                        paddingBottom: canoeView === '4' ? 1 : 2,
+                        paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
+                        paddingRight: seatNumPad,
                         borderRadius: 7,
                         background: active ? 'rgba(200,32,40,0.12)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
                         border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
@@ -1402,6 +1421,14 @@ export function TodayView({
                           {...provided.droppableProps}
                           style={{ position: 'relative' }}
                         >
+                          {/* Seat # is rendered here (a sibling of the
+                              Draggable, not a child) so it stays anchored
+                              to the slot when a paddler is dragged out.
+                              pointer-events: none so the number doesn't
+                              intercept taps — the whole row (including
+                              the number's visual column) remains a single
+                              grab target for the Draggable beneath. */}
+                          <span style={seatNumberStyle}>{seat}</span>
                           {assignedPaddler ? (
                             <Draggable draggableId={assignedPaddler.id} index={0} shouldRespectForcePress={false} isDragDisabled={!isAdmin}>
                               {(dp, dragSnapshot) => (
@@ -1437,7 +1464,6 @@ export function TodayView({
                                   }}
                                   data-animation-key={animationKey}
                                 >
-                                  <span style={seatNumberStyle}>{seat}</span>
                                   <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                                     <PaddlerChip
                                       label={paddlerLabel}
@@ -1453,7 +1479,6 @@ export function TodayView({
                             </Draggable>
                           ) : (
                             <div style={rowInnerStyle}>
-                              <span style={seatNumberStyle}>{seat}</span>
                               <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
                             </div>
                           )}
