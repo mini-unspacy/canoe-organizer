@@ -85,11 +85,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // canoe seat, we leave scrollRef scrollable so auto-scroll can bring
   // off-screen canoes into view as the user drags.
   const onBeforeDragStart = useCallback((start: DragStart) => {
+    console.log('[DND] onBeforeDragStart', { src: start.source.droppableId, id: start.draggableId });
     if (start.source.droppableId.startsWith('staging-') && scrollRef.current) {
       scrollRef.current.style.overflowY = 'hidden';
     }
   }, []);
   const onDragEndWithRestore = useCallback((result: DropResult) => {
+    console.log('[DND] onDragEnd', { src: result.source?.droppableId, dest: result.destination?.droppableId, id: result.draggableId, reason: result.reason });
     if (scrollRef.current) {
       // Clear the inline override — React's style prop will take over.
       scrollRef.current.style.overflowY = '';

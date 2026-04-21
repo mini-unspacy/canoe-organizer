@@ -175,6 +175,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const [dragFromStaging, setDragFromStaging] = useState(false);
 
   const handleDragStart = useCallback((start: DragStart) => {
+    console.log('[DND] onDragStart', { src: start.source.droppableId, id: start.draggableId });
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
   }, []);
@@ -355,8 +356,16 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     if (source.droppableId === destination.droppableId) return;
 
     if (destination.droppableId.startsWith("staging-")) {
+      console.log('[DND] staging-drop path', { oldCanoeId, oldSeat, draggableId, currentAssignment });
       if (oldCanoeId && oldSeat) {
-        await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+        try {
+          console.log('[DND] calling unassignPaddler');
+          await unassignPaddler({ eventId: selectedEvent.id, paddlerId: draggableId, canoeId: oldCanoeId, seat: oldSeat });
+          console.log('[DND] unassignPaddler resolved');
+        } catch (err) {
+          console.error('[DND] unassignPaddler threw', err);
+          throw err;
+        }
       }
       return;
     }
