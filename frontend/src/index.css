@@ -335,12 +335,13 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
-   Card entry: staggered fade + slide-up.
-   Apply .breathe-in to any element that should ease in when it
-   first mounts. Use inline style animationDelay for stagger. */
+   Card entry: fade-in. Opacity-only — a transform-based slide
+   would leave a containing block on the final frame which
+   breaks @hello-pangea/dnd's fixed-positioned drag clones for
+   any draggable inside this element. */
 @keyframes breathe-in {
-  from { opacity: 0; transform: translateY(6px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .breathe-in {
   animation: breathe-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -350,27 +351,23 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
-   Hover lift: subtle shadow + translateY on hover. Pairs with
-   .btn-zoom for a double punch, or use alone on cards/rows that
-   shouldn't scale. */
+   Hover lift: subtle shadow rise on hover. Box-shadow-only to
+   avoid creating a transform containing block — any transform
+   or `will-change: transform` on an ancestor breaks dnd drag
+   clone positioning. Safe to use on schedule event rows
+   (no draggables inside). */
 .hover-lift {
   transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 180ms ease,
     border-color 180ms ease !important;
-  will-change: transform, box-shadow;
 }
 @media (hover: hover) and (pointer: fine) {
   .hover-lift:hover {
-    transform: translateY(-2px);
     box-shadow:
       0 0 0 1px rgba(0,0,0,0.05),
       0 4px 12px rgba(0,0,0,0.06),
       0 12px 28px rgba(0,0,0,0.10);
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hover-lift:hover { transform: none; }
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -461,12 +458,13 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
-   Page transition: soft crossfade when the active tab
-   changes. The outgoing page unmounts; the incoming page
-   plays this animation on mount. */
+   Page transition: soft crossfade when the active tab changes.
+   Opacity-only — a transform would persist a containing block
+   on the tab wrapper which breaks @hello-pangea/dnd inside
+   TodayView. */
 @keyframes page-fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .page-fade-in {
   animation: page-fade-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;

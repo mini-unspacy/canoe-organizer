@@ -978,7 +978,7 @@ export function TodayView({
         return (
           <div
             key={canoe._id.toString()}
-            className="breathe-in hover-lift"
+            className="breathe-in"
             style={{
               display: 'flex',
               flexDirection: 'column',
