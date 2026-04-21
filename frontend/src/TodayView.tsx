@@ -239,8 +239,9 @@ export function TodayView({
           : null;
       return (
     <div style={{ width: '100%', maxWidth: '600px', margin: '10px auto 0', padding: '0 4px', boxSizing: 'border-box' }}>
-      {/* Event info card — serif title + stacked date stamp, matches the mock */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
+      {/* Event info card — serif title + stacked date stamp, matches the mock.
+          Warm cream→white gradient for subtle depth, plus breathe-in on mount. */}
+      <div className="breathe-in" style={{ background: 'linear-gradient(180deg, #faf6ee 0%, #fcfaf5 55%, #ffffff 100%)', borderRadius: '14px', padding: '18px 20px 14px', marginBottom: '12px', boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)' }}>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', alignItems: 'flex-start' }}>
         <div
           onClick={() => { setScrollToEventId(selectedEvent.id); setActivePage('schedule'); }}
@@ -893,6 +894,7 @@ export function TodayView({
           On the right we add a CanoeViewPicker (1/2/4). All modes render the
           whole fleet and let the page scroll vertically. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '20px 4px 10px' }}>
+        <span className="live-dot" aria-hidden="true" />
         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.6px', color: '#717171', textTransform: 'uppercase' }}>Fleet</span>
         <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,.08)' }} />
         <CanoeViewPicker value={canoeView} onChange={(v) => setCanoeView(v)} />

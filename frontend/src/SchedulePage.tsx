@@ -268,9 +268,17 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
         style={{ flex: 1, overflowY: 'auto', padding: '0', position: 'relative', background: '#ffffff' }}
         className="scrollbar-hidden"
       >
-        {/* Mock-style hero header */}
-        <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #e3e0da', position: 'relative' }}>
-          <div style={{ fontSize: 10, color: '#8a8275', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>
+        {/* Mock-style hero header — warm cream→white gradient for presence,
+            with a small live-dot next to the season label hinting that
+            the schedule reacts in real-time. */}
+        <div style={{
+          padding: '14px 16px 10px',
+          borderBottom: '1px solid #e3e0da',
+          position: 'relative',
+          background: 'linear-gradient(180deg, #faf6ee 0%, #fcfaf5 55%, #ffffff 100%)',
+        }}>
+          <div style={{ fontSize: 10, color: '#8a8275', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="live-dot" aria-hidden="true" />
             2026 Season · SCORA
           </div>
           <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 30, fontWeight: 600, color: '#1a1a1a', lineHeight: 1.05, marginTop: 2 }}>
