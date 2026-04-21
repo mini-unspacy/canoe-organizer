@@ -912,11 +912,12 @@ export function TodayView({
         gap: canoeView === '4' ? '6px' : '8px',
         padding: `4px 0 16px`,
       }}>
-      {canoes?.map((canoe) => {
+      {canoes?.map((canoe, canoeIdx) => {
         const canoeEventAssignments = canoeAssignmentsByCanoe.get(canoe.id) || [];
         return (
           <div
             key={canoe._id.toString()}
+            className="breathe-in hover-lift"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -926,6 +927,9 @@ export function TodayView({
               padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
               boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
               minWidth: 0,
+              // Stagger the entry: each card delays 40ms more than the last,
+              // capped at 8 cards so a huge fleet doesn't feel sluggish.
+              animationDelay: `${Math.min(canoeIdx, 8) * 40}ms`,
             }}
           >
             {/* Header row: canoe-hull icon · Hawaiian name (big serif) over

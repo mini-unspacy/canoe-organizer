@@ -500,7 +500,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 <div style={{ flex: 1, height: 1, background: '#e3e0da' }} />
               </div>
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }) => {
+              {group ? group.events.map((evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string; repeating: string; weekdays?: number[]; monthdays?: number[]; repeatUntil?: string }, evtIdx: number) => {
                 const d = new Date(evt.date + 'T00:00:00');
                 const dayNum = d.getDate();
                 const dayName = dayNames[d.getDay()];
@@ -600,6 +600,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 return (
                   <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
+                    className="breathe-in hover-lift"
                     onClick={go}
                     style={{
                       display: 'flex', gap: 12, alignItems: 'center',
@@ -609,6 +610,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                       borderRadius: 12,
                       opacity: isPast ? 0.45 : 1,
                       cursor: onSelectEvent ? 'pointer' : 'default',
+                      // Stagger entry per row; cap so long months don't cascade forever.
+                      animationDelay: `${Math.min(evtIdx, 10) * 30}ms`,
                     }}
                   >
                     {/* Date column: day-of-week + serif day number */}
