@@ -1685,6 +1685,16 @@ export function TodayView({
                                             // flat (just the colored name)
                                             // to avoid a nested pill.
                                             isDragging={dragSnapshot.isDragging && !!dragSnapshot.draggingOver && dragSnapshot.draggingOver.startsWith('staging-')}
+                                            // Suppress the chip's own
+                                            // hover/press visuals while
+                                            // the seat Draggable is being
+                                            // dragged — otherwise grabbing
+                                            // the chip latches `pressed`
+                                            // true for the whole drag and
+                                            // a white pressed chip rides
+                                            // along inside the blue drag
+                                            // clone, duplicating the name.
+                                            parentDragging={dragSnapshot.isDragging}
                                             // Non-admin: chip is a static
                                             // label, no hover/press visuals
                                             // and no grab cursor.

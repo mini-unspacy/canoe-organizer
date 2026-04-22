@@ -48,7 +48,15 @@ export const PaddlerChip: React.FC<{
   // no resting shadow, default cursor. Used in non-admin views where the
   // chip isn't draggable and shouldn't advertise itself as interactive.
   interactive?: boolean;
-}> = ({ label, color, dims, flat, isDragging, title, interactive = true }) => {
+  // When true, a drag is in progress on the parent Draggable. Suppresses
+  // the chip's local hover/press visuals so the chip doesn't render as
+  // a white pressed pill INSIDE the outer drag clone — which would look
+  // like a duplicate "name chip" riding along with the blue drag copy.
+  // Distinct from `isDragging`, which means "this chip IS the visible
+  // drag clone" (over-staging case): in that case the chip DOES render
+  // the white pill on purpose.
+  parentDragging?: boolean;
+}> = ({ label, color, dims, flat, isDragging, title, interactive = true, parentDragging = false }) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
@@ -76,8 +84,12 @@ export const PaddlerChip: React.FC<{
   // own transform on the child here would layer on top of dnd's and
   // shift the element under the cursor mid-drag.
   // Non-interactive chips ignore hover/press entirely and render at rest.
-  const effHovered = interactive && hovered;
-  const effPressed = interactive && pressed;
+  // `parentDragging` also kills hover/press so the chip doesn't render as
+  // a second white pressed pill INSIDE the outer drag clone when the
+  // user grabbed the chip itself (the pointer leaves the chip mid-drag
+  // but the mouseup/touchend that would clear `pressed` fires later).
+  const effHovered = interactive && hovered && !parentDragging;
+  const effPressed = interactive && pressed && !parentDragging;
   const shadow = isDragging
     ? '0 16px 32px rgba(0,0,0,0.34), 0 0 0 1.5px rgba(255,255,255,0.9)'
     : effPressed
