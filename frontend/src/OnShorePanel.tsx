@@ -207,6 +207,26 @@ export function OnShorePanel({
   );
   const count = visiblePaddlers.length + unassignedGuests.length;
 
+  // ─── ON SHORE STATUS ANIMATION ───
+  // Give the red pill a visible reaction when paddlers move on/off shore
+  // so the user notices the change without having to scan the number.
+  // Two flavors: a quick "pop" on any count change, and a bigger
+  // celebratory pulse when the count hits 0 (everyone's seated).
+  // Keyed off a nonce that increments on every animation so consecutive
+  // changes of the same kind still retrigger.
+  const [pillAnim, setPillAnim] = useState<{ cls: 'onshore-pop' | 'onshore-all-seated'; nonce: number } | null>(null);
+  const prevCountRef = useRef<number>(count);
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    prevCountRef.current = count;
+    if (prev === count) return;
+    // Crossing to zero wins — feels more like a mini win than a nudge.
+    const cls = count === 0 && prev > 0 ? 'onshore-all-seated' : 'onshore-pop';
+    setPillAnim(a => ({ cls, nonce: (a?.nonce ?? 0) + 1 }));
+    const t = setTimeout(() => setPillAnim(null), cls === 'onshore-all-seated' ? 720 : 320);
+    return () => clearTimeout(t);
+  }, [count]);
+
   return (
     <div
       style={{
@@ -244,10 +264,14 @@ export function OnShorePanel({
         }}
       >
         <button
+          // Nonce in the key restarts the CSS animation even when the
+          // class value didn't change between two consecutive pops.
+          key={pillAnim ? `${pillAnim.cls}-${pillAnim.nonce}` : 'idle'}
           type="button"
           onClick={togglePill}
           aria-label={`On Shore ${count} paddlers — tap to ${collapsed ? "open" : "close"}`}
           aria-expanded={!collapsed}
+          className={pillAnim?.cls ?? ''}
           style={{
             display: "inline-flex",
             alignItems: "center",

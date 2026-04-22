@@ -142,6 +142,42 @@ export function TodayView({
   }, [openDesignator]);
   const [sortPillOpen, setSortPillOpen] = useState(false);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
+
+  // ─── CANOE-FULL CELEBRATION ───
+  // When a canoe transitions from "not full" → "full" (6 seats taken), the
+  // card plays a one-shot spring animation on top of its ambient green
+  // breathing glow. We track the previously-full set in a ref and the
+  // currently-animating set in state; each new entry schedules its own
+  // teardown after the animation duration. This outlives re-renders and
+  // fires correctly regardless of which canoe got filled.
+  const prevFullCanoesRef = useRef<Set<string>>(new Set());
+  const [celebratingCanoes, setCelebratingCanoes] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!canoes) return;
+    const currentFull = new Set<string>();
+    canoes.forEach(c => {
+      const count = (canoeAssignmentsByCanoe.get(c.id) || []).length;
+      if (count === 6) currentFull.add(c.id);
+    });
+    const newlyFull: string[] = [];
+    currentFull.forEach(id => { if (!prevFullCanoesRef.current.has(id)) newlyFull.push(id); });
+    prevFullCanoesRef.current = currentFull;
+    if (newlyFull.length === 0) return;
+    setCelebratingCanoes(prev => {
+      const next = new Set(prev);
+      newlyFull.forEach(id => next.add(id));
+      return next;
+    });
+    const timers = newlyFull.map(id => setTimeout(() => {
+      setCelebratingCanoes(prev => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 720));
+    return () => { timers.forEach(clearTimeout); };
+  }, [canoes, canoeAssignmentsByCanoe]);
   const sortPillRef = useRef<HTMLDivElement>(null);
   // Fleet section view: '1' | '2' | '4'. All modes render every canoe in a
   // fixed-column grid; the page scrolls vertically when they overflow.
@@ -991,10 +1027,18 @@ export function TodayView({
         // Removing canoes out of order would leave gaps / re-order the
         // line-up, so admins must delete from the end.
         const isLastCanoe = !!canoes && canoeIdx === canoes.length - 1;
+        const isCelebrating = celebratingCanoes.has(canoe.id);
         return (
           <div
             key={canoe._id.toString()}
-            className="breathe-in"
+            // Order matters: canoe-celebrate is a one-shot spring overlay
+            // that's applied only during the transition-to-full window;
+            // canoe-full is the ambient breathing glow while the card
+            // stays full. Listing celebrate LAST lets it take over the
+            // box-shadow/transform animation for its 720ms run without a
+            // CSS specificity fight. Non-full cards rely on the inline
+            // boxShadow below for their neutral shadow.
+            className={`breathe-in${isFull ? ' canoe-full' : ''}${isCelebrating ? ' canoe-celebrate' : ''}`}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -1002,8 +1046,12 @@ export function TodayView({
               backgroundColor: '#ffffff',
               borderRadius: '14px',
               padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
+              // Let the canoe-full / canoe-celebrate animations drive the
+              // shadow when the card is full. Only set the neutral resting
+              // shadow inline for non-full cards so we don't have to fight
+              // inline-vs-class specificity for the animated versions.
               boxShadow: isFull
-                ? '0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18)'
+                ? undefined
                 : '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
               minWidth: 0,
               // Stagger the entry: each card delays 40ms more than the last,

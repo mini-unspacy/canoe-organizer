@@ -186,7 +186,32 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     if (!scrollToTodayNonce) return;
     const container = scheduleScrollRef.current;
     if (!container) return;
-    const el = container.querySelector('[data-today="true"]') as HTMLElement | null;
+    // Prefer an event literally dated today. If the user is on a day with
+    // no event (off-day, weekend without practice, etc.), fall back to the
+    // row whose date is closest to today — picking the upcoming one on
+    // ties so the user is always oriented "forward" from now.
+    let el = container.querySelector('[data-today="true"]') as HTMLElement | null;
+    if (!el) {
+      const rows = container.querySelectorAll('[data-event-id][data-date]');
+      const today = getLocalToday();
+      let best: { node: HTMLElement; delta: number; future: boolean } | null = null;
+      rows.forEach((n) => {
+        const node = n as HTMLElement;
+        const date = node.getAttribute('data-date') || '';
+        if (!date) return;
+        // YYYY-MM-DD lex-sorts as calendar order, so string diff is fine
+        // for "is this date future / past", but for distance we need the
+        // day delta. Parse as local-noon to dodge DST edges on midnight.
+        const dMs = new Date(date + 'T12:00:00').getTime();
+        const tMs = new Date(today + 'T12:00:00').getTime();
+        const deltaDays = Math.abs(Math.round((dMs - tMs) / 86400000));
+        const future = dMs >= tMs;
+        if (!best || deltaDays < best.delta || (deltaDays === best.delta && future && !best.future)) {
+          best = { node, delta: deltaDays, future };
+        }
+      });
+      if (best) el = (best as { node: HTMLElement }).node;
+    }
     if (!el) return;
     const target = el.offsetTop - container.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
     container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
@@ -630,7 +655,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 const isPast = evDayStart.getTime() < now.getTime();
                 const go = () => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType });
                 return (
-                  <div key={evt.id} data-event-id={evt.id} data-today={isToday ? 'true' : undefined} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
+                  <div key={evt.id} data-event-id={evt.id} data-date={evt.date} data-today={isToday ? 'true' : undefined} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
                     className="breathe-in hover-lift"
                     onClick={go}
