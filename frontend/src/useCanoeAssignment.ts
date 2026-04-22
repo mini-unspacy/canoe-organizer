@@ -33,6 +33,12 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // available before any memo that consumes these values.
   const [isDragging, setIsDragging] = useState(false);
   const [dragFromStaging, setDragFromStaging] = useState(false);
+  // Canoe id that is the SOURCE of the current drag (null when not
+  // dragging from a canoe, e.g. dragging from On Shore). TodayView uses
+  // this to boost the source canoe card's z-index during the drag, so
+  // the drag clone (a descendant of the card) paints above sibling
+  // canoe cards that come later in the fleet grid's DOM order.
+  const [draggingFromCanoeId, setDraggingFromCanoeId] = useState<string | null>(null);
   const _canoesLive = useQuery(api.canoes.getCanoes);
   const _paddlersLive = useQuery(api.paddlers.getPaddlers);
   const lastCanoesRef = useRef(_canoesLive);
@@ -218,6 +224,12 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
     setDragFromStaging(start.source.droppableId.startsWith('staging-'));
+    // Source droppableId for a paddler sitting in a canoe is
+    // `paddler-host-canoe-${canoeId}-seat-${seat}` — extract the canoe
+    // id so TodayView can raise its z-index during the drag. Null for
+    // drags originating in On Shore / staging.
+    const m = start.source.droppableId.match(/^paddler-host-canoe-(.+)-seat-\d+$/);
+    setDraggingFromCanoeId(m ? m[1] : null);
     clearDragWatchdog();
     dragWatchdogRef.current = setTimeout(() => {
       // Last-resort belt-and-suspenders: if 15 seconds have elapsed and
@@ -226,6 +238,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
       // so at minimum touchAction:none is removed and the UI thaws.
       setIsDragging(false);
       setDragFromStaging(false);
+      setDraggingFromCanoeId(null);
     }, 15000);
   }, [clearDragWatchdog]);
 
@@ -355,6 +368,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     clearDragWatchdog();
     setIsDragging(false);
     setDragFromStaging(false);
+    setDraggingFromCanoeId(null);
     const { source, destination, draggableId } = result;
     if (!destination) return;
 
@@ -537,7 +551,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     addSearchInputRef, addSearchMenuRef,
     lockedCanoes, setLockedCanoes, windowWidth,
     editingPaddler, isEditModalOpen, editForm, setEditForm,
-    isDragging, pendingAssignIds, dragFromStaging,
+    isDragging, pendingAssignIds, dragFromStaging, draggingFromCanoeId,
     animationKey, scheduleScrollPosRef,
 
     // Layout

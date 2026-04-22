@@ -292,6 +292,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     triggerAnimation={ctx.triggerAnimation}
                     canoePriority={ctx.canoePriority}
                     setCanoePriority={ctx.setCanoePriority}
+                    draggingFromCanoeId={ctx.draggingFromCanoeId}
                     setScrollToEventId={ctx.setScrollToEventId}
                     setActivePage={ctx.setActivePage}
                     windowWidth={ctx.windowWidth}
