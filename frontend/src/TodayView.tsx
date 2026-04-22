@@ -1551,37 +1551,82 @@ export function TodayView({
                                         // transform transition-end to dispatch
                                         // DROP_COMPLETE. If our transition were
                                         // spread after, it'd clobber pangea's
-                                        // and drops would hang.
-                                        style={{
-                                          // Layout matches the visual row
-                                          // below so the chip sits exactly
-                                          // where it does in the flow layer.
-                                          // Background/border/outline are
-                                          // TRANSPARENT here — the visual
-                                          // row below provides the drop
-                                          // affordance, and the dragged
-                                          // clone should be just the chip,
-                                          // not a tinted row.
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          paddingTop: canoeView === '4' ? 1 : 2,
-                                          paddingBottom: canoeView === '4' ? 1 : 2,
-                                          paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
-                                          paddingRight: seatNumPad,
-                                          minHeight: canoeView === '4' ? 26 : 34,
-                                          boxSizing: 'border-box',
-                                          background: 'transparent',
-                                          border: '1px solid transparent',
-                                          borderRadius: 7,
-                                          touchAction: 'manipulation',
-                                          WebkitUserSelect: 'none',
-                                          userSelect: 'none',
-                                          cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
-                                          opacity: (someoneElseOver && !dragSnapshot.isDragging) ? 0.3 : 1,
-                                          width: '100%',
-                                          pointerEvents: 'auto',
-                                          ...dp.draggableProps.style,
-                                        }}
+                                        // and drops would hang. The on-shore
+                                        // size overrides go AFTER pangea's
+                                        // style so we can override the
+                                        // captured width/height mid-drag.
+                                        style={(() => {
+                                          // Drag clone should look like a
+                                          // seat-row CARD (full seat width,
+                                          // white bg, lifted shadow) when
+                                          // hovering over the canoe fleet, and
+                                          // collapse to a plain paddler chip
+                                          // when hovering over the on-shore
+                                          // area — matching the destination's
+                                          // native size so it's obvious what
+                                          // shape the paddler will land as.
+                                          // `draggingOver` is the droppableId
+                                          // under the cursor, null when over
+                                          // a non-droppable region.
+                                          const over = dragSnapshot.draggingOver;
+                                          const isOverStaging = dragSnapshot.isDragging && !!over && over.startsWith('staging-');
+                                          const isDraggingAsCard = dragSnapshot.isDragging && !isOverStaging;
+                                          return {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            paddingTop: canoeView === '4' ? 1 : 2,
+                                            paddingBottom: canoeView === '4' ? 1 : 2,
+                                            paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
+                                            paddingRight: seatNumPad,
+                                            minHeight: canoeView === '4' ? 26 : 34,
+                                            boxSizing: 'border-box' as const,
+                                            // When NOT dragging: transparent —
+                                            // the visual row below this layer
+                                            // provides the idle affordance.
+                                            // When dragging over the canoe
+                                            // fleet: white card with shadow
+                                            // so it clearly reads as a lifted
+                                            // seat row. When over on-shore:
+                                            // transparent again so only the
+                                            // chip shows.
+                                            background: isDraggingAsCard ? '#ffffff' : 'transparent',
+                                            border: isDraggingAsCard
+                                              ? '1px solid rgba(0,0,0,0.10)'
+                                              : '1px solid transparent',
+                                            borderRadius: 7,
+                                            boxShadow: isDraggingAsCard
+                                              ? '0 10px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)'
+                                              : 'none',
+                                            touchAction: 'manipulation' as const,
+                                            WebkitUserSelect: 'none' as const,
+                                            userSelect: 'none' as const,
+                                            cursor: !isAdmin ? 'default' : dragSnapshot.isDragging ? 'grabbing' : 'grab',
+                                            opacity: (someoneElseOver && !dragSnapshot.isDragging) ? 0.3 : 1,
+                                            width: '100%',
+                                            pointerEvents: 'auto' as const,
+                                            ...dp.draggableProps.style,
+                                            // Over the on-shore area: shrink
+                                            // the lifted footprint to just
+                                            // the chip. Pangea captured the
+                                            // full seat width/height at drag
+                                            // start; overriding AFTER
+                                            // dp.draggableProps.style lets us
+                                            // collapse to the native chip
+                                            // size while keeping pangea's
+                                            // position:fixed + transform.
+                                            ...(isOverStaging ? {
+                                              width: 'auto' as const,
+                                              minHeight: 0,
+                                              paddingLeft: 0,
+                                              paddingRight: 0,
+                                              paddingTop: 0,
+                                              paddingBottom: 0,
+                                              background: 'transparent',
+                                              border: '1px solid transparent',
+                                              boxShadow: 'none',
+                                            } : {}),
+                                          };
+                                        })()}
                                         data-animation-key={animationKey}
                                       >
                                         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
