@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import type { DragStart, DropResult } from "@hello-pangea/dnd";
+import type { DragStart, DragUpdate, DropResult } from "@hello-pangea/dnd";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "./convex_generated/api";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
@@ -39,6 +39,11 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // the drag clone (a descendant of the card) paints above sibling
   // canoe cards that come later in the fleet grid's DOM order.
   const [draggingFromCanoeId, setDraggingFromCanoeId] = useState<string | null>(null);
+  // Canoe id that the drag is currently HOVERING over (null when over On
+  // Shore / nothing). TodayView uses this to pop the hovered canoe card
+  // above the On Shore drawer so you can actually see the target seats
+  // while dragging, even when the drawer otherwise overlaps the card.
+  const [draggingOverCanoeId, setDraggingOverCanoeId] = useState<string | null>(null);
   const _canoesLive = useQuery(api.canoes.getCanoes);
   const _paddlersLive = useQuery(api.paddlers.getPaddlers);
   const lastCanoesRef = useRef(_canoesLive);
@@ -230,6 +235,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     // drags originating in On Shore / staging.
     const m = start.source.droppableId.match(/^paddler-host-canoe-(.+)-seat-\d+$/);
     setDraggingFromCanoeId(m ? m[1] : null);
+    setDraggingOverCanoeId(null);
     clearDragWatchdog();
     dragWatchdogRef.current = setTimeout(() => {
       // Last-resort belt-and-suspenders: if 15 seconds have elapsed and
@@ -239,8 +245,23 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
       setIsDragging(false);
       setDragFromStaging(false);
       setDraggingFromCanoeId(null);
+      setDraggingOverCanoeId(null);
     }, 15000);
   }, [clearDragWatchdog]);
+
+  // onDragUpdate fires every time the pangea engine recomputes the drop
+  // destination — including when the drag enters / leaves / switches
+  // between droppables. Parse the destination droppableId to recover
+  // which canoe (if any) the drag is currently over, so the card can be
+  // lifted above the On Shore drawer while the user hovers. Matches both
+  // seat shapes: `canoe-<id>-seat-<n>` (the drop zone itself) and
+  // `paddler-host-canoe-<id>-seat-<n>` (the inner paddler host, for
+  // swap-onto-occupied-seat drops).
+  const handleDragUpdate = useCallback((update: DragUpdate) => {
+    const id = update.destination?.droppableId ?? '';
+    const m = id.match(/^(?:paddler-host-)?canoe-(.+)-seat-\d+$/);
+    setDraggingOverCanoeId(m ? m[1] : null);
+  }, []);
 
   useEffect(() => clearDragWatchdog, [clearDragWatchdog]);
 
@@ -369,6 +390,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     setIsDragging(false);
     setDragFromStaging(false);
     setDraggingFromCanoeId(null);
+    setDraggingOverCanoeId(null);
     const { source, destination, draggableId } = result;
     if (!destination) return;
 
@@ -551,14 +573,14 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     addSearchInputRef, addSearchMenuRef,
     lockedCanoes, setLockedCanoes, windowWidth,
     editingPaddler, isEditModalOpen, editForm, setEditForm,
-    isDragging, pendingAssignIds, dragFromStaging, draggingFromCanoeId,
+    isDragging, pendingAssignIds, dragFromStaging, draggingFromCanoeId, draggingOverCanoeId,
     animationKey, scheduleScrollPosRef,
 
     // Layout
     containerWidth, boatWidth, canoeRowHeight, canoeMargin,
 
     // Handlers
-    handleDragStart, onDragEnd, handleToggleAttendance,
+    handleDragStart, handleDragUpdate, onDragEnd, handleToggleAttendance,
     handleAssign, handleUnassignAll, handleReassignCanoes,
     handleRemoveCanoe, handleAddCanoeAfter, handleSaveEdit, handleCloseEditModal,
     triggerAnimation, populatePaddlers, populateCanoes, addCanoe,

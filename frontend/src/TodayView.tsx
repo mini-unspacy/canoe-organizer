@@ -101,6 +101,11 @@ interface TodayViewProps {
    *  canoes (fixes a mobile-only paint-order glitch where the clone
    *  would render *under* another canoe card). */
   draggingFromCanoeId?: string | null;
+  /** Canoe the drag is currently HOVERING over. Used to pop that card
+   *  above the On Shore drawer (which sits at zIndex 30) so the user
+   *  can see the target seats clearly while the drawer would otherwise
+   *  overlap them. */
+  draggingOverCanoeId?: string | null;
   setScrollToEventId: (id: string | null) => void;
   setActivePage: (page: 'today' | 'roster' | 'schedule' | 'attendance' | 'crews') => void;
 }
@@ -114,7 +119,8 @@ export function TodayView({
   showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut, addGuestMut,
   handleAssign, handleUnassignAll, handleReassignCanoes,
   handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
-  canoePriority, setCanoePriority, draggingFromCanoeId, setScrollToEventId, setActivePage,
+  canoePriority, setCanoePriority, draggingFromCanoeId, draggingOverCanoeId,
+  setScrollToEventId, setActivePage,
   windowWidth,
 }: TodayViewProps) {
   const [openDesignator, setOpenDesignator] = useState<string | null>(null);
@@ -1004,16 +1010,21 @@ export function TodayView({
               // capped at 8 cards so a huge fleet doesn't feel sluggish.
               animationDelay: `${Math.min(canoeIdx, 8) * 40}ms`,
               transition: 'box-shadow 320ms ease',
-              // Paint-order fix: while a paddler is being dragged FROM this
-              // canoe's seats, lift the whole card into its own stacking
-              // context so pangea's drag clone (a child of the seat
-              // Droppable inside this card) paints above later-in-DOM
-              // sibling canoes. Without this, on mobile the clone would
-              // occasionally render UNDER the next canoe card as the
-              // finger passed over it. The clone is position:fixed so the
-              // card's overflow/layout doesn't clip it — the z-index here
-              // only affects paint order among canoe cards.
-              zIndex: draggingFromCanoeId === canoe.id ? 100 : undefined,
+              // Paint-order fix + drag-over lift:
+              // • When dragging FROM this canoe (source), bump z-index so
+              //   the drag clone (a descendant of this card) paints above
+              //   sibling canoe cards that come later in the grid's DOM
+              //   order — otherwise the clone can render UNDER a later
+              //   sibling as the finger passes over it (mobile bug).
+              // • When dragging OVER this canoe (destination), lift the
+              //   card above the On Shore drawer (zIndex 30) so the user
+              //   can see the target seats even if the drawer would
+              //   otherwise overlap them.
+              // The OVER case wins when both apply to the same card.
+              zIndex:
+                draggingOverCanoeId === canoe.id ? 200 :
+                draggingFromCanoeId === canoe.id ? 100 :
+                undefined,
             }}
           >
             {/* Seat-fill flourish — FULL pill pops in when all 6 seats are

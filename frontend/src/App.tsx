@@ -146,6 +146,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
     <DragDropContext
       onBeforeDragStart={onBeforeDragStart}
       onDragStart={ctx.handleDragStart}
+      onDragUpdate={ctx.handleDragUpdate}
       onDragEnd={onDragEndWithRestore}
       sensors={sensors}
     >
@@ -293,6 +294,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     canoePriority={ctx.canoePriority}
                     setCanoePriority={ctx.setCanoePriority}
                     draggingFromCanoeId={ctx.draggingFromCanoeId}
+                draggingOverCanoeId={ctx.draggingOverCanoeId}
                     setScrollToEventId={ctx.setScrollToEventId}
                     setActivePage={ctx.setActivePage}
                     windowWidth={ctx.windowWidth}
