@@ -36,7 +36,7 @@ function DateTimeFields({
   );
 }
 
-export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null }) {
+export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId, scrollToTodayNonce }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null; scrollToTodayNonce?: number }) {
   const cutoffDate = useMemo(() => {
     const d = new Date(); d.setDate(d.getDate() - 7);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -173,6 +173,24 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     const t = setTimeout(() => setPendingJump(false), 600);
     return () => clearTimeout(t);
   }, [pendingJump]);
+
+  // Re-tap-Schedule → scroll today to viewport center. The parent bumps
+  // `scrollToTodayNonce` every time the Schedule tab is tapped while the
+  // Schedule page is already active. A nonce (rather than a boolean) lets
+  // the effect re-fire on every tap, even when nothing else has changed.
+  //
+  // Skip the initial render (nonce === 0) so first-load doesn't fight with
+  // the scrollPosRef restore. Smooth scroll so the motion reads as "here's
+  // today" rather than a hard jump that could be mistaken for a re-render.
+  useEffect(() => {
+    if (!scrollToTodayNonce) return;
+    const container = scheduleScrollRef.current;
+    if (!container) return;
+    const el = container.querySelector('[data-today="true"]') as HTMLElement | null;
+    if (!el) return;
+    const target = el.offsetTop - container.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+    container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+  }, [scrollToTodayNonce]);
 
   const eventsByMonth = useMemo(() => {
     if (!events) return [];
@@ -612,7 +630,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
                 const isPast = evDayStart.getTime() < now.getTime();
                 const go = () => onSelectEvent?.({ id: evt.id, title: evt.title, date: evt.date, time: evt.time, location: evt.location, eventType: evt.eventType });
                 return (
-                  <div key={evt.id} data-event-id={evt.id} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
+                  <div key={evt.id} data-event-id={evt.id} data-today={isToday ? 'true' : undefined} style={{ position: 'relative', zIndex: guestPopupEventId === evt.id ? 30 : 'auto' }}>
                   <div
                     className="breathe-in hover-lift"
                     onClick={go}

@@ -40,6 +40,12 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   const [navHidden, setNavHidden] = useState(false);
   const [navH, setNavH] = useState(68);
   const lastScrollTop = useRef(0);
+  // Re-tap-to-center: tapping the Schedule tab while already on the Schedule
+  // page should scroll today's event into the middle of the viewport. A
+  // monotonically-increasing nonce lets SchedulePage fire its scroll effect
+  // on every re-tap, even when the value isn't "changing" in a meaningful
+  // data sense — each bump is a fresh trigger.
+  const [scrollToTodayNonce, setScrollToTodayNonce] = useState(0);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -206,7 +212,17 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                     ]).map(({ page, icon, label }) => (
                       <span
                         key={page}
-                        onClick={() => { ctx.setActivePage(page); if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null); }}
+                        onClick={() => {
+                          // Re-tap Schedule while already on Schedule:
+                          // bump a nonce that SchedulePage watches and
+                          // scrolls today's row to the viewport center.
+                          if (page === 'schedule' && ctx.activePage === 'schedule') {
+                            setScrollToTodayNonce((n) => n + 1);
+                            return;
+                          }
+                          ctx.setActivePage(page);
+                          if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null);
+                        }}
                         title={label}
                         className="cursor-pointer transition-colors"
                         style={{
@@ -302,7 +318,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 )}
 
                 {ctx.activePage === 'schedule' && (
-                  <SchedulePage isAdmin={ctx.isAdmin} scrollPosRef={ctx.scheduleScrollPosRef} scrollToEventId={ctx.scrollToEventId} onSelectEvent={(evt) => {
+                  <SchedulePage isAdmin={ctx.isAdmin} scrollPosRef={ctx.scheduleScrollPosRef} scrollToEventId={ctx.scrollToEventId} scrollToTodayNonce={scrollToTodayNonce} onSelectEvent={(evt) => {
                     ctx.setSelectedEvent(evt);
                     ctx.setScrollToEventId(null);
                     ctx.setActivePage('today');
@@ -410,7 +426,18 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 <button
                   key={page}
                   type="button"
-                  onClick={() => { ctx.setActivePage(page); if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null); }}
+                  onClick={() => {
+                    // Re-tap Schedule while already on Schedule: bump a
+                    // nonce that SchedulePage watches and scrolls today's
+                    // row to the viewport center. All other taps behave
+                    // like before — navigate to the requested page.
+                    if (page === 'schedule' && ctx.activePage === 'schedule') {
+                      setScrollToTodayNonce((n) => n + 1);
+                      return;
+                    }
+                    ctx.setActivePage(page);
+                    if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null);
+                  }}
                   style={{
                     flex: 1,
                     background: 'transparent',
