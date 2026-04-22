@@ -1650,6 +1650,10 @@ export function TodayView({
                                             // flat (just the colored name)
                                             // to avoid a nested pill.
                                             isDragging={dragSnapshot.isDragging && !!dragSnapshot.draggingOver && dragSnapshot.draggingOver.startsWith('staging-')}
+                                            // Non-admin: chip is a static
+                                            // label, no hover/press visuals
+                                            // and no grab cursor.
+                                            interactive={isAdmin}
                                             title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
                                           />
                                         </div>

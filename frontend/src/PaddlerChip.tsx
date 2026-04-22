@@ -44,7 +44,11 @@ export const PaddlerChip: React.FC<{
   flat?: boolean;
   isDragging?: boolean;
   title?: string;
-}> = ({ label, color, dims, flat, isDragging, title }) => {
+  // When false, the chip is a static label — no hover/press transforms,
+  // no resting shadow, default cursor. Used in non-admin views where the
+  // chip isn't draggable and shouldn't advertise itself as interactive.
+  interactive?: boolean;
+}> = ({ label, color, dims, flat, isDragging, title, interactive = true }) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
@@ -71,40 +75,43 @@ export const PaddlerChip: React.FC<{
   // transform via draggableProps.style on the wrapper. Applying our
   // own transform on the child here would layer on top of dnd's and
   // shift the element under the cursor mid-drag.
+  // Non-interactive chips ignore hover/press entirely and render at rest.
+  const effHovered = interactive && hovered;
+  const effPressed = interactive && pressed;
   const shadow = isDragging
     ? '0 16px 32px rgba(0,0,0,0.34), 0 0 0 1.5px rgba(255,255,255,0.9)'
-    : pressed
+    : effPressed
       ? '0 10px 22px rgba(0,0,0,0.3)'
-      : hovered
+      : effHovered
         ? '0 6px 14px rgba(0,0,0,0.22)'
         : flat ? 'none' : '0 1px 2px rgba(0,0,0,0.08)';
   // Only hover transforms the chip. Pressed keeps the element's
   // position stable so @hello-pangea/dnd's drag-start threshold check
   // isn't confused by an element shifting under the cursor between
   // mousedown and the 5px drag threshold being crossed.
-  const transform = isDragging || pressed
+  const transform = isDragging || effPressed
     ? 'none'
-    : hovered
+    : effHovered
       ? 'translateY(-3px) scale(1.02)'
       : 'none';
   const restBg = flat ? 'transparent' : 'rgba(0,0,0,0.04)';
   const restBorder = flat ? '1px solid transparent' : '1px solid rgba(0,0,0,0.06)';
   const bg = isDragging
     ? 'rgba(255,255,255,0.96)'
-    : pressed
+    : effPressed
       ? (flat ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.96)')
-      : hovered
+      : effHovered
         ? (flat ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.9)')
         : restBg;
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setPressed(false); }}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onTouchStart={() => setPressed(true)}
-      onTouchEnd={() => setPressed(false)}
-      onTouchCancel={() => setPressed(false)}
+      onMouseEnter={interactive ? () => setHovered(true) : undefined}
+      onMouseLeave={interactive ? () => { setHovered(false); setPressed(false); } : undefined}
+      onMouseDown={interactive ? () => setPressed(true) : undefined}
+      onMouseUp={interactive ? () => setPressed(false) : undefined}
+      onTouchStart={interactive ? () => setPressed(true) : undefined}
+      onTouchEnd={interactive ? () => setPressed(false) : undefined}
+      onTouchCancel={interactive ? () => setPressed(false) : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -125,7 +132,7 @@ export const PaddlerChip: React.FC<{
         opacity: isDragging ? 0.95 : 1,
         transform,
         transition: 'box-shadow 140ms ease, transform 140ms ease, background 140ms ease',
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: !interactive ? 'default' : (isDragging ? 'grabbing' : 'grab'),
         maxWidth: '100%',
         gap: dims.gap + 3,
       }}
