@@ -66,15 +66,28 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // locally against the getEventAssignments query so the UI snaps to
   // the post-drop state immediately. Convex reconciles the real server
   // result against the optimistic value when it arrives.
+  // Shape of a single row in the getEventAssignments query result. We
+  // type this locally so the optimistic filter/push callbacks below
+  // don't fall through to implicit-any under strict tsc -b builds —
+  // Convex's generated types don't always propagate the element type
+  // through .filter/.push without a hint.
+  type AssignmentRow = {
+    _id: Id<"eventAssignments">;
+    _creationTime: number;
+    eventId: string;
+    canoeId: string;
+    seat: number;
+    paddlerId: string;
+  };
   const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat)
     .withOptimisticUpdate((localStore, args) => {
       const { eventId, paddlerId, canoeId, seat } = args;
-      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId }) as AssignmentRow[] | undefined;
       if (existing === undefined) return;
       // Mirror server logic: remove any existing assignment for this
       // paddler in this event, then remove any current occupant of the
       // target seat, then insert the new assignment.
-      const next = existing.filter(
+      const next: AssignmentRow[] = existing.filter(
         (a) => a.paddlerId !== paddlerId && !(a.canoeId === canoeId && a.seat === seat)
       );
       next.push({
@@ -87,9 +100,9 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler)
     .withOptimisticUpdate((localStore, args) => {
       const { eventId, paddlerId, canoeId, seat } = args;
-      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId }) as AssignmentRow[] | undefined;
       if (existing === undefined) return;
-      const next = existing.filter(
+      const next: AssignmentRow[] = existing.filter(
         (a) => !(a.paddlerId === paddlerId && a.canoeId === canoeId && a.seat === seat)
       );
       localStore.setQuery(api.eventAssignments.getEventAssignments, { eventId }, next);
@@ -97,11 +110,11 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers)
     .withOptimisticUpdate((localStore, args) => {
       const { eventId, paddlerA, canoeA, seatA, paddlerB, canoeB, seatB } = args;
-      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId }) as AssignmentRow[] | undefined;
       if (existing === undefined) return;
       // Drop both paddlers' current rows, then re-insert them at each
       // other's seat. Same shape as the server mutation.
-      const next = existing.filter((a) => a.paddlerId !== paddlerA && a.paddlerId !== paddlerB);
+      const next: AssignmentRow[] = existing.filter((a) => a.paddlerId !== paddlerA && a.paddlerId !== paddlerB);
       const now = Date.now();
       next.push(
         {

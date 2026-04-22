@@ -25,10 +25,11 @@ interface OnShorePanelProps {
   pendingAssignIds: Set<string>;
   animationKey: number;
   dragFromStaging: boolean;
-  /** True while any dnd drag is in flight — used to auto-open the drawer
-   *  when a paddler is being dragged from a canoe seat so the user has a
-   *  visible drop target to release onto. */
-  dragIsActive: boolean;
+  /** True while any dnd drag is in flight. Kept on the interface so the
+   *  parent can still pass it without a type error, but no longer used
+   *  internally — the drawer used to auto-open on drag-start and that
+   *  behavior has been removed. */
+  dragIsActive?: boolean;
   /** Distance in px to leave below the panel (height of the mobile tab bar). */
   bottomOffset: number;
 }
@@ -67,7 +68,6 @@ export function OnShorePanel({
   guestPaddlerMap,
   pendingAssignIds,
   dragFromStaging,
-  dragIsActive,
   bottomOffset,
 }: OnShorePanelProps) {
   const [panelHeight, setPanelHeight] = useState<number>(() => {
