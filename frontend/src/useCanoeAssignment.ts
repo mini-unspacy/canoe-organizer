@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { DragStart, DragUpdate, DropResult } from "@hello-pangea/dnd";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "./convex_generated/api";
+import type { Id } from "./convex_generated/dataModel";
 import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { getLocalToday, sortPaddlersByPriority, CANOE_SORT_OPTIONS } from "./utils";
 import { useAnimationTrigger } from "./useAnimationTrigger";
@@ -56,9 +57,66 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   // loading UX win too.
   const canoes = _canoesLive === undefined ? lastCanoesRef.current : _canoesLive;
   const paddlers = _paddlersLive === undefined ? lastPaddlersRef.current : _paddlersLive;
-  const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat);
-  const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler);
-  const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers);
+  // ─── OPTIMISTIC DRAG COMMIT ───
+  // Without these, the moment pangea drops a paddler onto a new seat
+  // the UI re-renders from the stale Convex cache (paddler still in
+  // old seat / old on-shore slot) until the server round-trip returns,
+  // which shows as a brief flash of the pre-drag state before the new
+  // one appears. Each mutation now applies the same mutation-logic
+  // locally against the getEventAssignments query so the UI snaps to
+  // the post-drop state immediately. Convex reconciles the real server
+  // result against the optimistic value when it arrives.
+  const assignPaddler = useMutation(api.eventAssignments.assignPaddlerToSeat)
+    .withOptimisticUpdate((localStore, args) => {
+      const { eventId, paddlerId, canoeId, seat } = args;
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      if (existing === undefined) return;
+      // Mirror server logic: remove any existing assignment for this
+      // paddler in this event, then remove any current occupant of the
+      // target seat, then insert the new assignment.
+      const next = existing.filter(
+        (a) => a.paddlerId !== paddlerId && !(a.canoeId === canoeId && a.seat === seat)
+      );
+      next.push({
+        _id: `optimistic-assign-${paddlerId}-${canoeId}-${seat}-${Date.now()}` as Id<"eventAssignments">,
+        _creationTime: Date.now(),
+        eventId, canoeId, seat, paddlerId,
+      });
+      localStore.setQuery(api.eventAssignments.getEventAssignments, { eventId }, next);
+    });
+  const unassignPaddler = useMutation(api.eventAssignments.unassignPaddler)
+    .withOptimisticUpdate((localStore, args) => {
+      const { eventId, paddlerId, canoeId, seat } = args;
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      if (existing === undefined) return;
+      const next = existing.filter(
+        (a) => !(a.paddlerId === paddlerId && a.canoeId === canoeId && a.seat === seat)
+      );
+      localStore.setQuery(api.eventAssignments.getEventAssignments, { eventId }, next);
+    });
+  const swapPaddlers = useMutation(api.eventAssignments.swapPaddlers)
+    .withOptimisticUpdate((localStore, args) => {
+      const { eventId, paddlerA, canoeA, seatA, paddlerB, canoeB, seatB } = args;
+      const existing = localStore.getQuery(api.eventAssignments.getEventAssignments, { eventId });
+      if (existing === undefined) return;
+      // Drop both paddlers' current rows, then re-insert them at each
+      // other's seat. Same shape as the server mutation.
+      const next = existing.filter((a) => a.paddlerId !== paddlerA && a.paddlerId !== paddlerB);
+      const now = Date.now();
+      next.push(
+        {
+          _id: `optimistic-swap-${paddlerA}-${canoeB}-${seatB}-${now}` as Id<"eventAssignments">,
+          _creationTime: now,
+          eventId, canoeId: canoeB, seat: seatB, paddlerId: paddlerA,
+        },
+        {
+          _id: `optimistic-swap-${paddlerB}-${canoeA}-${seatA}-${now}` as Id<"eventAssignments">,
+          _creationTime: now,
+          eventId, canoeId: canoeA, seat: seatA, paddlerId: paddlerB,
+        },
+      );
+      localStore.setQuery(api.eventAssignments.getEventAssignments, { eventId }, next);
+    });
   const assignOptimal = useMutation(api.eventAssignments.assignOptimalForEvent);
   const unassignAllForEventMut = useMutation(api.eventAssignments.unassignAllForEvent);
   const populatePaddlers = useMutation(api.paddlers.populateSamplePaddlers);
