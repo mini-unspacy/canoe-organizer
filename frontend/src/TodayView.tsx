@@ -1584,14 +1584,19 @@ export function TodayView({
                                             // the visual row below this layer
                                             // provides the idle affordance.
                                             // When dragging over the canoe
-                                            // fleet: white card with shadow
-                                            // so it clearly reads as a lifted
-                                            // seat row. When over on-shore:
-                                            // transparent again so only the
-                                            // chip shows.
-                                            background: isDraggingAsCard ? '#ffffff' : 'transparent',
+                                            // fleet: tint the card with the
+                                            // paddler's gender color so the
+                                            // drag clone reads as ONE unified
+                                            // card (no nested white pill
+                                            // against a white card). Alpha
+                                            // hex `1A` (~10%) is the soft
+                                            // background tint, `66` (~40%)
+                                            // gives a visible matching border.
+                                            // Over on-shore: transparent so
+                                            // only the chip shows.
+                                            background: isDraggingAsCard ? `${paddlerColor}1A` : 'transparent',
                                             border: isDraggingAsCard
-                                              ? '1px solid rgba(0,0,0,0.10)'
+                                              ? `1px solid ${paddlerColor}66`
                                               : '1px solid transparent',
                                             borderRadius: 7,
                                             boxShadow: isDraggingAsCard
@@ -1635,7 +1640,16 @@ export function TodayView({
                                             color={paddlerColor}
                                             dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
                                             flat
-                                            isDragging={dragSnapshot.isDragging}
+                                            // Only light up the chip's own
+                                            // dragging pill (white bg + ring)
+                                            // when it IS the visible drag
+                                            // clone — over the on-shore area.
+                                            // When dragging over the canoe
+                                            // fleet the OUTER card is the
+                                            // drag clone, so keep the chip
+                                            // flat (just the colored name)
+                                            // to avoid a nested pill.
+                                            isDragging={dragSnapshot.isDragging && !!dragSnapshot.draggingOver && dragSnapshot.draggingOver.startsWith('staging-')}
                                             title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
                                           />
                                         </div>
