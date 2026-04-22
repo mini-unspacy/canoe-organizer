@@ -144,26 +144,13 @@ export function OnShorePanel({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // When a drag starts FROM a canoe seat (i.e. not from staging), bump the
-  // drawer open to SMALL if it was collapsed so the user has a visible
-  // On Shore drop zone to release onto. Restore the previous collapsed
-  // height once the drag ends. Without this, the staging-mobile Droppable
-  // still renders, but the 32px-tall collapsed drawer is too small to
-  // aim at with a finger, and there's no visual affordance that the
-  // drop is possible.
-  const preDragHeight = useRef<number | null>(null);
-  useEffect(() => {
-    if (dragIsActive && !dragFromStaging && collapsed && preDragHeight.current === null) {
-      preDragHeight.current = panelHeight;
-      setPanelHeight(getSmallH());
-    } else if (!dragIsActive && preDragHeight.current !== null) {
-      setPanelHeight(preDragHeight.current);
-      preDragHeight.current = null;
-    }
-    // We intentionally don't include `collapsed` or `panelHeight` in deps —
-    // we only want the edge transitions on dragIsActive to trigger this.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragIsActive, dragFromStaging]);
+  // NOTE: an earlier version auto-opened the drawer on drag-start (when
+  // collapsed and dragging FROM a canoe seat) to surface the On Shore drop
+  // zone. That behavior was removed — the drawer now stays exactly where
+  // the user left it during drags. If the user wants to drop back to On
+  // Shore, they can open the drawer themselves before or after the drag.
+  // The `dragIsActive` and `dragFromStaging` props are still threaded
+  // through for future use but intentionally don't drive panel height.
 
   // Drag-to-resize state. We track startY/startH plus a "moved" flag so a
   // tap (no drag) toggles open/closed while an actual drag sets a height.
