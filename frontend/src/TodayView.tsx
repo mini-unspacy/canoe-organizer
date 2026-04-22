@@ -1011,19 +1011,27 @@ export function TodayView({
               animationDelay: `${Math.min(canoeIdx, 8) * 40}ms`,
               transition: 'box-shadow 320ms ease',
               // Paint-order fix + drag-over lift:
-              // • When dragging FROM this canoe (source), bump z-index so
-              //   the drag clone (a descendant of this card) paints above
-              //   sibling canoe cards that come later in the grid's DOM
-              //   order — otherwise the clone can render UNDER a later
-              //   sibling as the finger passes over it (mobile bug).
-              // • When dragging OVER this canoe (destination), lift the
-              //   card above the On Shore drawer (zIndex 30) so the user
-              //   can see the target seats even if the drawer would
-              //   otherwise overlap them.
-              // The OVER case wins when both apply to the same card.
+              // • SOURCE canoe (draggingFromCanoeId): bump z-index HIGH
+              //   so the drag clone (a descendant of this card, at
+              //   pangea's internal z-index ~5000 scoped to THIS card's
+              //   stacking context) paints above every other card AND
+              //   above the On Shore drawer (zIndex 30). The clone's
+              //   effective stacking is capped by its source card's
+              //   z-index — if anything else outranks the source, the
+              //   clone gets painted UNDER that thing.
+              // • OVER canoe (draggingOverCanoeId): lift above the On
+              //   Shore drawer (30) so the user can see the target
+              //   seats, but STAY BELOW the source card so we don't
+              //   cover the drag clone. Only applied when the drag
+              //   started from another canoe — when the drag started
+              //   from On Shore the clone lives inside the drawer's
+              //   stacking context (30), so lifting a canoe above the
+              //   drawer would cover the clone.
+              // Same canoe is both source and over (in-canoe swaps): the
+              // source branch fires first, card ends up at 200.
               zIndex:
-                draggingOverCanoeId === canoe.id ? 200 :
-                draggingFromCanoeId === canoe.id ? 100 :
+                draggingFromCanoeId === canoe.id ? 200 :
+                draggingFromCanoeId && draggingOverCanoeId === canoe.id ? 100 :
                 undefined,
             }}
           >
