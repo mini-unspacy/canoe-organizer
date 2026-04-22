@@ -394,11 +394,15 @@ export function OnShorePanel({
         )}
       </div>
 
-      {/* Drop zone is ALWAYS mounted — even when the drawer is collapsed —
-          so that @hello-pangea/dnd can measure it and accept drops from
-          canoe seats. When collapsed the effect above auto-opens the
-          drawer to SMALL during a drag so the user can see the target. */}
-      <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={dragFromStaging}>
+      {/* Drop zone is mounted unconditionally so dnd can measure it, but
+          it only ACCEPTS drops when the drawer is open. A collapsed
+          drawer is a ~32px sliver and was never a viable target anyway;
+          disabling it here means a drag released over the closed drawer
+          falls back to "no valid drop" (the paddler snaps back to its
+          source) instead of silently landing On Shore. Also disabled
+          when dragging a paddler that's already in staging, so drops
+          back onto the pool stay no-ops. */}
+      <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={collapsed || dragFromStaging}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
