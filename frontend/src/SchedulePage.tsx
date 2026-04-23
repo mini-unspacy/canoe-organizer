@@ -174,6 +174,17 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
   useLayoutEffect(() => {
     if (didJumpRef.current) return;
     if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
+    // Wait until past events have finished streaming in before computing
+    // el.offsetTop. The pastEvents list renders ABOVE the upcoming events,
+    // so if we jump while pastStatus is still 'LoadingFirstPage', the
+    // target row's offsetTop is measured in a layout where 50 past events
+    // are about to appear above it — we'd scroll to the correct number
+    // for the current (short) layout, then the past events would arrive,
+    // push the target row far down the page, and leave the user parked
+    // at what looks like a random spot. `didJumpRef.current = true` also
+    // means we don't retry after the layout changes, so the first jump
+    // has to happen against the settled layout.
+    if (pastStatus === 'LoadingFirstPage') return;
     const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
     if (el) {
       // Container is position: relative, so el.offsetParent === container
@@ -188,7 +199,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
       didJumpRef.current = true;
       setPendingJump(false);
     }
-  }, [scrollToEventId, events]);
+  }, [scrollToEventId, events, pastStatus]);
   // Reset the one-shot when the target event changes (new jump requested).
   useEffect(() => {
     didJumpRef.current = false;
