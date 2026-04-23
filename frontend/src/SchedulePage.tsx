@@ -308,7 +308,17 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           }
           if (found && found !== activeMonth) setActiveMonth(found);
         }}
-        style={{ flex: 1, overflowY: 'auto', padding: '0', position: 'relative', background: '#ffffff' }}
+        // `overflowAnchor: 'none'` disables the browser's built-in
+        // scroll-anchoring for this container. Without it, when
+        // loadMorePast prepends 20 past events near the top, the
+        // browser's auto-anchor compensates scrollTop to keep the
+        // visible content stationary — AND the manual anchor in the
+        // useLayoutEffect below also compensates. The two systems
+        // double-apply and disagree by a pixel or two, which shows up
+        // as a noticeable skip/jump when the user is scrolling up and
+        // hits the load-more threshold. Disable the browser anchor so
+        // the manual one is the sole source of truth.
+        style={{ flex: 1, overflowY: 'auto', padding: '0', position: 'relative', background: '#ffffff', overflowAnchor: 'none' }}
         className="scrollbar-hidden"
       >
         {/* Mock-style hero header — warm cream→white gradient for presence,
