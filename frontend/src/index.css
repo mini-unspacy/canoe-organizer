@@ -518,31 +518,6 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
-   On Shore sparkle burst: a handful of little emoji flying
-   upward + outward + fading on the "all seated" pulse. Each
-   sparkle is an independent absolutely-positioned span with
-   a different CSS-variable-driven travel vector so the burst
-   reads as explosive rather than a uniform shower. */
-@keyframes onshore-sparkle {
-  0%   { transform: translate(-50%, 0) scale(0.4);   opacity: 0; }
-  15%  { transform: translate(calc(-50% + (var(--sx) * 0.3)), calc(var(--sy) * 0.3)) scale(1); opacity: 1; }
-  100% { transform: translate(calc(-50% + var(--sx)), var(--sy)) scale(0.8);                  opacity: 0; }
-}
-.onshore-sparkle {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-size: 14px;
-  line-height: 1;
-  pointer-events: none;
-  will-change: transform, opacity;
-  animation: onshore-sparkle 900ms cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
-}
-@media (prefers-reduced-motion: reduce) {
-  .onshore-sparkle { animation: none; opacity: 0; }
-}
-
-/* ────────────────────────────────────────────────────────────
    On Shore count-digit roll: the number inside the pill rolls
    up when the count goes up, down when it goes down, so the
    direction of movement is legible. Reuses the existing

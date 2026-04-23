@@ -208,50 +208,43 @@ export function OnShorePanel({
   const count = visiblePaddlers.length + unassignedGuests.length;
 
   // ─── ON SHORE STATUS ANIMATION ───
-  // Give the red pill a visible reaction when paddlers move on/off shore
-  // so the user notices the change without having to scan the number.
-  // Three layers, all triggered off the same count change:
-  //  • pillAnim — one-shot CSS animation on the button (squishy pop on
-  //    any change; green "all seated" pulse on crossing to zero).
-  //  • rollDir — direction of the digit slide for the count so the
-  //    number visibly rolls up when count rises / down when it falls.
-  //  • sparkleBurst — a handful of emoji that fly out of the pill when
-  //    the count hits 0, nonce-keyed so repeated zero-crossings retrigger.
-  // All three use nonce-bumped keys so consecutive same-direction changes
-  // still restart their animations.
-  const [pillAnim, setPillAnim] = useState<{ cls: 'onshore-pop' | 'onshore-all-seated'; nonce: number } | null>(null);
+  // Give the red pill a visible reaction when paddlers move on/off shore.
+  // Two layers, driven off count change:
+  //  • pill bounce — a small scale pop on any change; a larger green
+  //    pulse when count crosses to 0 from a meaningful starting count.
+  //    Triggered via direct classList manipulation on the button ref
+  //    (remove class → force reflow → add class) so the animation
+  //    restarts on every change WITHOUT remounting the button. A key-
+  //    based remount caused a visible flicker + "double play" on
+  //    desktop because React would tear the DOM node down and rebuild
+  //    it between frames.
+  //  • rollDir — direction of the digit slide so the number rolls up
+  //    when count rises / down when it falls. This still uses key-
+  //    based remount on an inner span (the count digit itself), which
+  //    is small enough that the remount is invisible.
+  const pillRef = useRef<HTMLButtonElement>(null);
   const [rollDir, setRollDir] = useState<{ dir: 'up' | 'down'; nonce: number } | null>(null);
-  const [sparkleBurst, setSparkleBurst] = useState<number>(0);
   const prevCountRef = useRef<number>(count);
   useEffect(() => {
     const prev = prevCountRef.current;
     prevCountRef.current = count;
     if (prev === count) return;
-    // "All seated" celebration should feel earned — only fire when a
-    // MEANINGFUL group just got seated (prev >= 3). A solo 1→0 move is
-    // just a normal count change and gets the subtle pop instead, so
-    // the big green+sparkle pulse doesn't feel spammy on small edits.
+    setRollDir(r => ({ dir: count > prev ? 'up' : 'down', nonce: (r?.nonce ?? 0) + 1 }));
+    const btn = pillRef.current;
+    if (!btn) return;
+    // "All seated" pulse only on a meaningful seating wave (prev >= 3).
+    // A solo 1→0 move is a routine change and gets the subtle pop.
     const allSeated = count === 0 && prev >= 3;
     const cls = allSeated ? 'onshore-all-seated' : 'onshore-pop';
-    setPillAnim(a => ({ cls, nonce: (a?.nonce ?? 0) + 1 }));
-    setRollDir(r => ({ dir: count > prev ? 'up' : 'down', nonce: (r?.nonce ?? 0) + 1 }));
-    if (allSeated) setSparkleBurst(n => n + 1);
-    const t = setTimeout(() => setPillAnim(null), allSeated ? 820 : 320);
-    return () => clearTimeout(t);
+    // Wipe any in-flight animation classes, force a reflow, re-add.
+    // This is the canonical recipe for restarting a CSS animation
+    // without unmounting the element. `offsetWidth` read forces
+    // layout so the browser sees the class change as two distinct
+    // events (remove, then add) rather than coalescing them.
+    btn.classList.remove('onshore-pop', 'onshore-all-seated');
+    void btn.offsetWidth;
+    btn.classList.add(cls);
   }, [count]);
-
-  // Sparkle vectors — a small fixed set of travel directions the emoji
-  // burst uses. Generated from nonce so the pattern feels organic but
-  // deterministic within one burst. Each entry: [dx, dy] in px, plus
-  // the glyph. Emoji mix avoids any single-glyph repetition.
-  const SPARKLE_VECTORS: Array<{ dx: number; dy: number; glyph: string; delay: number; size: number }> = [
-    { dx: -36, dy: -34, glyph: '✨', delay: 0,   size: 12 },
-    { dx:  38, dy: -36, glyph: '🎉', delay: 40,  size: 14 },
-    { dx: -10, dy: -44, glyph: '🛶', delay: 80,  size: 13 },
-    { dx:  22, dy: -42, glyph: '✨', delay: 20,  size: 11 },
-    { dx: -44, dy: -18, glyph: '⭐', delay: 60,  size: 10 },
-    { dx:  46, dy: -20, glyph: '✨', delay: 100, size: 12 },
-  ];
 
   return (
     <div
@@ -290,14 +283,32 @@ export function OnShorePanel({
         }}
       >
         <button
-          // Nonce in the key restarts the CSS animation even when the
-          // class value didn't change between two consecutive pops.
-          key={pillAnim ? `${pillAnim.cls}-${pillAnim.nonce}` : 'idle'}
+          // Animation classes are applied to THIS DOM node directly via
+          // ref.classList (see the useEffect above) — we don't use
+          // React key to restart the animation because remounting the
+          // button between every count change caused a visible flicker
+          // and made it look like the animation played twice.
+          ref={pillRef}
           type="button"
           onClick={togglePill}
+          onAnimationEnd={(e) => {
+            // Self-clean the animation class when it naturally
+            // completes so a subsequent count change triggers a fresh
+            // remove → reflow → add cycle. Guard by animationName so
+            // we only react to OUR animations (count-roll inside the
+            // digit span also bubbles up here).
+            if (
+              e.animationName === 'onshore-pop' ||
+              e.animationName === 'onshore-all-seated'
+            ) {
+              (e.currentTarget as HTMLButtonElement).classList.remove(
+                'onshore-pop',
+                'onshore-all-seated',
+              );
+            }
+          }}
           aria-label={`On Shore ${count} paddlers — tap to ${collapsed ? "open" : "close"}`}
           aria-expanded={!collapsed}
-          className={pillAnim?.cls ?? ''}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -317,12 +328,7 @@ export function OnShorePanel({
             WebkitUserSelect: "none",
             boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
             transition: "background 120ms ease",
-            // Sparkles are rendered as absolute children and must be
-            // allowed to escape the pill's border-radius without being
-            // clipped. visible overflow is the default, but flex
-            // parents sometimes clip — make it explicit.
             position: "relative",
-            overflow: "visible",
           }}
         >
           <span>On Shore</span>
@@ -342,13 +348,6 @@ export function OnShorePanel({
               {count}
             </span>
           </span>
-          {/* Sparkle burst — rendered only briefly around the zero-
-              crossing so it doesn't pile up spans for every pop. Keyed
-              on the burst nonce so it remounts and each span restarts
-              its animation from frame 0. */}
-          {sparkleBurst > 0 && (
-            <SparkleBurst nonce={sparkleBurst} vectors={SPARKLE_VECTORS} />
-          )}
         </button>
 
         {/* Center drag grip — sits horizontally centered in the row and is
@@ -609,40 +608,6 @@ export function OnShorePanel({
           )}
         </Droppable>
     </div>
-  );
-}
-
-// Sparkle burst rendered over the On Shore pill when the paddler count
-// hits zero. Each emoji has its own --sx / --sy travel vector (set as
-// CSS custom properties on the span) which the `onshore-sparkle` keyframe
-// reads to animate the element outward and upward. Wrapping in a keyed
-// component means each new burst remounts all spans so the animations
-// restart from frame 0 even if the component was already in the DOM.
-function SparkleBurst({ nonce, vectors }: { nonce: number; vectors: Array<{ dx: number; dy: number; glyph: string; delay: number; size: number }> }) {
-  return (
-    <span
-      key={nonce}
-      aria-hidden="true"
-      style={{ position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, pointerEvents: 'none' }}
-    >
-      {vectors.map((v, i) => (
-        <span
-          key={i}
-          className="onshore-sparkle"
-          style={{
-            // Custom properties feed the keyframe's translate() values.
-            // Cast via `as React.CSSProperties` since TS doesn't know
-            // about arbitrary --var custom props on style.
-            ['--sx' as any]: `${v.dx}px`,
-            ['--sy' as any]: `${v.dy}px`,
-            animationDelay: `${v.delay}ms`,
-            fontSize: v.size,
-          } as React.CSSProperties}
-        >
-          {v.glyph}
-        </span>
-      ))}
-    </span>
   );
 }
 

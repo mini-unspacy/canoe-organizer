@@ -144,14 +144,29 @@ export function TodayView({
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
 
   // ─── CANOE-FULL CELEBRATION ───
-  // When a canoe transitions from "not full" → "full" (6 seats taken), the
-  // card plays a one-shot spring animation on top of its ambient green
-  // breathing glow. We track the previously-full set in a ref and the
-  // currently-animating set in state; each new entry schedules its own
-  // teardown after the animation duration. This outlives re-renders and
-  // fires correctly regardless of which canoe got filled.
+  // When a canoe transitions from "not full" → "full" (6 seats taken),
+  // the card plays a one-shot ring pulse. We track the previously-full
+  // set in a ref (persists across renders) and the currently-animating
+  // set in state; cards consult the state via `isCelebrating` below.
+  //
+  // Cleanup is driven by `onAnimationEnd` on the card rather than a
+  // setTimeout — earlier versions used a timer that was getting
+  // cancelled by React cleanup when the effect re-ran mid-animation
+  // (canoeAssignmentsByCanoe's reference changes on every parent
+  // re-render), leaving a canoe stuck in the celebrating set and its
+  // animation running past its natural end. Letting the browser's
+  // own animationend event drive teardown makes the lifecycle
+  // insensitive to how often the parent re-renders.
   const prevFullCanoesRef = useRef<Set<string>>(new Set());
   const [celebratingCanoes, setCelebratingCanoes] = useState<Set<string>>(new Set());
+  const stopCelebrating = (id: string) => {
+    setCelebratingCanoes(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
   useEffect(() => {
     if (!canoes) return;
     const currentFull = new Set<string>();
@@ -168,15 +183,6 @@ export function TodayView({
       newlyFull.forEach(id => next.add(id));
       return next;
     });
-    const timers = newlyFull.map(id => setTimeout(() => {
-      setCelebratingCanoes(prev => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }, 720));
-    return () => { timers.forEach(clearTimeout); };
   }, [canoes, canoeAssignmentsByCanoe]);
   const sortPillRef = useRef<HTMLDivElement>(null);
   // Fleet section view: '1' | '2' | '4'. All modes render every canoe in a
@@ -1040,6 +1046,15 @@ export function TodayView({
             // one). The celebrate class layers on a springy transform
             // + shadow boost during the 820ms transition moment.
             className={`breathe-in${isCelebrating ? ' canoe-celebrate' : ''}`}
+            onAnimationEnd={(e) => {
+              // Self-clean: when the celebrate animation completes
+              // naturally, drop this canoe from the celebrating set.
+              // Guard by animationName so the `breathe-in` fade-in
+              // (also bubbles up here) doesn't trip the cleanup.
+              if (e.animationName === 'canoe-celebrate') {
+                stopCelebrating(canoe.id);
+              }
+            }}
             style={{
               display: 'flex',
               flexDirection: 'column',
