@@ -1031,14 +1031,15 @@ export function TodayView({
         return (
           <div
             key={canoe._id.toString()}
-            // Order matters: canoe-celebrate is a one-shot spring overlay
-            // that's applied only during the transition-to-full window;
-            // canoe-full is the ambient breathing glow while the card
-            // stays full. Listing celebrate LAST lets it take over the
-            // box-shadow/transform animation for its 720ms run without a
-            // CSS specificity fight. Non-full cards rely on the inline
-            // boxShadow below for their neutral shadow.
-            className={`breathe-in${isFull ? ' canoe-full' : ''}${isCelebrating ? ' canoe-celebrate' : ''}`}
+            // canoe-celebrate is a one-shot spring ONLY during the
+            // transition window; we no longer use .canoe-full for the
+            // ambient state because the inline boxShadow below paints
+            // the green ring statically (animations were getting
+            // optimized/suppressed on some desktop setups and leaving
+            // a full canoe visually indistinguishable from a partial
+            // one). The celebrate class layers on a springy transform
+            // + shadow boost during the 820ms transition moment.
+            className={`breathe-in${isCelebrating ? ' canoe-celebrate' : ''}`}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -1046,12 +1047,22 @@ export function TodayView({
               backgroundColor: '#ffffff',
               borderRadius: '14px',
               padding: canoeView === '4' ? '8px 6px 6px' : '10px 10px 8px',
-              // Let the canoe-full / canoe-celebrate animations drive the
-              // shadow when the card is full. Only set the neutral resting
-              // shadow inline for non-full cards so we don't have to fight
-              // inline-vs-class specificity for the animated versions.
+              // Static green ring for full canoes — always visible
+              // regardless of whether any animation is running. We
+              // use `outline` rather than `border` so it sits OUTSIDE
+              // the box-shadow ring and doesn't shift layout when a
+              // canoe transitions between partial/full (a border
+              // swap would reflow the card by 4px). The outline is
+              // solid green at full saturation so it reads clearly
+              // on desktop monitors where subtle alpha rings get
+              // crushed against the white card background. The
+              // inner box-shadow ring fills in the visual weight
+              // so the outline has context rather than floating on
+              // its own.
+              outline: isFull ? '2px solid #2f7a47' : undefined,
+              outlineOffset: isFull ? '-1px' : undefined,
               boxShadow: isFull
-                ? undefined
+                ? '0 0 0 3px rgba(47,122,71,0.22), 0 4px 12px rgba(47,122,71,0.22), 0 14px 36px rgba(47,122,71,0.32)'
                 : '0 0 0 1px rgba(0,0,0,.05), 0 2px 6px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.06)',
               minWidth: 0,
               // Stagger the entry: each card delays 40ms more than the last,

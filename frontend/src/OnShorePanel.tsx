@@ -227,8 +227,11 @@ export function OnShorePanel({
     const prev = prevCountRef.current;
     prevCountRef.current = count;
     if (prev === count) return;
-    // Crossing to zero wins — feels more like a mini win than a nudge.
-    const allSeated = count === 0 && prev > 0;
+    // "All seated" celebration should feel earned — only fire when a
+    // MEANINGFUL group just got seated (prev >= 3). A solo 1→0 move is
+    // just a normal count change and gets the subtle pop instead, so
+    // the big green+sparkle pulse doesn't feel spammy on small edits.
+    const allSeated = count === 0 && prev >= 3;
     const cls = allSeated ? 'onshore-all-seated' : 'onshore-pop';
     setPillAnim(a => ({ cls, nonce: (a?.nonce ?? 0) + 1 }));
     setRollDir(r => ({ dir: count > prev ? 'up' : 'down', nonce: (r?.nonce ?? 0) + 1 }));
