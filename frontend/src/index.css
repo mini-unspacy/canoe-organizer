@@ -131,9 +131,19 @@ button {
 button:hover {
   border-color: #3387a2;
 }
-button:focus,
+/* Only show the focus ring for keyboard focus (`:focus-visible`),
+   not for mouse clicks. Without this, the default Vite stylesheet's
+   `button:focus { outline: 4px auto ... }` leaves the ring stuck on
+   a button after it's been clicked (e.g. Auto / Clear / Sort in the
+   Today bar) until the user clicks somewhere else. `:focus-visible`
+   preserves the ring for keyboard tab-through, which is what we
+   actually want for accessibility. */
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #3387a2;
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 
 @media (prefers-color-scheme: light) {
