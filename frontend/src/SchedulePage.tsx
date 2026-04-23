@@ -113,14 +113,29 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
   const anchorRef = useRef<{ eventId: string; offsetFromTop: number } | null>(null);
   const lastLoadTime = useRef(0);
 
-  // After past events load, scroll back to the element that was visible before
+  // After past events load, scroll back to the element that was visible before.
+  //
+  // The container has `position: relative`, so it is the offsetParent of
+  // every event row — meaning `el.offsetTop` is already measured from the
+  // top of THIS container. The original formula subtracted
+  // `container.offsetTop` too, which is the container's OWN position within
+  // its own offsetParent (up the tree, e.g. relative to <body>) — an
+  // unrelated number that injected a constant offset into the restore,
+  // producing the visible skip when loadMorePast fired near today (the
+  // only time this code runs, because initialNumItems: 1 means the top of
+  // the scroll content sits right above today).
+  //
+  // The anchor was captured via viewport math (rect.top - containerRect.top)
+  // which is exactly "distance in pixels from the container's top edge to
+  // the anchor's top edge" — so the correct restore is simply:
+  //   scrollTop = el.offsetTop - anchor.offsetFromTop
   useLayoutEffect(() => {
     const container = scheduleScrollRef.current;
     const anchor = anchorRef.current;
     if (!container || !anchor) return;
     const el = container.querySelector(`[data-event-id="${anchor.eventId}"]`) as HTMLElement | null;
     if (el) {
-      container.scrollTop = el.offsetTop - container.offsetTop - anchor.offsetFromTop;
+      container.scrollTop = el.offsetTop - anchor.offsetFromTop;
     }
     anchorRef.current = null;
     // Cooldown before allowing another load
@@ -151,7 +166,10 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     if (!scrollToEventId || !scheduleScrollRef.current || !events) return;
     const el = scheduleScrollRef.current.querySelector(`[data-event-id="${scrollToEventId}"]`) as HTMLElement | null;
     if (el) {
-      scheduleScrollRef.current.scrollTop = el.offsetTop - scheduleScrollRef.current.offsetTop;
+      // Container is position: relative, so el.offsetParent === container
+      // and el.offsetTop is already measured from the container's top.
+      // See the matching fix in the anchor-restore useLayoutEffect above.
+      scheduleScrollRef.current.scrollTop = el.offsetTop;
       didJumpRef.current = true;
       setPendingJump(false);
     } else {
@@ -213,7 +231,9 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
       if (best) el = (best as { node: HTMLElement }).node;
     }
     if (!el) return;
-    const target = el.offsetTop - container.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
+    // Container is position: relative → el.offsetParent === container,
+    // so el.offsetTop is already measured from the container's top.
+    const target = el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2);
     container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }, [scrollToTodayNonce]);
 
@@ -302,7 +322,8 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
           let found = monthList[0] || '';
           for (const m of monthList) {
             const el = monthRefs.current[m];
-            if (el && el.offsetTop - container.offsetTop <= scrollTop + 60) {
+            // Container is position: relative → monthRef.offsetParent === container.
+            if (el && el.offsetTop <= scrollTop + 60) {
               found = m;
             }
           }
