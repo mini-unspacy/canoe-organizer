@@ -371,30 +371,42 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
-   Seat row hover: lights up the WHOLE filled seat row on
-   mouse hover, not just the paddler-name chip floating on
-   top. Hover lives on the seat row itself rather than on
-   the chip because the chip only covers part of the row's
-   width — reaching for "that paddler" with the cursor
-   landed dead space on the right half of the row before
-   the chip's translateY lift would trigger. A box-shadow /
-   border / background shift on the row gives a full-width
-   affordance.
+   Filled-seat hover. The whole slot (row background + seat #)
+   lights up when the cursor is over a filled seat — not just
+   the paddler-name chip floating on top. Hover lives on the
+   outer slot wrapper so BOTH the row and the absolute-
+   positioned seat # (a sibling of the row) can respond.
 
-   `!important` is needed because the seat row carries inline
+   Two coordinated effects:
+   (1) Row gets a faint paddler-colored wash via `color-mix()`
+       reading `--paddler-color` off the slot's inline style.
+       This ties the hover feedback to the person sitting in
+       the seat rather than a generic gray.
+   (2) Seat # darkens to the paddler's color, weights up, and
+       scales ~1.12× so the eye is drawn to "which seat" the
+       cursor is on — useful when dragging across many canoes.
+
+   `!important` is needed on the row because it carries inline
    `style=` values (drag state changes background/border/
    shadow in JS), and without !important the inline rule
-   always wins. We only apply this class when the row has a
-   paddler AND is not currently the active drop target —
-   so the red drag-over styling is not affected.
+   always wins. We only apply the `seat-slot-hoverable` class
+   when the row has a paddler AND is not currently the active
+   drop target — so the red drag-over styling is not affected.
 
    `@media (hover: hover)` so the flash doesn't stick on
    touch devices that briefly register :hover on tap. */
 @media (hover: hover) and (pointer: fine) {
-  .seat-row-hoverable:hover {
-    background: rgba(0,0,0,0.06) !important;
-    border-color: rgba(0,0,0,0.14) !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05) !important;
+  .seat-slot-hoverable:hover .seat-row-inner {
+    background: color-mix(in srgb, var(--paddler-color, #000) 9%, transparent) !important;
+    border-color: color-mix(in srgb, var(--paddler-color, #000) 40%, transparent) !important;
+    box-shadow:
+      0 2px 6px color-mix(in srgb, var(--paddler-color, #000) 18%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--paddler-color, #000) 12%, transparent) !important;
+  }
+  .seat-slot-hoverable:hover .seat-num {
+    color: var(--paddler-color, #2a2a2a) !important;
+    font-weight: 700;
+    transform: translateY(-50%) scale(1.12);
   }
 }
 

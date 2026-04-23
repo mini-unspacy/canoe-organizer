@@ -1506,6 +1506,9 @@ export function TodayView({
                         lineHeight: 1,
                         width: seatNumColWidth,
                         textAlign: 'right',
+                        // Smooth out the hover-driven color/scale change
+                        // from `.seat-slot-hoverable:hover .seat-num`.
+                        transition: 'color 140ms ease, transform 140ms ease',
                       };
                       // Seat row height is sized to the FILLED state so
                       // empty + filled rows render at the same height and
@@ -1546,16 +1549,25 @@ export function TodayView({
                         minHeight: canoeView === '4' ? 26 : 34,
                         boxSizing: 'border-box',
                       };
-                      // Enable full-row :hover styling only when this
+                      // Enable slot-wide :hover styling only when this
                       // seat has a paddler AND isn't currently the
                       // drag-over drop target (the red drag affordance
                       // should fully own the row's visuals during a
-                      // drop). The class is consumed by a pure-CSS
-                      // `.seat-row-hoverable:hover` rule in index.css
-                      // — no React hover state needed, so there's no
-                      // per-seat useState and no re-render on every
-                      // mouse move across the fleet.
-                      const rowHoverClass = hasPaddler && !active ? 'seat-row-hoverable' : '';
+                      // drop). The class is consumed by pure-CSS
+                      // `.seat-slot-hoverable:hover` rules in index.css
+                      // that target `.seat-row-inner` and `.seat-num`
+                      // descendants — no React hover state needed, so
+                      // there's no per-seat useState and no re-render
+                      // on every mouse move across the fleet.
+                      //
+                      // The outer wrapper is the hover trigger rather
+                      // than the row itself so the seat # (an absolute-
+                      // positioned sibling of the row) can also respond
+                      // on hover. `--paddler-color` is exposed as a CSS
+                      // custom property so the hover rule can tint the
+                      // row with a faint wash of the sitting paddler's
+                      // color via `color-mix()`.
+                      const slotHoverClass = hasPaddler && !active ? 'seat-slot-hoverable' : '';
                       // Half the former flex-gap becomes padding at the
                       // top and bottom of each Droppable, so adjacent
                       // Droppables meet edge-to-edge. The visual row
@@ -1578,10 +1590,17 @@ export function TodayView({
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
+                          className={slotHoverClass}
                           style={{
                             position: 'relative',
                             paddingTop: seatHitPad,
                             paddingBottom: seatHitPad,
+                            // Expose the sitting paddler's color as a CSS
+                            // custom property so the slot-hover rules can
+                            // tint the row + seat # with a paddler-colored
+                            // wash. Undefined for empty seats; harmless
+                            // because empty seats don't get the hover class.
+                            ...(hasPaddler ? { ['--paddler-color' as any]: paddlerColor } : {}),
                           }}
                         >
                           {/* Seat # is rendered here (a sibling of the
@@ -1591,7 +1610,7 @@ export function TodayView({
                               intercept taps — the whole row (including
                               the number's visual column) remains a single
                               grab target for the Draggable beneath. */}
-                          <span style={seatNumberStyle}>{seat}</span>
+                          <span className="seat-num" style={seatNumberStyle}>{seat}</span>
                           {/* Visual drop-target row — ALWAYS a flow element
                               (never a Draggable), so the outer Droppable
                               `canoe-X-seat-Y` is always a Draggable-free
@@ -1606,7 +1625,7 @@ export function TodayView({
                               (paddler-host-...), dropping onto an occupied
                               seat looks identical to dropping onto an
                               empty seat from pangea's perspective. */}
-                          <div className={rowHoverClass} style={rowInnerStyle}>
+                          <div className="seat-row-inner" style={rowInnerStyle}>
                             <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
                           </div>
                           {/* Paddler overlay — absolute over the visual
