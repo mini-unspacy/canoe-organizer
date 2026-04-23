@@ -532,7 +532,18 @@ export function OnShorePanel({
                         : '#2a2a2a';
                     return (
                       <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
-                        {(dragProvided, dragSnapshot) => (
+                        {(dragProvided, dragSnapshot) => {
+                          // Mirror the seat→pool morph from TodayView in
+                          // reverse: when the pool chip is dragged over a
+                          // canoe seat, grow the drag clone into a
+                          // seat-card shape (tinted bg + colored border +
+                          // lifted shadow + seat-like padding) so the user
+                          // sees the target shape before release. When
+                          // over the pool (staging-*) or nothing, the
+                          // clone stays chip-sized — same as always.
+                          const over = dragSnapshot.draggingOver;
+                          const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          return (
                           <div
                             ref={dragProvided.innerRef}
                             {...dragProvided.draggableProps}
@@ -541,21 +552,59 @@ export function OnShorePanel({
                             role="none"
                             aria-roledescription=""
                             style={{
-                              ...dragProvided.draggableProps.style,
                               touchAction: 'manipulation',
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
+                              boxSizing: 'border-box',
+                              // dp.draggableProps.style MUST precede the
+                              // card overrides so we can replace the
+                              // captured chip width/height with the card
+                              // dims when over a canoe seat.
+                              ...dragProvided.draggableProps.style,
+                              ...(isOverCanoe ? {
+                                // width: 'auto' releases the captured
+                                // chip-pixel width; minWidth guarantees a
+                                // card-wide footprint so the clone reads
+                                // as a seat row even at the narrowest
+                                // viewport. Padding matches the
+                                // seat-number column offset used in
+                                // TodayView's seat-row render so the
+                                // paddler label sits where it would in
+                                // an actual seat.
+                                width: 'auto' as const,
+                                minWidth: 220,
+                                minHeight: 34,
+                                paddingLeft: 19,
+                                paddingRight: 4,
+                                paddingTop: 2,
+                                paddingBottom: 2,
+                                background: `${paddlerColor}1A`,
+                                border: `1px solid ${paddlerColor}66`,
+                                borderRadius: 7,
+                                boxShadow: '0 10px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)',
+                                display: 'flex',
+                                alignItems: 'center',
+                              } : {}),
                             }}
                           >
                             <PaddlerChip
                               label={paddlerLabel}
                               color={paddlerColor}
                               dims={rowDims}
-                              isDragging={dragSnapshot.isDragging}
+                              // When the outer wrapper has morphed into a
+                              // seat card, flatten the chip so it doesn't
+                              // render a second white pill INSIDE the
+                              // tinted card. Over the pool (or nothing),
+                              // the chip IS the drag clone — render its
+                              // white dragging pill as usual.
+                              flat={isOverCanoe}
+                              isDragging={dragSnapshot.isDragging && !isOverCanoe}
+                              parentDragging={dragSnapshot.isDragging}
                               title={paddler.firstName + (paddler.lastName ? ' ' + paddler.lastName : '')}
                             />
                           </div>
-                        )}
+                        );
+                        }}
                       </Draggable>
                     );
                   })}
@@ -574,7 +623,15 @@ export function OnShorePanel({
                         index={visiblePaddlers.length + gi}
                         shouldRespectForcePress={false}
                       >
-                        {(dragProvided, dragSnapshot) => (
+                        {(dragProvided, dragSnapshot) => {
+                          // Same seat-card morph as the paddler Draggable
+                          // above — guest chips should also grow into a
+                          // seat-card shape when hovered over a canoe
+                          // seat, so the drop target affordance is
+                          // consistent regardless of paddler kind.
+                          const over = dragSnapshot.draggingOver;
+                          const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          return (
                           <div
                             ref={dragProvided.innerRef}
                             {...dragProvided.draggableProps}
@@ -583,21 +640,40 @@ export function OnShorePanel({
                             role="none"
                             aria-roledescription=""
                             style={{
-                              ...dragProvided.draggableProps.style,
                               touchAction: 'manipulation',
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
+                              boxSizing: 'border-box',
+                              ...dragProvided.draggableProps.style,
+                              ...(isOverCanoe ? {
+                                width: 'auto' as const,
+                                minWidth: 220,
+                                minHeight: 34,
+                                paddingLeft: 19,
+                                paddingRight: 4,
+                                paddingTop: 2,
+                                paddingBottom: 2,
+                                background: `${guestColor}1A`,
+                                border: `1px solid ${guestColor}66`,
+                                borderRadius: 7,
+                                boxShadow: '0 10px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)',
+                                display: 'flex',
+                                alignItems: 'center',
+                              } : {}),
                             }}
                           >
                             <PaddlerChip
                               label={paddlerLabel}
                               color={guestColor}
                               dims={rowDims}
-                              isDragging={dragSnapshot.isDragging}
+                              flat={isOverCanoe}
+                              isDragging={dragSnapshot.isDragging && !isOverCanoe}
+                              parentDragging={dragSnapshot.isDragging}
                               title={guestPaddler.firstName + (guestPaddler.lastName ? ' ' + guestPaddler.lastName : '')}
                             />
                           </div>
-                        )}
+                        );
+                        }}
                       </Draggable>
                     );
                   })}
