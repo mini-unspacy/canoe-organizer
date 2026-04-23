@@ -42,10 +42,20 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
   const upcomingEvents = useQuery(api.events.getUpcomingEvents, { fromDate: cutoffDate });
+  // initialNumItems: 50 preloads ~3 months of past events up front, so the
+  // user can scroll back through recent history without triggering
+  // loadMorePast. The previous value (1) meant the top of the scroll
+  // content started essentially at today, and any scroll that reached the
+  // near-top fired loadMorePast mid-scroll — prepending ~20 events at once,
+  // which jumps scrollTop by ~1500px to keep the anchor event stationary.
+  // Visually correct, but the abrupt scrollTop change disrupts scroll
+  // momentum and reads as a "skip" right around today. A bigger initial
+  // window means the loader now only fires for genuinely old events (many
+  // months back), where the user has already committed to deep-scrolling.
   const { results: pastEventsDesc, status: pastStatus, loadMore: loadMorePast } = usePaginatedQuery(
     api.events.getPastEvents,
     { beforeDate: cutoffDate },
-    { initialNumItems: 1 }
+    { initialNumItems: 50 }
   );
   const pastEvents = useMemo(() => [...pastEventsDesc].reverse(), [pastEventsDesc]);
   const events = useMemo(() => {
