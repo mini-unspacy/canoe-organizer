@@ -1542,10 +1542,20 @@ export function TodayView({
                         outline: active ? '2px solid #c82028' : 'none',
                         outlineOffset: active ? '-1px' : '0',
                         boxShadow: active ? '0 0 0 4px rgba(200,32,40,0.16)' : 'none',
-                        transition: 'background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, outline-color 120ms ease',
+                        transition: 'background 140ms ease, border-color 140ms ease, box-shadow 140ms ease, outline-color 140ms ease',
                         minHeight: canoeView === '4' ? 26 : 34,
                         boxSizing: 'border-box',
                       };
+                      // Enable full-row :hover styling only when this
+                      // seat has a paddler AND isn't currently the
+                      // drag-over drop target (the red drag affordance
+                      // should fully own the row's visuals during a
+                      // drop). The class is consumed by a pure-CSS
+                      // `.seat-row-hoverable:hover` rule in index.css
+                      // — no React hover state needed, so there's no
+                      // per-seat useState and no re-render on every
+                      // mouse move across the fleet.
+                      const rowHoverClass = hasPaddler && !active ? 'seat-row-hoverable' : '';
                       // Half the former flex-gap becomes padding at the
                       // top and bottom of each Droppable, so adjacent
                       // Droppables meet edge-to-edge. The visual row
@@ -1596,7 +1606,7 @@ export function TodayView({
                               (paddler-host-...), dropping onto an occupied
                               seat looks identical to dropping onto an
                               empty seat from pangea's perspective. */}
-                          <div style={rowInnerStyle}>
+                          <div className={rowHoverClass} style={rowInnerStyle}>
                             <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }} />
                           </div>
                           {/* Paddler overlay — absolute over the visual

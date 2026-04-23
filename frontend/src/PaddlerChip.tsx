@@ -88,12 +88,15 @@ export const PaddlerChip: React.FC<{
   // a second white pressed pill INSIDE the outer drag clone when the
   // user grabbed the chip itself (the pointer leaves the chip mid-drag
   // but the mouseup/touchend that would clear `pressed` fires later).
-  // Flat chips (inside canoe seats) also skip the press visual — the
-  // outer seat row owns the affordance, and the brief white-pressed
-  // frame between mousedown and pangea crossing the drag threshold was
-  // flashing as a ghost chip on drag-start. Hover is still allowed so
-  // desktop users get a lift affordance when mousing over the name.
-  const effHovered = interactive && hovered && !parentDragging;
+  // Flat chips (inside canoe seats) skip BOTH hover and press visuals —
+  // the outer seat row now owns the hover affordance (a full-row
+  // background/border lift via `.seat-row-hoverable:hover` CSS), so a
+  // chip-local hover translate/bg would layer on top of the row
+  // treatment and look redundant. The press visual was also removed
+  // for flat chips because the brief white-pressed frame between
+  // mousedown and pangea crossing the drag threshold was flashing as
+  // a ghost chip on drag-start.
+  const effHovered = interactive && hovered && !parentDragging && !flat;
   const effPressed = interactive && pressed && !parentDragging && !flat;
   const shadow = isDragging
     ? '0 16px 32px rgba(0,0,0,0.34), 0 0 0 1.5px rgba(255,255,255,0.9)'

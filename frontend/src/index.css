@@ -371,6 +371,34 @@ select,
 }
 
 /* ────────────────────────────────────────────────────────────
+   Seat row hover: lights up the WHOLE filled seat row on
+   mouse hover, not just the paddler-name chip floating on
+   top. Hover lives on the seat row itself rather than on
+   the chip because the chip only covers part of the row's
+   width — reaching for "that paddler" with the cursor
+   landed dead space on the right half of the row before
+   the chip's translateY lift would trigger. A box-shadow /
+   border / background shift on the row gives a full-width
+   affordance.
+
+   `!important` is needed because the seat row carries inline
+   `style=` values (drag state changes background/border/
+   shadow in JS), and without !important the inline rule
+   always wins. We only apply this class when the row has a
+   paddler AND is not currently the active drop target —
+   so the red drag-over styling is not affected.
+
+   `@media (hover: hover)` so the flash doesn't stick on
+   touch devices that briefly register :hover on tap. */
+@media (hover: hover) and (pointer: fine) {
+  .seat-row-hoverable:hover {
+    background: rgba(0,0,0,0.06) !important;
+    border-color: rgba(0,0,0,0.14) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05) !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
    Shimmer skeleton. Gradient sweeps across the placeholder. */
 @keyframes shimmer-sweep {
   0%   { background-position: -200% 0; }
