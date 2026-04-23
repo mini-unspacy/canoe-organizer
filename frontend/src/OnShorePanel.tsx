@@ -210,22 +210,45 @@ export function OnShorePanel({
   // ─── ON SHORE STATUS ANIMATION ───
   // Give the red pill a visible reaction when paddlers move on/off shore
   // so the user notices the change without having to scan the number.
-  // Two flavors: a quick "pop" on any count change, and a bigger
-  // celebratory pulse when the count hits 0 (everyone's seated).
-  // Keyed off a nonce that increments on every animation so consecutive
-  // changes of the same kind still retrigger.
+  // Three layers, all triggered off the same count change:
+  //  • pillAnim — one-shot CSS animation on the button (squishy pop on
+  //    any change; green "all seated" pulse on crossing to zero).
+  //  • rollDir — direction of the digit slide for the count so the
+  //    number visibly rolls up when count rises / down when it falls.
+  //  • sparkleBurst — a handful of emoji that fly out of the pill when
+  //    the count hits 0, nonce-keyed so repeated zero-crossings retrigger.
+  // All three use nonce-bumped keys so consecutive same-direction changes
+  // still restart their animations.
   const [pillAnim, setPillAnim] = useState<{ cls: 'onshore-pop' | 'onshore-all-seated'; nonce: number } | null>(null);
+  const [rollDir, setRollDir] = useState<{ dir: 'up' | 'down'; nonce: number } | null>(null);
+  const [sparkleBurst, setSparkleBurst] = useState<number>(0);
   const prevCountRef = useRef<number>(count);
   useEffect(() => {
     const prev = prevCountRef.current;
     prevCountRef.current = count;
     if (prev === count) return;
     // Crossing to zero wins — feels more like a mini win than a nudge.
-    const cls = count === 0 && prev > 0 ? 'onshore-all-seated' : 'onshore-pop';
+    const allSeated = count === 0 && prev > 0;
+    const cls = allSeated ? 'onshore-all-seated' : 'onshore-pop';
     setPillAnim(a => ({ cls, nonce: (a?.nonce ?? 0) + 1 }));
-    const t = setTimeout(() => setPillAnim(null), cls === 'onshore-all-seated' ? 720 : 320);
+    setRollDir(r => ({ dir: count > prev ? 'up' : 'down', nonce: (r?.nonce ?? 0) + 1 }));
+    if (allSeated) setSparkleBurst(n => n + 1);
+    const t = setTimeout(() => setPillAnim(null), allSeated ? 820 : 320);
     return () => clearTimeout(t);
   }, [count]);
+
+  // Sparkle vectors — a small fixed set of travel directions the emoji
+  // burst uses. Generated from nonce so the pattern feels organic but
+  // deterministic within one burst. Each entry: [dx, dy] in px, plus
+  // the glyph. Emoji mix avoids any single-glyph repetition.
+  const SPARKLE_VECTORS: Array<{ dx: number; dy: number; glyph: string; delay: number; size: number }> = [
+    { dx: -36, dy: -34, glyph: '✨', delay: 0,   size: 12 },
+    { dx:  38, dy: -36, glyph: '🎉', delay: 40,  size: 14 },
+    { dx: -10, dy: -44, glyph: '🛶', delay: 80,  size: 13 },
+    { dx:  22, dy: -42, glyph: '✨', delay: 20,  size: 11 },
+    { dx: -44, dy: -18, glyph: '⭐', delay: 60,  size: 10 },
+    { dx:  46, dy: -20, glyph: '✨', delay: 100, size: 12 },
+  ];
 
   return (
     <div
@@ -291,10 +314,38 @@ export function OnShorePanel({
             WebkitUserSelect: "none",
             boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
             transition: "background 120ms ease",
+            // Sparkles are rendered as absolute children and must be
+            // allowed to escape the pill's border-radius without being
+            // clipped. visible overflow is the default, but flex
+            // parents sometimes clip — make it explicit.
+            position: "relative",
+            overflow: "visible",
           }}
         >
           <span>On Shore</span>
-          <span style={{ fontWeight: 800, letterSpacing: 0 }}>{count}</span>
+          {/* Count digit in an overflow-clipped wrapper so the roll-up /
+              roll-down animation slides within a fixed frame instead of
+              spilling into the "On Shore" label. Key includes the count
+              value AND a nonce so repeated same-direction changes
+              restart the slide. */}
+          <span
+            className="count-roll-wrap"
+            style={{ fontWeight: 800, letterSpacing: 0, minWidth: 10, textAlign: 'center' }}
+          >
+            <span
+              key={`${count}-${rollDir?.nonce ?? 0}`}
+              className={rollDir ? (rollDir.dir === 'up' ? 'count-roll-up' : 'count-roll-down') : ''}
+            >
+              {count}
+            </span>
+          </span>
+          {/* Sparkle burst — rendered only briefly around the zero-
+              crossing so it doesn't pile up spans for every pop. Keyed
+              on the burst nonce so it remounts and each span restarts
+              its animation from frame 0. */}
+          {sparkleBurst > 0 && (
+            <SparkleBurst nonce={sparkleBurst} vectors={SPARKLE_VECTORS} />
+          )}
         </button>
 
         {/* Center drag grip — sits horizontally centered in the row and is
@@ -555,6 +606,40 @@ export function OnShorePanel({
           )}
         </Droppable>
     </div>
+  );
+}
+
+// Sparkle burst rendered over the On Shore pill when the paddler count
+// hits zero. Each emoji has its own --sx / --sy travel vector (set as
+// CSS custom properties on the span) which the `onshore-sparkle` keyframe
+// reads to animate the element outward and upward. Wrapping in a keyed
+// component means each new burst remounts all spans so the animations
+// restart from frame 0 even if the component was already in the DOM.
+function SparkleBurst({ nonce, vectors }: { nonce: number; vectors: Array<{ dx: number; dy: number; glyph: string; delay: number; size: number }> }) {
+  return (
+    <span
+      key={nonce}
+      aria-hidden="true"
+      style={{ position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, pointerEvents: 'none' }}
+    >
+      {vectors.map((v, i) => (
+        <span
+          key={i}
+          className="onshore-sparkle"
+          style={{
+            // Custom properties feed the keyframe's translate() values.
+            // Cast via `as React.CSSProperties` since TS doesn't know
+            // about arbitrary --var custom props on style.
+            ['--sx' as any]: `${v.dx}px`,
+            ['--sy' as any]: `${v.dy}px`,
+            animationDelay: `${v.delay}ms`,
+            fontSize: v.size,
+          } as React.CSSProperties}
+        >
+          {v.glyph}
+        </span>
+      ))}
+    </span>
   );
 }
 

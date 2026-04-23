@@ -460,27 +460,34 @@ select,
 /* ────────────────────────────────────────────────────────────
    Canoe-full celebration: two-part animation applied to the
    canoe card the moment fillCount hits 6.
-   • .canoe-celebrate — one-shot "wave" on transition to full:
-     a quick scale bump + green glow swell that reads like the
-     boat settling into the water once all paddlers are seated.
    • .canoe-full — ambient breathing glow while the card stays
      full, so a fully-crewed canoe feels "alive" compared to
-     its still, half-filled neighbors. */
-@keyframes canoe-celebrate {
-  0%   { transform: scale(1)      translateY(0);    box-shadow: 0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18); }
-  30%  { transform: scale(1.025)  translateY(-2px); box-shadow: 0 0 0 2px rgba(47,122,71,0.55), 0 4px 12px rgba(47,122,71,0.22), 0 16px 40px rgba(47,122,71,0.38); }
-  55%  { transform: scale(0.995)  translateY(1px);  box-shadow: 0 0 0 1.5px rgba(47,122,71,0.45), 0 3px 8px rgba(47,122,71,0.18), 0 12px 30px rgba(47,122,71,0.28); }
-  100% { transform: scale(1)      translateY(0);    box-shadow: 0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18); }
-}
-.canoe-celebrate {
-  animation: canoe-celebrate 720ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
-}
+     its still, half-filled neighbors.
+   • .canoe-celebrate — one-shot spring wave on transition to
+     full, stacked on top of the breathing glow via a longer
+     `animation` list so both play at once (the celebrate layer
+     dominates shadow/transform for its 720ms run, and the glow
+     resumes once it ends).
+   Order matters: .canoe-celebrate is declared AFTER .canoe-full
+   so when an element has BOTH classes the spring animation wins
+   the cascade — otherwise the ambient breath overrode the
+   one-shot and nothing visible ever ran. */
 @keyframes canoe-full-breathe {
   0%, 100% { box-shadow: 0 0 0 1px rgba(47,122,71,0.35),  0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18); }
   50%      { box-shadow: 0 0 0 1.5px rgba(47,122,71,0.50), 0 3px 10px rgba(47,122,71,0.16), 0 14px 36px rgba(47,122,71,0.28); }
 }
 .canoe-full {
   animation: canoe-full-breathe 3.6s ease-in-out infinite;
+}
+@keyframes canoe-celebrate {
+  0%   { transform: scale(1)      translateY(0);    box-shadow: 0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18); }
+  18%  { transform: scale(1.045)  translateY(-4px); box-shadow: 0 0 0 2.5px rgba(47,122,71,0.70), 0 6px 16px rgba(47,122,71,0.32), 0 22px 56px rgba(47,122,71,0.45); }
+  40%  { transform: scale(0.985)  translateY(2px);  box-shadow: 0 0 0 1.5px rgba(47,122,71,0.45), 0 3px 8px rgba(47,122,71,0.18), 0 12px 30px rgba(47,122,71,0.28); }
+  65%  { transform: scale(1.012)  translateY(-1px); box-shadow: 0 0 0 2px rgba(47,122,71,0.55),  0 4px 12px rgba(47,122,71,0.22), 0 16px 40px rgba(47,122,71,0.32); }
+  100% { transform: scale(1)      translateY(0);    box-shadow: 0 0 0 1px rgba(47,122,71,0.35), 0 2px 6px rgba(47,122,71,0.10), 0 10px 28px rgba(47,122,71,0.18); }
+}
+.canoe-celebrate {
+  animation: canoe-celebrate 820ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
 }
 @media (prefers-reduced-motion: reduce) {
   .canoe-celebrate, .canoe-full { animation: none; }
@@ -493,7 +500,9 @@ select,
    notices "you just moved someone."
    • .onshore-pop — one-shot squishy pop on any count change.
    • .onshore-all-seated — bigger celebratory pulse when the
-     count reaches 0 (everyone's on a canoe). */
+     count reaches 0 (everyone's on a canoe). Briefly flips the
+     pill GREEN at the peak so the user's eye catches "done"
+     before it settles back to the neutral gray resting state. */
 @keyframes onshore-pop {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.12); }
@@ -504,16 +513,60 @@ select,
   animation: onshore-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
 }
 @keyframes onshore-all-seated {
-  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(47,122,71,0.55), 0 1px 2px rgba(0,0,0,0.15); }
-  35%  { transform: scale(1.18); box-shadow: 0 0 0 10px rgba(47,122,71,0), 0 3px 10px rgba(47,122,71,0.30); }
-  60%  { transform: scale(0.96); }
-  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(47,122,71,0), 0 1px 2px rgba(0,0,0,0.15); }
+  0%   { transform: scale(1);    background: #c82028; box-shadow: 0 0 0 0 rgba(47,122,71,0.55), 0 1px 2px rgba(0,0,0,0.15); }
+  25%  { transform: scale(1.22); background: #2f7a47; box-shadow: 0 0 0 12px rgba(47,122,71,0), 0 4px 14px rgba(47,122,71,0.40); }
+  55%  { transform: scale(0.94); background: #2f7a47; box-shadow: 0 0 0 0 rgba(47,122,71,0), 0 2px 6px rgba(47,122,71,0.25); }
+  80%  { transform: scale(1.04); background: #4a8f5e; }
+  100% { transform: scale(1);    background: #a8a39a; box-shadow: 0 0 0 0 rgba(47,122,71,0), 0 1px 2px rgba(0,0,0,0.15); }
 }
 .onshore-all-seated {
-  animation: onshore-all-seated 720ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+  animation: onshore-all-seated 820ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
 }
 @media (prefers-reduced-motion: reduce) {
   .onshore-pop, .onshore-all-seated { animation: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   On Shore sparkle burst: a handful of little emoji flying
+   upward + outward + fading on the "all seated" pulse. Each
+   sparkle is an independent absolutely-positioned span with
+   a different CSS-variable-driven travel vector so the burst
+   reads as explosive rather than a uniform shower. */
+@keyframes onshore-sparkle {
+  0%   { transform: translate(-50%, 0) scale(0.4);   opacity: 0; }
+  15%  { transform: translate(calc(-50% + (var(--sx) * 0.3)), calc(var(--sy) * 0.3)) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--sx)), var(--sy)) scale(0.8);                  opacity: 0; }
+}
+.onshore-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: onshore-sparkle 900ms cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onshore-sparkle { animation: none; opacity: 0; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   On Shore count-digit roll: the number inside the pill rolls
+   up when the count goes up, down when it goes down, so the
+   direction of movement is legible. Reuses the existing
+   count-roll-up / count-roll-down keyframes defined above;
+   these class wrappers add the overflow clip so neighbor
+   digits don't bleed during the slide. */
+.count-roll-wrap {
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1;
+  vertical-align: baseline;
+}
+.count-roll-wrap > span {
+  display: inline-block;
+  line-height: 1;
 }
 
 /* ────────────────────────────────────────────────────────────
