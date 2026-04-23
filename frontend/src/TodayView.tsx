@@ -842,7 +842,13 @@ export function TodayView({
           the same fleet view below but with no editing controls, so we
           simply skip this whole strip for them. */}
       {isAdmin && (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', flexWrap: 'nowrap', overflowX: 'auto' }}>
+      // paddingY: 3 protects the scale(1.06) hover on .btn-zoom children
+      // from being clipped at the top/bottom. Because overflowX is 'auto',
+      // the CSS spec promotes overflowY from 'visible' to 'auto' too,
+      // which clips anything that extends outside the content box — so
+      // without vertical padding, hovering Auto/Clear/Sort chopped their
+      // 1px top + bottom borders off.
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0', marginBottom: '0', paddingTop: 3, paddingBottom: 3, flexWrap: 'nowrap', overflowX: 'auto' }}>
           {/* Mock-style outlined-pill action bar: Auto / Clear / + Canoe / Sort,
               roughly matching the Lokahi mock's Today toolbar (with Sort By kept
               as a fourth pill since the feature is useful). */}
