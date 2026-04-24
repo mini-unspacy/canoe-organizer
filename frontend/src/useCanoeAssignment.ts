@@ -334,7 +334,16 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     setDraggingOverCanoeId(m ? m[1] : null);
   }, []);
 
-  useEffect(() => clearDragWatchdog, [clearDragWatchdog]);
+  // Belt: clear the watchdog timer if the component unmounts mid-drag
+  // so a stale setTimeout can't fire after we're gone.
+  useEffect(() => {
+    return () => {
+      if (dragWatchdogRef.current) {
+        clearTimeout(dragWatchdogRef.current);
+        dragWatchdogRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handler = () => {
