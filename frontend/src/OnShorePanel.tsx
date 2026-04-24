@@ -62,6 +62,25 @@ const getLargeH = () => (typeof window === "undefined" ? 380 : Math.round(window
 const getFullH = () => (typeof window === "undefined" ? 640 : Math.round(window.innerHeight * 0.78));
 const PANEL_HEIGHT_LS_KEY = "lokahi.onShorePanelHeight";
 
+// Match TodayView's seat-row dims when morphing the drag clone into a
+// seat-card shape. canoeView lives in TodayView component state and
+// isn't plumbed down here, so read it straight from localStorage — the
+// same key TodayView writes to. Reading inside the drag-style function
+// means every drag update picks up the current value with no staleness.
+const CANOE_VIEW_LS_KEY = 'lokahi.canoeView';
+type CardDims = { minHeight: number; paddingV: number; paddingL: number; paddingR: number };
+const CARD_DIMS_DEFAULT: CardDims = { minHeight: 34, paddingV: 2, paddingL: 19, paddingR: 4 };
+const CARD_DIMS_COMPACT: CardDims = { minHeight: 26, paddingV: 1, paddingL: 15, paddingR: 3 };
+function getSeatCardDims(): CardDims {
+  try {
+    return window.localStorage.getItem(CANOE_VIEW_LS_KEY) === '4'
+      ? CARD_DIMS_COMPACT
+      : CARD_DIMS_DEFAULT;
+  } catch {
+    return CARD_DIMS_DEFAULT;
+  }
+}
+
 export function OnShorePanel({
   unassignedPaddlers,
   unassignedGuests,
@@ -543,6 +562,11 @@ export function OnShorePanel({
                           // clone stays chip-sized — same as always.
                           const over = dragSnapshot.draggingOver;
                           const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          // Pick seat-row dims matching the user's current
+                          // canoeView (4-up compact vs 1/2/6-up default)
+                          // so the morphed clone lines up with the actual
+                          // seat it's hovering over.
+                          const cardDims = isOverCanoe ? getSeatCardDims() : CARD_DIMS_DEFAULT;
                           return (
                           <div
                             ref={dragProvided.innerRef}
@@ -573,11 +597,11 @@ export function OnShorePanel({
                                 // an actual seat.
                                 width: 'auto' as const,
                                 minWidth: 220,
-                                minHeight: 34,
-                                paddingLeft: 19,
-                                paddingRight: 4,
-                                paddingTop: 2,
-                                paddingBottom: 2,
+                                minHeight: cardDims.minHeight,
+                                paddingLeft: cardDims.paddingL,
+                                paddingRight: cardDims.paddingR,
+                                paddingTop: cardDims.paddingV,
+                                paddingBottom: cardDims.paddingV,
                                 background: `${paddlerColor}1A`,
                                 border: `1px solid ${paddlerColor}66`,
                                 borderRadius: 7,
@@ -631,6 +655,10 @@ export function OnShorePanel({
                           // consistent regardless of paddler kind.
                           const over = dragSnapshot.draggingOver;
                           const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          // Match the user's current canoeView so the
+                          // morphed clone aligns with the target seat row
+                          // in both the default and 4-up compact layouts.
+                          const cardDims = isOverCanoe ? getSeatCardDims() : CARD_DIMS_DEFAULT;
                           return (
                           <div
                             ref={dragProvided.innerRef}
@@ -648,11 +676,11 @@ export function OnShorePanel({
                               ...(isOverCanoe ? {
                                 width: 'auto' as const,
                                 minWidth: 220,
-                                minHeight: 34,
-                                paddingLeft: 19,
-                                paddingRight: 4,
-                                paddingTop: 2,
-                                paddingBottom: 2,
+                                minHeight: cardDims.minHeight,
+                                paddingLeft: cardDims.paddingL,
+                                paddingRight: cardDims.paddingR,
+                                paddingTop: cardDims.paddingV,
+                                paddingBottom: cardDims.paddingV,
                                 background: `${guestColor}1A`,
                                 border: `1px solid ${guestColor}66`,
                                 borderRadius: 7,
