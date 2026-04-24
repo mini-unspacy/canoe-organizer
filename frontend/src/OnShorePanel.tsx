@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import type { Paddler } from "./types";
 import { PaddlerChip, POOL_ROW_ZOOM_STEPS } from "./PaddlerChip";
@@ -231,9 +231,15 @@ export function OnShorePanel({
 
   // Belt-and-suspenders against a stale zoom index blowing up the drawer.
   const rowDims = POOL_ROW_ZOOM_STEPS[zoom] ?? POOL_ROW_ZOOM_STEPS[POOL_ROW_ZOOM_STEPS.length - 1];
-  const visiblePaddlers = sortPaddlers(
-    unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
-    sort
+  // Memoize: this re-sorts the entire pool every render, including during
+  // drag updates (every mouse move) — wasteful when neither the pool, the
+  // pending-assign set, nor the sort key has changed.
+  const visiblePaddlers = useMemo(
+    () => sortPaddlers(
+      unassignedPaddlers.filter(p => !pendingAssignIds.has(p.id)),
+      sort
+    ),
+    [unassignedPaddlers, pendingAssignIds, sort],
   );
   const count = visiblePaddlers.length + unassignedGuests.length;
 
