@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
@@ -247,6 +247,19 @@ export function TodayView({
     // Recompute whenever the set of paddlers/guests that feeds the list changes.
   }, [showGoingList, paddlers, eventGuests, eventAttendingPaddlerIds, recomputeGoingScroll]);
 
+  // Paddlers attending this event, alphabetized. Used both for the
+  // "Going" count in the event header and the rendered list inside
+  // the Going menu. Memoized so we don't re-filter+sort the entire
+  // paddler roster on every unrelated re-render (e.g. a hover change
+  // or a drag update). Recomputes only when the underlying set of
+  // attendees or the paddler list itself changes.
+  const goingPaddlersSorted = useMemo(() => {
+    if (!paddlers || !eventAttendingPaddlerIds) return [];
+    return paddlers
+      .filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id))
+      .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName));
+  }, [paddlers, eventAttendingPaddlerIds]);
+
   // Going-menu inline add UI state — tapping the "+" button opens a small
   // popover with "Paddler" / "Guest" choices; selecting one sets
   // `addingType`, which swaps in the search panel or guest-name input.
@@ -304,7 +317,7 @@ export function TodayView({
       const _monthName = _monthNames[_d.getMonth()];
       const _dayNum = _d.getDate();
       const _isAttending = selectedPaddlerId && eventAttendingPaddlerIds ? eventAttendingPaddlerIds.has(selectedPaddlerId) : false;
-      const _goingPaddlers = eventAttendingPaddlerIds && paddlers ? paddlers.filter((p: Paddler) => eventAttendingPaddlerIds.has(p.id)).length : 0;
+      const _goingPaddlers = goingPaddlersSorted.length;
       const _guestCount = eventGuests?.length || 0;
       const _goingCount = _goingPaddlers + _guestCount;
       const _typeLabel: { text: string; color: string; bg: string } | null =
@@ -656,10 +669,7 @@ export function TodayView({
                   className="scrollbar-hidden"
                   style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '4px 8px 8px' }}
                 >
-                  {paddlers
-                    ?.filter((p: Paddler) => eventAttendingPaddlerIds!.has(p.id))
-                    .sort((a: Paddler, b: Paddler) => a.firstName.localeCompare(b.firstName))
-                    .map((p: Paddler) => {
+                  {goingPaddlersSorted.map((p: Paddler) => {
                       const isWahine = p.gender === 'wahine';
                       const isKane = p.gender === 'kane';
                       const dotColor = isWahine ? '#a81a22' : isKane ? '#1f4e5e' : '#8a8a8a';
