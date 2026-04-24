@@ -127,23 +127,25 @@ export function RosterView({
     });
   }, [sorted, genderFilter, typeFilter, search]);
 
-  const counts = useMemo(
-    () => ({
+  // Single pass tallies both gender and type counts so we only walk
+  // `paddlers` once per change (was 5 separate .filter passes).
+  const { counts, typeCounts } = useMemo(() => {
+    const counts = { all: paddlers.length, kane: 0, wahine: 0 };
+    const typeCounts = {
       all: paddlers.length,
-      kane: paddlers.filter(p => p.gender === "kane").length,
-      wahine: paddlers.filter(p => p.gender === "wahine").length,
-    }),
-    [paddlers],
-  );
-  const typeCounts = useMemo(
-    () => ({
-      all: paddlers.length,
-      racer: paddlers.filter(p => p.type === "racer").length,
-      casual: paddlers.filter(p => p.type === "casual").length,
-      "very-casual": paddlers.filter(p => p.type === "very-casual").length,
-    }),
-    [paddlers],
-  );
+      racer: 0,
+      casual: 0,
+      "very-casual": 0,
+    };
+    for (const p of paddlers) {
+      if (p.gender === "kane") counts.kane++;
+      else if (p.gender === "wahine") counts.wahine++;
+      if (p.type === "racer") typeCounts.racer++;
+      else if (p.type === "casual") typeCounts.casual++;
+      else if (p.type === "very-casual") typeCounts["very-casual"]++;
+    }
+    return { counts, typeCounts };
+  }, [paddlers]);
 
   const openEdit = (p: Paddler) => {
     setEditForm({
