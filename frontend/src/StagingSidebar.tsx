@@ -30,7 +30,7 @@ interface StagingSidebarProps {
 }
 
 export function StagingSidebar({
-  sidebarOpen, setSidebarOpen, isDragging, dragFromStaging,
+  sidebarOpen, setSidebarOpen, isDragging,
   viewBy, setViewBy, unassignedPaddlers, unassignedGuests, guestPaddlerMap,
   pendingAssignIds, animationKey, isAdmin, selectedEvent,
   showAddSearch, setShowAddSearch, addSearchQuery, setAddSearchQuery,
@@ -242,8 +242,14 @@ export function StagingSidebar({
 
       {sidebarOpen && (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {/* Staging - single drop zone */}
-      <Droppable droppableId="staging-all" direction="vertical" isDropDisabled={dragFromStaging}>
+      {/* Staging - single drop zone. Stays enabled even while dragging
+          FROM the pool: a disabled droppable is hidden from
+          dragSnapshot.draggingOver, which breaks any "over the pool"
+          detection (e.g. the seat→chip clone morph in TodayView).
+          onDragEnd already short-circuits same-droppable drops, and
+          the staging-* branch no-ops when there's no oldCanoeId, so
+          drop-onto-self stays a no-op. */}
+      <Droppable droppableId="staging-all" direction="vertical">
         {(provided, snapshot) => {
           // Flatten all sections into one ordered list for draggable indices
           const allPaddlers: Paddler[] = [];
@@ -336,9 +342,11 @@ export function StagingSidebar({
           );
         }}
       </Droppable>
-      {/* Guest paddler circles (draggable) */}
+      {/* Guest paddler circles (draggable). staging-guests stays
+          enabled during pool drags for the same reason as staging-all
+          above (don't hide from dragSnapshot.draggingOver). */}
       {unassignedGuests.length > 0 && (
-        <Droppable droppableId="staging-guests" direction="vertical" isDropDisabled={dragFromStaging}>
+        <Droppable droppableId="staging-guests" direction="vertical">
           {(provided) => (
             <div
               ref={provided.innerRef}
