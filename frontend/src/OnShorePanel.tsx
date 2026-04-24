@@ -79,13 +79,13 @@ type CardDims = {
   paddingV: number;
   paddingL: number;
   paddingR: number;
-  // Card-wide footprint for the morphed clone. We always release pangea's
-  // captured chip width with `width: auto` and let minWidth set the
-  // baseline so the clone matches the destination seat shape. Default
-  // (1/2/6-up) seats are ~220px wide; 4-up grid seats are ~70-90px on
-  // phones, so compact uses a much smaller floor — anything bigger and
-  // the clone overflows the seat it's hovering over.
-  minWidth: number;
+  // Exact pixel width to apply to the morphed clone, so it matches the
+  // destination seat. We measure a real `.seat-row-inner` element from
+  // the rendered fleet at drag time; the fallback below is only used
+  // when no canoe is mounted yet (loading state). The seat width
+  // depends on viewport AND canoeView (4-up grid vs 1/2/6-up), so
+  // measuring is the only reliable way to track it across resizes.
+  width: number;
   // Inner chip dims to use while morphed. We don't render the chip at
   // the user's pool-zoom size when over a seat — the destination seat
   // renders SEAT_CHIP_DIMS (or _COMPACT in 4-up), so the clone should
@@ -97,7 +97,7 @@ const CARD_DIMS_DEFAULT: CardDims = {
   paddingV: 2,
   paddingL: 19,
   paddingR: 4,
-  minWidth: 220,
+  width: 220,
   chipDims: SEAT_CHIP_DIMS,
 };
 const CARD_DIMS_COMPACT: CardDims = {
@@ -105,17 +105,27 @@ const CARD_DIMS_COMPACT: CardDims = {
   paddingV: 1,
   paddingL: 15,
   paddingR: 3,
-  minWidth: 70,
+  width: 80,
   chipDims: SEAT_CHIP_DIMS_COMPACT,
 };
+// Measure a rendered seat so the morphed clone matches it exactly. Reads
+// from the DOM at call time so it tracks viewport size, canoeView, and
+// fleet size without prop plumbing. Falls back to the static base values
+// if no seat exists yet (initial load before canoes have rendered).
 function getSeatCardDims(): CardDims {
+  let isCompact = false;
   try {
-    return window.localStorage.getItem(CANOE_VIEW_LS_KEY) === '4'
-      ? CARD_DIMS_COMPACT
-      : CARD_DIMS_DEFAULT;
-  } catch {
-    return CARD_DIMS_DEFAULT;
-  }
+    isCompact = window.localStorage.getItem(CANOE_VIEW_LS_KEY) === '4';
+  } catch {}
+  const base = isCompact ? CARD_DIMS_COMPACT : CARD_DIMS_DEFAULT;
+  try {
+    const el = document.querySelector('.seat-row-inner') as HTMLElement | null;
+    if (el) {
+      const w = el.getBoundingClientRect().width;
+      if (w > 0) return { ...base, width: Math.round(w) };
+    }
+  } catch {}
+  return base;
 }
 
 export function OnShorePanel({
@@ -640,16 +650,14 @@ export function OnShorePanel({
                               // dims when over a canoe seat.
                               ...dragProvided.draggableProps.style,
                               ...(isOverCanoe ? {
-                                // Release pangea's captured chip width
-                                // and let minWidth own the baseline so
-                                // the clone matches the destination seat
-                                // shape. In 4-up grid view the compact
-                                // minWidth (70px) keeps the clone from
-                                // overflowing a ~80px seat; in 1/2/6-up
-                                // the default 220px makes the clone read
-                                // as a full seat row.
-                                width: 'auto' as const,
-                                minWidth: cardDims.minWidth,
+                                // Override pangea's captured chip width
+                                // with the actual destination seat
+                                // width (measured from a rendered
+                                // `.seat-row-inner`) so the clone fits
+                                // the seat exactly — no overflow in
+                                // 4-up grid, no shrinkage in 1/2/6-up.
+                                width: cardDims.width,
+                                minWidth: 0,
                                 minHeight: cardDims.minHeight,
                                 paddingLeft: cardDims.paddingL,
                                 paddingRight: cardDims.paddingR,
@@ -734,14 +742,11 @@ export function OnShorePanel({
                               boxSizing: 'border-box',
                               ...dragProvided.draggableProps.style,
                               ...(isOverCanoe ? {
-                                // See paddler Draggable above. width:auto
-                                // releases pangea's captured chip width
-                                // so the clone re-flows to a seat-shaped
-                                // baseline (compact in 4-up, default
-                                // otherwise) instead of carrying a
-                                // mis-sized pool footprint into the seat.
-                                width: 'auto' as const,
-                                minWidth: cardDims.minWidth,
+                                // See paddler Draggable above — width
+                                // is the measured seat width so the
+                                // morph fits the destination exactly.
+                                width: cardDims.width,
+                                minWidth: 0,
                                 minHeight: cardDims.minHeight,
                                 paddingLeft: cardDims.paddingL,
                                 paddingRight: cardDims.paddingR,
