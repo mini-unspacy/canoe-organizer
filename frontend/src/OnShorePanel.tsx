@@ -98,7 +98,6 @@ export function OnShorePanel({
   unassignedGuests,
   guestPaddlerMap,
   pendingAssignIds,
-  dragFromStaging,
   bottomOffset,
 }: OnShorePanelProps) {
   const [panelHeight, setPanelHeight] = useState<number>(() => {
@@ -507,10 +506,17 @@ export function OnShorePanel({
           drawer is a ~32px sliver and was never a viable target anyway;
           disabling it here means a drag released over the closed drawer
           falls back to "no valid drop" (the paddler snaps back to its
-          source) instead of silently landing On Shore. Also disabled
-          when dragging a paddler that's already in staging, so drops
-          back onto the pool stay no-ops. */}
-      <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={collapsed || dragFromStaging}>
+          source) instead of silently landing On Shore.
+
+          Historically we also disabled this while dragging FROM the
+          pool (dragFromStaging), to keep drops-onto-self as no-ops. But
+          a disabled droppable never reports in `draggingOver`, so the
+          drag-clone morph logic couldn't tell when the cursor had
+          returned to the pool — the clone stayed in seat-card shape
+          forever. onDragEnd already short-circuits same-droppable
+          drops, so enabling this here is safe and lets the clone
+          collapse back to a chip when hovering back over the pool. */}
+      <Droppable droppableId="staging-mobile" direction="vertical" isDropDisabled={collapsed}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
