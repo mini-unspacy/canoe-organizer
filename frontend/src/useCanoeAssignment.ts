@@ -454,7 +454,12 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
       handleReassignCanoes();
     }
     prevCanoePriorityRef.current = priorityKey;
-  }, [canoePriority]);
+    // Include handleReassignCanoes + isReassigning so the effect always
+    // closes over the freshest versions. The if-guard above (priorityKey
+    // change vs ref) keeps the actual reassign call gated on canoePriority
+    // changes; extra re-runs from handleReassignCanoes identity flips are
+    // cheap no-ops that just refresh the ref.
+  }, [canoePriority, handleReassignCanoes, isReassigning]);
 
   const onDragEnd = async (result: DropResult) => {
     clearDragWatchdog();
