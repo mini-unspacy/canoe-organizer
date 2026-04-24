@@ -565,15 +565,20 @@ export function OnShorePanel({
                       <Draggable key={paddler._id.toString()} draggableId={paddler.id} index={index} shouldRespectForcePress={false}>
                         {(dragProvided, dragSnapshot) => {
                           // Mirror the seat→pool morph from TodayView in
-                          // reverse: when the pool chip is dragged over a
-                          // canoe seat, grow the drag clone into a
-                          // seat-card shape (tinted bg + colored border +
-                          // lifted shadow + seat-like padding) so the user
-                          // sees the target shape before release. When
-                          // over the pool (staging-*) or nothing, the
-                          // clone stays chip-sized — same as always.
+                          // reverse: the clone grows into a seat-card
+                          // shape (tinted bg + colored border + lifted
+                          // shadow + seat-like padding) whenever it's
+                          // being dragged anywhere outside the pool.
+                          // Keying off "not over staging" instead of
+                          // "over a canoe seat droppable" means the
+                          // morph kicks in the moment the cursor leaves
+                          // the On Shore panel — before reaching a
+                          // specific seat — so there's no dead zone
+                          // between seats or over the canoe container
+                          // where the clone flickers back to chip shape.
                           const over = dragSnapshot.draggingOver;
-                          const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          const isOverStaging = dragSnapshot.isDragging && !!over && over.startsWith('staging-');
+                          const isOverCanoe = dragSnapshot.isDragging && !isOverStaging;
                           // Pick seat-row dims matching the user's current
                           // canoeView (4-up compact vs 1/2/6-up default)
                           // so the morphed clone lines up with the actual
@@ -665,12 +670,13 @@ export function OnShorePanel({
                       >
                         {(dragProvided, dragSnapshot) => {
                           // Same seat-card morph as the paddler Draggable
-                          // above — guest chips should also grow into a
-                          // seat-card shape when hovered over a canoe
-                          // seat, so the drop target affordance is
-                          // consistent regardless of paddler kind.
+                          // above — guest chips get the same morph. See
+                          // the paddler block for why this keys off
+                          // "not over staging" rather than a specific
+                          // canoe droppable id (avoids dead-zone flicker).
                           const over = dragSnapshot.draggingOver;
-                          const isOverCanoe = dragSnapshot.isDragging && !!over && !over.startsWith('staging-');
+                          const isOverStaging = dragSnapshot.isDragging && !!over && over.startsWith('staging-');
+                          const isOverCanoe = dragSnapshot.isDragging && !isOverStaging;
                           // Match the user's current canoeView so the
                           // morphed clone aligns with the target seat row
                           // in both the default and 4-up compact layouts.
