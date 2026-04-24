@@ -118,10 +118,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
   // the library's own publisher.abort() path, which fires onDragEnd
   // with reason CANCEL and releases all the DOM locks.
   const sensorApiRef = useRef<SensorAPI | null>(null);
-  const captureSensor: Sensor = useCallback((api: SensorAPI) => {
-    sensorApiRef.current = api;
-  }, []);
-  const sensors = useMemo<Sensor[]>(() => [captureSensor], [captureSensor]);
+  // Stable for the lifetime of the component — single sensor whose only
+  // job is to capture the library's SensorAPI on mount. sensorApiRef is
+  // a stable ref so the inline arrow doesn't need to be re-created.
+  const sensors = useMemo<Sensor[]>(
+    () => [(api: SensorAPI) => { sensorApiRef.current = api; }],
+    [],
+  );
 
   const isDraggingRef = useRef(ctx.isDragging);
   isDraggingRef.current = ctx.isDragging;
