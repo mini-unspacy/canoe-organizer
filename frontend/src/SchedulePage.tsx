@@ -37,10 +37,14 @@ function DateTimeFields({
 }
 
 export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scrollToEventId, scrollToTodayNonce }: { onSelectEvent?: (evt: { id: string; title: string; date: string; time: string; location: string; eventType?: string }) => void; isAdmin?: boolean; scrollPosRef?: React.MutableRefObject<number>; scrollToEventId?: string | null; scrollToTodayNonce?: number }) {
-  const cutoffDate = useMemo(() => {
+  // Compute fresh each render — useMemo with [] deps would freeze the
+  // cutoff at the date the component first mounted, which goes stale if
+  // the tab is left open across midnight. The string is cheap to build,
+  // and useQuery deep-compares args so a stable value won't refetch.
+  const cutoffDate = (() => {
     const d = new Date(); d.setDate(d.getDate() - 7);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }, []);
+  })();
   const upcomingEvents = useQuery(api.events.getUpcomingEvents, { fromDate: cutoffDate });
   // initialNumItems: 50 preloads ~3 months of past events up front, so the
   // user can scroll back through recent history without triggering
