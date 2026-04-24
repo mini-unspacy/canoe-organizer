@@ -68,8 +68,20 @@ const PANEL_HEIGHT_LS_KEY = "lokahi.onShorePanelHeight";
 // same key TodayView writes to. Reading inside the drag-style function
 // means every drag update picks up the current value with no staleness.
 const CANOE_VIEW_LS_KEY = 'lokahi.canoeView';
-type CardDims = { minHeight: number; paddingV: number; paddingL: number; paddingR: number };
-const CARD_DIMS_DEFAULT: CardDims = { minHeight: 34, paddingV: 2, paddingL: 19, paddingR: 4 };
+type CardDims = {
+  minHeight: number;
+  paddingV: number;
+  paddingL: number;
+  paddingR: number;
+  // Card-wide footprint for the morphed clone. Omitted for compact/grid
+  // where 4 canoes share a viewport — at phone widths each seat is only
+  // ~80px wide, so forcing 220px makes the clone wildly wider than the
+  // seat it's hovering over. Without this the clone keeps pangea's
+  // captured chip width and still reads as a seat row from the
+  // minHeight + padding + tinted card styling.
+  minWidth?: number;
+};
+const CARD_DIMS_DEFAULT: CardDims = { minHeight: 34, paddingV: 2, paddingL: 19, paddingR: 4, minWidth: 220 };
 const CARD_DIMS_COMPACT: CardDims = { minHeight: 26, paddingV: 1, paddingL: 15, paddingR: 3 };
 function getSeatCardDims(): CardDims {
   try {
@@ -586,17 +598,21 @@ export function OnShorePanel({
                               // dims when over a canoe seat.
                               ...dragProvided.draggableProps.style,
                               ...(isOverCanoe ? {
-                                // width: 'auto' releases the captured
-                                // chip-pixel width; minWidth guarantees a
-                                // card-wide footprint so the clone reads
-                                // as a seat row even at the narrowest
-                                // viewport. Padding matches the
-                                // seat-number column offset used in
-                                // TodayView's seat-row render so the
-                                // paddler label sits where it would in
-                                // an actual seat.
-                                width: 'auto' as const,
-                                minWidth: 220,
+                                // In the default (1/2/6-up) layout each
+                                // seat row is wide enough that forcing a
+                                // card-wide footprint (width: auto +
+                                // minWidth) makes the clone read as a
+                                // seat. In 4-up compact view, seats are
+                                // only ~80px wide on phones — releasing
+                                // the captured width there would make
+                                // the clone overflow the target seat —
+                                // so we keep the captured chip width and
+                                // rely on the vertical morph + tint to
+                                // communicate the seat-row shape.
+                                ...(cardDims.minWidth != null ? {
+                                  width: 'auto' as const,
+                                  minWidth: cardDims.minWidth,
+                                } : {}),
                                 minHeight: cardDims.minHeight,
                                 paddingLeft: cardDims.paddingL,
                                 paddingRight: cardDims.paddingR,
@@ -674,8 +690,14 @@ export function OnShorePanel({
                               boxSizing: 'border-box',
                               ...dragProvided.draggableProps.style,
                               ...(isOverCanoe ? {
-                                width: 'auto' as const,
-                                minWidth: 220,
+                                // See paddler Draggable above for why
+                                // compact (4-up) skips the width/minWidth
+                                // override: forced 220px would overflow
+                                // the narrow seats in grid view.
+                                ...(cardDims.minWidth != null ? {
+                                  width: 'auto' as const,
+                                  minWidth: cardDims.minWidth,
+                                } : {}),
                                 minHeight: cardDims.minHeight,
                                 paddingLeft: cardDims.paddingL,
                                 paddingRight: cardDims.paddingR,
