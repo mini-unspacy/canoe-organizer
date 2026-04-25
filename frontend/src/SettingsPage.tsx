@@ -104,6 +104,15 @@ function ThemePreview({ theme }: { theme: Theme }) {
   const look = previewLook(theme.id);
   return (
     <div
+      // The `theme-preview` class is the escape hatch the global
+      // [data-theme=...] rules in index.css use to know NOT to cascade
+      // into this subtree. The preview is fully painted by the inline
+      // styles below (driven by previewLook), so we must keep the
+      // active theme's overrides out — otherwise e.g. Edge globally
+      // active would zero out our intentional rounded corners, and
+      // Midnight's substring matchers would repaint our hardcoded
+      // backgrounds.
+      className="theme-preview"
       style={{
         width: '100%',
         aspectRatio: '16 / 11',

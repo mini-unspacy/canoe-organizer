@@ -211,22 +211,25 @@ button:focus:not(:focus-visible) {
    over the inline rule. CSS variable-based themes don't reach
    inline styles, which is why corner shape is forced this way. */
 
-/* The theme rules are scoped under `[data-theme="..."]` rather than
-   `:root[data-theme="..."]`. The unqualified attribute selector lets the
-   same rules apply in TWO contexts:
-     1. The whole app, when <html> carries the attribute (default usage).
-     2. A scoped subtree, e.g. the SettingsPage's per-theme preview cards,
-        which set `data-theme={id}` on a wrapper so the card *itself*
-        shows what the theme would actually do — sharp corners under
-        Edge, fully-pill buttons under Pillow, dark surfaces under
-        Midnight, etc.
-   Without the wider scope, the previews would all render identically
-   regardless of which theme they're advertising. */
+/* The theme rules are scoped under `[data-theme="..."]` on <html>.
+   Every selector here also explicitly EXCLUDES `.theme-preview` and
+   its descendants. The Settings page renders each theme's preview
+   card with hardcoded inline styles (see SettingsPage.tsx ›
+   previewLook), and we don't want the globally-active theme to
+   cascade into those tiles — otherwise e.g. Edge globally would
+   square off the Lokahi preview's rounded corners, and Midnight's
+   substring-matchers would repaint every preview's hardcoded canvas.
+
+   The exclusion uses `:not(.theme-preview, .theme-preview *)` which
+   is Selectors L4 (supported by all evergreen browsers). It also
+   bumps each selector's specificity by (0,1,0) — that's fine; the
+   rules below still beat any inline-style baseline because of
+   `!important`. */
 
 /* EDGE: industrial / brutalist — every rounded corner squared off. */
-[data-theme="edge"] *,
-[data-theme="edge"] *::before,
-[data-theme="edge"] *::after {
+[data-theme="edge"] *:not(.theme-preview, .theme-preview *),
+[data-theme="edge"] *:not(.theme-preview, .theme-preview *)::before,
+[data-theme="edge"] *:not(.theme-preview, .theme-preview *)::after {
   border-radius: 0 !important;
 }
 
@@ -235,12 +238,12 @@ button:focus:not(:focus-visible) {
    radius on a tall canoe card would render as an oval. We target
    the elements whose width and height are similar enough that
    "full pill" reads as "soft button" rather than "warped shape". */
-[data-theme="pillow"] button,
-[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div,
-[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div > div,
-[data-theme="pillow"] .btn-zoom,
-[data-theme="pillow"] .btn-zoom-sm,
-[data-theme="pillow"] [data-sort-menu] {
+[data-theme="pillow"] button:not(.theme-preview, .theme-preview *),
+[data-theme="pillow"] [data-rfd-drag-handle-draggable-id]:not(.theme-preview, .theme-preview *) > div,
+[data-theme="pillow"] [data-rfd-drag-handle-draggable-id]:not(.theme-preview, .theme-preview *) > div > div,
+[data-theme="pillow"] .btn-zoom:not(.theme-preview, .theme-preview *),
+[data-theme="pillow"] .btn-zoom-sm:not(.theme-preview, .theme-preview *),
+[data-theme="pillow"] [data-sort-menu]:not(.theme-preview, .theme-preview *) {
   border-radius: 9999px !important;
 }
 
@@ -259,7 +262,13 @@ button:focus:not(:focus-visible) {
    (kept as a fallback for any case where the browser preserves the
    raw input — e.g. via the shorthand `background:` property in some
    engines). Named colors like `white` are NOT collapsed and match
-   directly. */
+   directly.
+
+   Substring matchers are anchored to `background:` / `background-color:`
+   prefixes — anything looser also matches `color: rgb(...)`,
+   `border: 1px solid rgb(...)`, etc., which is how the GO chip in the
+   theme previews ended up painted white-on-white (the chip's
+   `color: rgb(255, 255, 255)` substring was being caught). */
 [data-theme="midnight"] body {
   background-color: #14171c !important;
   color: #e8e8e8;
@@ -273,100 +282,57 @@ button:focus:not(:focus-visible) {
 
 /* White / off-white surfaces → mid-dark surface. The rgb forms are
    the ones that actually fire after browser serialization. */
-[data-theme="midnight"] [style*="background-color: rgb(255, 255, 255)"],
-[data-theme="midnight"] [style*="background: rgb(255, 255, 255)"],
-[data-theme="midnight"] [style*="background-color: white"],
-[data-theme="midnight"] [style*="background: white"],
-[data-theme="midnight"] [style*="background-color: #fff"],
-[data-theme="midnight"] [style*="background-color:#fff"],
-[data-theme="midnight"] [style*="background: #fff"],
-[data-theme="midnight"] [style*="background:#fff"] {
+[data-theme="midnight"] [style*="background-color: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: white"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: white"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #fff"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color:#fff"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #fff"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background:#fff"]:not(.theme-preview, .theme-preview *) {
   background-color: #232730 !important;
 }
 
 /* Cream / sidebar surfaces (#faf9f7) → slightly darker than the body. */
-[data-theme="midnight"] [style*="rgb(250, 249, 247)"],
-[data-theme="midnight"] [style*="#faf9f7"] {
+[data-theme="midnight"] [style*="background-color: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #faf9f7"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #faf9f7"]:not(.theme-preview, .theme-preview *) {
   background-color: #1a1d23 !important;
 }
 
 /* Misc soft greys → a notch above the body so they're still readable. */
-[data-theme="midnight"] [style*="rgb(247, 247, 247)"],
-[data-theme="midnight"] [style*="rgb(245, 243, 239)"],
-[data-theme="midnight"] [style*="#f7f7f7"],
-[data-theme="midnight"] [style*="#f5f3ef"] {
+[data-theme="midnight"] [style*="background-color: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #f5f3ef"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #f5f3ef"]:not(.theme-preview, .theme-preview *) {
   background-color: #2a2e37 !important;
 }
 
 /* Dark text colors → light text. */
-[data-theme="midnight"] [style*="color: rgb(34, 34, 34)"],
-[data-theme="midnight"] [style*="color: rgb(26, 26, 26)"],
-[data-theme="midnight"] [style*="color: rgb(72, 72, 72)"],
-[data-theme="midnight"] [style*="color: rgb(17, 17, 17)"],
-[data-theme="midnight"] [style*="color: #222"],
-[data-theme="midnight"] [style*="color: #1a1a1a"],
-[data-theme="midnight"] [style*="color: #484848"],
-[data-theme="midnight"] [style*="color: #111"] {
+[data-theme="midnight"] [style*="color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #222"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #484848"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #111"]:not(.theme-preview, .theme-preview *) {
   color: #e8e8e8 !important;
 }
 
 /* Muted greys → lighter muted so they're still discernible against the dark surface. */
-[data-theme="midnight"] [style*="color: rgb(113, 113, 113)"],
-[data-theme="midnight"] [style*="color: rgb(107, 101, 88)"],
-[data-theme="midnight"] [style*="color: rgb(138, 130, 117)"],
-[data-theme="midnight"] [style*="color: #717171"],
-[data-theme="midnight"] [style*="color: #6b6558"],
-[data-theme="midnight"] [style*="color: #8a8275"] {
+[data-theme="midnight"] [style*="color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #717171"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #6b6558"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *) {
   color: #aab0bd !important;
-}
-
-/* Theme isolation in nested preview cards.
-   The Midnight overrides above match any descendant of an element
-   carrying `data-theme="midnight"` — including the case where <html>
-   has the attribute and a deeper card has its OWN
-   `data-theme="lokahi"`. Without correction, opening Settings while
-   on Midnight would push midnight colors into every other theme's
-   preview tile, defeating the live-preview design.
-
-   Each rule below has the same specificity as the corresponding
-   midnight rule (0,2,0) and same `!important`, so source-order — these
-   coming AFTER the midnight overrides — makes them win wherever a
-   non-midnight `data-theme` is the closer ancestor. */
-[data-theme="lokahi"] [style*="rgb(255, 255, 255)"],
-[data-theme="edge"] [style*="rgb(255, 255, 255)"],
-[data-theme="pillow"] [style*="rgb(255, 255, 255)"],
-[data-theme="lokahi"] [style*="background-color: white"],
-[data-theme="edge"] [style*="background-color: white"],
-[data-theme="pillow"] [style*="background-color: white"],
-[data-theme="lokahi"] [style*="background: white"],
-[data-theme="edge"] [style*="background: white"],
-[data-theme="pillow"] [style*="background: white"] {
-  background-color: #ffffff !important;
-}
-
-[data-theme="lokahi"] [style*="rgb(250, 249, 247)"],
-[data-theme="edge"] [style*="rgb(250, 249, 247)"],
-[data-theme="pillow"] [style*="rgb(250, 249, 247)"] {
-  background-color: #faf9f7 !important;
-}
-
-[data-theme="lokahi"] [style*="rgb(247, 247, 247)"],
-[data-theme="edge"] [style*="rgb(247, 247, 247)"],
-[data-theme="pillow"] [style*="rgb(247, 247, 247)"] {
-  background-color: #f7f7f7 !important;
-}
-
-[data-theme="lokahi"] [style*="rgb(245, 243, 239)"],
-[data-theme="edge"] [style*="rgb(245, 243, 239)"],
-[data-theme="pillow"] [style*="rgb(245, 243, 239)"] {
-  background-color: #f5f3ef !important;
-}
-
-/* Same defeat for text colors — ensure non-midnight previews keep their dark text. */
-[data-theme="lokahi"] [style*="color: rgb(34, 34, 34)"],
-[data-theme="edge"] [style*="color: rgb(34, 34, 34)"],
-[data-theme="pillow"] [style*="color: rgb(34, 34, 34)"] {
-  color: #222222 !important;
 }
 
 @keyframes paddler-enter {
