@@ -283,6 +283,8 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const {
     animationKey,
     animationPhase,
+    animationStyle,
+    animationStagger,
     trigger: triggerAnimation,
     triggerExit: triggerAnimationExit,
   } = useAnimationTrigger();
@@ -664,7 +666,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     lockedCanoes, setLockedCanoes, windowWidth,
     editingPaddler, isEditModalOpen, editForm, setEditForm,
     isDragging, pendingAssignIds, dragFromStaging, draggingFromCanoeId, draggingOverCanoeId,
-    animationKey, animationPhase, scheduleScrollPosRef,
+    animationKey, animationPhase, animationStyle, animationStagger, scheduleScrollPosRef,
 
     // Layout
     containerWidth, boatWidth, canoeRowHeight, canoeMargin,

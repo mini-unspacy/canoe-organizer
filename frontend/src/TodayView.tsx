@@ -6,41 +6,119 @@ import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
 import { pickFreshCanoeName } from "./canoeNames";
 import { PaddlerChip, SEAT_CHIP_DIMS, SEAT_CHIP_DIMS_COMPACT } from "./PaddlerChip";
-import type { AnimationPhase } from "./useAnimationTrigger";
+import type { AnimationPhase, AnimationStyle, AnimationStagger } from "./useAnimationTrigger";
 
-// Wraps an in-seat PaddlerChip so it bounces into existence when the Auto
-// button fills the boat and fades out when Clear empties it. The animation
-// host is the inner flex wrapper (NOT the Draggable wrapper) — applying a
-// transform on the Draggable's own element creates a containing block that
-// breaks @hello-pangea/dnd's position:fixed drag-clone math. Each seat
-// passes its own delay so the boat fills/empties as a staggered waterfall.
+// Keyframes for each (style × phase) combination. `enter` keyframes go
+// from a "pre-mount" pose to the resting state; `exit` keyframes do the
+// reverse. The wrapper uses fill:'backwards' on enter (apply pose during
+// the staggered delay so chips don't pop in early) and fill:'forwards'
+// on exit (hold the faded pose so the chip stays invisible right up to
+// when the mutation propagates and unmounts it).
+const ENTER_KEYFRAMES: Record<AnimationStyle, Keyframe[]> = {
+  bounce: [
+    { transform: 'scale(0.3)', opacity: 0 },
+    { transform: 'scale(1.08)', opacity: 1, offset: 0.7 },
+    { transform: 'scale(1)', opacity: 1 },
+  ],
+  drop: [
+    { transform: 'translateY(-30px) scale(0.85)', opacity: 0 },
+    { transform: 'translateY(0) scale(1)', opacity: 1 },
+  ],
+  slide: [
+    { transform: 'translateX(-40px)', opacity: 0 },
+    { transform: 'translateX(0)', opacity: 1 },
+  ],
+  flip: [
+    { transform: 'perspective(400px) rotateX(-90deg)', opacity: 0, transformOrigin: '50% 100%' },
+    { transform: 'perspective(400px) rotateX(0)', opacity: 1, transformOrigin: '50% 100%' },
+  ],
+  fade: [
+    { transform: 'translateY(10px)', opacity: 0 },
+    { transform: 'translateY(0)', opacity: 1 },
+  ],
+};
+const EXIT_KEYFRAMES: Record<AnimationStyle, Keyframe[]> = {
+  bounce: [
+    { transform: 'scale(1)', opacity: 1 },
+    { transform: 'scale(0.3)', opacity: 0 },
+  ],
+  drop: [
+    { transform: 'translateY(0)', opacity: 1 },
+    { transform: 'translateY(40px)', opacity: 0 },
+  ],
+  slide: [
+    { transform: 'translateX(0)', opacity: 1 },
+    { transform: 'translateX(40px)', opacity: 0 },
+  ],
+  flip: [
+    { transform: 'perspective(400px) rotateX(0)', opacity: 1, transformOrigin: '50% 100%' },
+    { transform: 'perspective(400px) rotateX(90deg)', opacity: 0, transformOrigin: '50% 100%' },
+  ],
+  fade: [
+    { transform: 'translateY(0)', opacity: 1 },
+    { transform: 'translateY(-10px)', opacity: 0 },
+  ],
+};
+const ENTER_OPTS: Record<AnimationStyle, { duration: number; easing: string }> = {
+  bounce: { duration: 360, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+  drop:   { duration: 380, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+  slide:  { duration: 320, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+  flip:   { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+  fade:   { duration: 280, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+};
+const EXIT_OPTS: Record<AnimationStyle, { duration: number; easing: string }> = {
+  bounce: { duration: 260, easing: 'cubic-bezier(0.32, 0, 0.67, 0)' },
+  drop:   { duration: 320, easing: 'cubic-bezier(0.55, 0.06, 0.68, 0.19)' },
+  slide:  { duration: 280, easing: 'cubic-bezier(0.55, 0.06, 0.68, 0.19)' },
+  flip:   { duration: 300, easing: 'cubic-bezier(0.55, 0.06, 0.68, 0.19)' },
+  fade:   { duration: 260, easing: 'ease-in' },
+};
+
+const SEAT_COUNT = 6;
+const STAGGER_STEP = 50; // ms between adjacent seats for forward/reverse
+
+// Compute the per-seat delay for the current stagger order. Random uses a
+// hash of seat + animationKey so all six seats pick stable, distinct
+// values within one animation cycle, and a fresh set the next cycle.
+function staggerDelay(stagger: AnimationStagger, seat: number, animationKey: number): number {
+  if (stagger === 'forward') return (seat - 1) * STAGGER_STEP;
+  if (stagger === 'reverse') return (SEAT_COUNT - seat) * STAGGER_STEP;
+  // random — deterministic per (seat, key) so all renders within one
+  // cycle agree, but reshuffles next cycle when animationKey changes.
+  return ((seat * 17 + animationKey * 31) % 5) * STAGGER_STEP;
+}
+
+// Wraps an in-seat PaddlerChip so it animates in when Auto fills the boat
+// and out when Clear empties it. Each Auto/Clear click randomly picks one
+// of five styles (bounce/drop/slide/flip/fade) and one of three stagger
+// orders (forward/reverse/random) so the boat fills/empties differently
+// every time. The animation host is the inner flex wrapper (NOT the
+// Draggable wrapper) — applying a transform on the Draggable's own
+// element creates a containing block that breaks @hello-pangea/dnd's
+// position:fixed drag-clone math.
 const PaddlerChipAnim: React.FC<{
   animationKey: number;
   animationPhase: AnimationPhase;
-  animationDelay?: number;
+  animationStyle: AnimationStyle;
+  animationStagger: AnimationStagger;
+  seat: number;
   children: React.ReactNode;
-}> = ({ animationKey, animationPhase, animationDelay = 0, children }) => {
+}> = ({ animationKey, animationPhase, animationStyle, animationStagger, seat, children }) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (animationKey === 0 || !animationPhase) return;
     const el = ref.current;
     if (!el) return;
-    const keyframes = animationPhase === 'enter'
-      ? [
-          { transform: 'scale(0.3)', opacity: 0 },
-          { transform: 'scale(1.08)', opacity: 1, offset: 0.7 },
-          { transform: 'scale(1)', opacity: 1 },
-        ]
-      : [
-          { transform: 'scale(1)', opacity: 1 },
-          { transform: 'scale(0.3)', opacity: 0 },
-        ];
-    const opts: KeyframeAnimationOptions = animationPhase === 'enter'
-      ? { duration: 350, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', delay: animationDelay, fill: 'backwards' }
-      : { duration: 260, easing: 'cubic-bezier(0.32, 0, 0.67, 0)', delay: animationDelay, fill: 'forwards' };
-    const anim = el.animate(keyframes, opts);
+    const kf = animationPhase === 'enter' ? ENTER_KEYFRAMES[animationStyle] : EXIT_KEYFRAMES[animationStyle];
+    const opts = animationPhase === 'enter' ? ENTER_OPTS[animationStyle] : EXIT_OPTS[animationStyle];
+    const delay = staggerDelay(animationStagger, seat, animationKey);
+    const anim = el.animate(kf, {
+      ...opts,
+      delay,
+      fill: animationPhase === 'enter' ? 'backwards' : 'forwards',
+    });
     return () => anim.cancel();
-  }, [animationKey, animationPhase, animationDelay]);
+  }, [animationKey, animationPhase, animationStyle, animationStagger, seat]);
   return (
     <div ref={ref} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
       {children}
@@ -113,6 +191,8 @@ interface TodayViewProps {
   renameCanoeMut: (args: { canoeId: string; name: string }) => void;
   animationKey: number;
   animationPhase: AnimationPhase;
+  animationStyle: AnimationStyle;
+  animationStagger: AnimationStagger;
   boatWidth: number;
   canoeRowHeight: number;
   canoeMargin: number;
@@ -158,7 +238,7 @@ export function TodayView({
   canoeAssignmentsByCanoe, eventAttendingPaddlerIds, eventGuests,
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
   canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey,
-  animationPhase,
+  animationPhase, animationStyle, animationStagger,
   selectedPaddlerId,
   showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut, addGuestMut,
   handleAssign, handleUnassignAll, handleReassignCanoes,
@@ -1840,7 +1920,9 @@ export function TodayView({
                                         <PaddlerChipAnim
                                           animationKey={animationKey}
                                           animationPhase={animationPhase}
-                                          animationDelay={(seat - 1) * 50}
+                                          animationStyle={animationStyle}
+                                          animationStagger={animationStagger}
+                                          seat={seat}
                                         >
                                           <PaddlerChip
                                             label={paddlerLabel}
