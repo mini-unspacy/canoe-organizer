@@ -6,6 +6,47 @@ import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
 import { pickFreshCanoeName } from "./canoeNames";
 import { PaddlerChip, SEAT_CHIP_DIMS, SEAT_CHIP_DIMS_COMPACT } from "./PaddlerChip";
+import type { AnimationPhase } from "./useAnimationTrigger";
+
+// Wraps an in-seat PaddlerChip so it bounces into existence when the Auto
+// button fills the boat and fades out when Clear empties it. The animation
+// host is the inner flex wrapper (NOT the Draggable wrapper) — applying a
+// transform on the Draggable's own element creates a containing block that
+// breaks @hello-pangea/dnd's position:fixed drag-clone math. Each seat
+// passes its own delay so the boat fills/empties as a staggered waterfall.
+const PaddlerChipAnim: React.FC<{
+  animationKey: number;
+  animationPhase: AnimationPhase;
+  animationDelay?: number;
+  children: React.ReactNode;
+}> = ({ animationKey, animationPhase, animationDelay = 0, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (animationKey === 0 || !animationPhase) return;
+    const el = ref.current;
+    if (!el) return;
+    const keyframes = animationPhase === 'enter'
+      ? [
+          { transform: 'scale(0.3)', opacity: 0 },
+          { transform: 'scale(1.08)', opacity: 1, offset: 0.7 },
+          { transform: 'scale(1)', opacity: 1 },
+        ]
+      : [
+          { transform: 'scale(1)', opacity: 1 },
+          { transform: 'scale(0.3)', opacity: 0 },
+        ];
+    const opts: KeyframeAnimationOptions = animationPhase === 'enter'
+      ? { duration: 350, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', delay: animationDelay, fill: 'backwards' }
+      : { duration: 260, easing: 'cubic-bezier(0.32, 0, 0.67, 0)', delay: animationDelay, fill: 'forwards' };
+    const anim = el.animate(keyframes, opts);
+    return () => anim.cancel();
+  }, [animationKey, animationPhase, animationDelay]);
+  return (
+    <div ref={ref} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+      {children}
+    </div>
+  );
+};
 
 // Animated counter — plays a small slide-in when the value changes,
 // direction based on whether it went up or down. The number is wrapped
@@ -71,6 +112,7 @@ interface TodayViewProps {
   updateDesignationMut: (args: { canoeId: string; designation: string }) => void;
   renameCanoeMut: (args: { canoeId: string; name: string }) => void;
   animationKey: number;
+  animationPhase: AnimationPhase;
   boatWidth: number;
   canoeRowHeight: number;
   canoeMargin: number;
@@ -93,6 +135,7 @@ interface TodayViewProps {
   handleAddCanoeAfter: (index: number) => void;
   addCanoe: (args: { name: string }) => void;
   triggerAnimation: () => void;
+  triggerAnimationExit: (after: () => void, delay?: number) => void;
   canoePriority: CanoeSortItem[];
   setCanoePriority: (p: CanoeSortItem[]) => void;
   /** When a paddler is being dragged from a seat, this is the id of the
@@ -115,10 +158,11 @@ export function TodayView({
   canoeAssignmentsByCanoe, eventAttendingPaddlerIds, eventGuests,
   guestPaddlerMap, lockedCanoes, setLockedCanoes,
   canoeDesignations, updateDesignationMut, renameCanoeMut, animationKey,
+  animationPhase,
   selectedPaddlerId,
   showGoingList, setShowGoingList, handleToggleAttendance, removeGuestMut, addGuestMut,
   handleAssign, handleUnassignAll, handleReassignCanoes,
-  handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation,
+  handleRemoveCanoe, handleAddCanoeAfter, triggerAnimation, triggerAnimationExit,
   canoePriority, setCanoePriority, draggingFromCanoeId, draggingOverCanoeId,
   setScrollToEventId, setActivePage,
   windowWidth,
@@ -888,7 +932,7 @@ export function TodayView({
           <button
             type="button"
             className="btn-zoom"
-            onClick={() => { triggerAnimation(); handleUnassignAll(); }}
+            onClick={() => { triggerAnimationExit(() => handleUnassignAll(), 560); }}
             title="Clear all assignments"
             style={{
               height: 32, padding: '0 12px',
@@ -1793,7 +1837,11 @@ export function TodayView({
                                         })()}
                                         data-animation-key={animationKey}
                                       >
-                                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                                        <PaddlerChipAnim
+                                          animationKey={animationKey}
+                                          animationPhase={animationPhase}
+                                          animationDelay={(seat - 1) * 50}
+                                        >
                                           <PaddlerChip
                                             label={paddlerLabel}
                                             color={paddlerColor}
@@ -1825,7 +1873,7 @@ export function TodayView({
                                             interactive={isAdmin}
                                             title={assignedPaddler.firstName + (assignedPaddler.lastName ? ' ' + assignedPaddler.lastName : '')}
                                           />
-                                        </div>
+                                        </PaddlerChipAnim>
                                       </div>
                                     )}
                                   </Draggable>

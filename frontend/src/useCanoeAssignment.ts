@@ -280,7 +280,12 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     seatPreference: '000000',
   });
 
-  const { animationKey, trigger: triggerAnimation } = useAnimationTrigger();
+  const {
+    animationKey,
+    animationPhase,
+    trigger: triggerAnimation,
+    triggerExit: triggerAnimationExit,
+  } = useAnimationTrigger();
 
   const [pendingAssignIds, setPendingAssignIds] = useState<Set<string>>(new Set());
 
@@ -659,7 +664,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     lockedCanoes, setLockedCanoes, windowWidth,
     editingPaddler, isEditModalOpen, editForm, setEditForm,
     isDragging, pendingAssignIds, dragFromStaging, draggingFromCanoeId, draggingOverCanoeId,
-    animationKey, scheduleScrollPosRef,
+    animationKey, animationPhase, scheduleScrollPosRef,
 
     // Layout
     containerWidth, boatWidth, canoeRowHeight, canoeMargin,
@@ -668,7 +673,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     handleDragStart, handleDragUpdate, onDragEnd, handleToggleAttendance,
     handleAssign, handleUnassignAll, handleReassignCanoes,
     handleRemoveCanoe, handleAddCanoeAfter, handleSaveEdit, handleCloseEditModal,
-    triggerAnimation, populatePaddlers, populateCanoes, addCanoe,
+    triggerAnimation, triggerAnimationExit, populatePaddlers, populateCanoes, addCanoe,
     updatePaddler, updateDesignationMut, renameCanoeMut, toggleAdminMut,
     deleteUserByPaddlerIdMut, deletePaddlerMut, setAttendanceMut,
     removeGuestMut, addGuestMut,
