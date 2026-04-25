@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CanoeViewPicker, type CanoeView } from "./components/CanoeViewPicker";
@@ -105,7 +105,14 @@ const PaddlerChipAnim: React.FC<{
   children: React.ReactNode;
 }> = ({ animationKey, animationPhase, animationStyle, animationStagger, seat, children }) => {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the animation is registered
+  // synchronously after DOM mutation, BEFORE the browser paints. With
+  // fill:'backwards' the keyframe-0 state (e.g. scale 0.3, opacity 0)
+  // takes effect during the staggered delay — but only if the animation
+  // exists by paint time. With plain useEffect, the chip mounts → paints
+  // at full opacity → effect runs → animation starts: that one paint is
+  // the visible "filled seats flash" before Auto's enter animation.
+  useLayoutEffect(() => {
     if (animationKey === 0 || !animationPhase) return;
     const el = ref.current;
     if (!el) return;
