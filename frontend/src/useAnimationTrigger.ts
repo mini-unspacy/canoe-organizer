@@ -29,16 +29,23 @@ export function useAnimationTrigger(duration = 1500) {
   // elapsed (which should be ≥ animation length). Lets the caller mutate
   // state AFTER chips have visually faded so the unmount feels intentional
   // rather than abrupt.
+  //
+  // Phase + key are NOT reset alongside `after()` — that would re-render
+  // the (still mounted, mutation hasn't propagated yet) chips with no
+  // animation phase, snapping them back to full opacity for one frame
+  // before they unmount. We instead leave phase='exit' until well after
+  // the mutation has propagated and the chips have unmounted; by then
+  // the reset is a no-op visually.
   const triggerExit = useCallback((after: () => void, delay = 320) => {
     clearTimeout(timerRef.current);
     clearTimeout(exitTimerRef.current);
     setAnimationPhase('exit');
     setAnimationKey(k => k + 1);
-    exitTimerRef.current = setTimeout(() => {
-      after();
-      setAnimationPhase(null);
+    exitTimerRef.current = setTimeout(after, delay);
+    timerRef.current = setTimeout(() => {
       setAnimationKey(0);
-    }, delay);
+      setAnimationPhase(null);
+    }, delay + 1500);
   }, []);
 
   return { animationKey, animationPhase, trigger, triggerExit } as const;
