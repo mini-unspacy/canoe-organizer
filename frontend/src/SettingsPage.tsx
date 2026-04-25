@@ -26,96 +26,152 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Live preview: each card runs the theme's actual CSS by setting
-// `data-theme={id}` on its own wrapper. The theme rules in index.css
-// are scoped under `[data-theme="..."]` (no `:root` qualifier), so
-// when applied to a subtree the inside of the card gets the same
-// treatment the theme would give the whole app.
+// Hardcoded per-theme preview. Each card paints itself based on its
+// theme.id so the preview is what the theme would look like — NOT
+// what the currently-active theme looks like. We deliberately do NOT
+// rely on the live `data-theme` CSS rules here, because those rules
+// cascade from <html> downward and an attribute selector on a deeper
+// wrapper has the same specificity as the html-level one — so under
+// e.g. a globally-active "Edge" theme, every preview card would also
+// get edge corners no matter what data-theme it tried to advertise.
 //
-// Implementation details:
-//   • The inner mock uses inline `borderRadius: 10` and inline
-//     `background: '#fff'` etc. — the same patterns the real app
-//     uses — so the theme overrides (border-radius:0 for Edge, full-
-//     pill buttons for Pillow, recolored white surfaces for Midnight)
-//     visibly fire here too.
-//   • The outer canvas bg comes from `theme.preview.bg` — Midnight
-//     uses a dark canvas so its dark inner surfaces sit on something
-//     plausibly dark too.
-//   • The "Sample" pill is a real <button>, which Pillow's selector
-//     targets specifically.
+// The mapping below mirrors what each theme's index.css block does
+// to the real app:
+//   • lokahi   → soft 10px rounding, light cream canvas, white inner
+//   • edge     → 0px rounding everywhere
+//   • pillow   → max-pill on the chip/button, normal corners on cards
+//   • midnight → dark canvas, dark inner card, light text
+function previewLook(id: Theme['id']) {
+  switch (id) {
+    case 'edge':
+      return {
+        outerRadius: 0,
+        innerRadius: 0,
+        chipRadius: 0,
+        barRadius: 0,
+        canvas: '#ffffff',
+        surface: '#ffffff',
+        border: '1px solid #1a1a1a',
+        text: '#111111',
+        muted: 'rgba(0,0,0,0.10)',
+        subtle: 'rgba(0,0,0,0.18)',
+      };
+    case 'pillow':
+      return {
+        outerRadius: 10,
+        innerRadius: 10,
+        chipRadius: 9999,
+        barRadius: 9999,
+        canvas: '#faf9f7',
+        surface: '#ffffff',
+        border: `1px solid ${T.inkLine}`,
+        text: '#222222',
+        muted: 'rgba(0,0,0,0.07)',
+        subtle: 'rgba(0,0,0,0.14)',
+      };
+    case 'midnight':
+      return {
+        outerRadius: 10,
+        innerRadius: 10,
+        chipRadius: 8,
+        barRadius: 4,
+        canvas: '#14171c',
+        surface: '#232730',
+        border: '1px solid rgba(255,255,255,0.10)',
+        text: '#e8e8e8',
+        muted: 'rgba(255,255,255,0.10)',
+        subtle: 'rgba(255,255,255,0.20)',
+      };
+    case 'lokahi':
+    default:
+      return {
+        outerRadius: 10,
+        innerRadius: 10,
+        chipRadius: 8,
+        barRadius: 4,
+        canvas: '#faf9f7',
+        surface: '#ffffff',
+        border: `1px solid ${T.inkLine}`,
+        text: '#222222',
+        muted: 'rgba(0,0,0,0.07)',
+        subtle: 'rgba(0,0,0,0.14)',
+      };
+  }
+}
+
 function ThemePreview({ theme }: { theme: Theme }) {
-  const { bg, accent } = theme.preview;
+  const { accent } = theme.preview;
+  const look = previewLook(theme.id);
   return (
     <div
-      data-theme={theme.id}
       style={{
         width: '100%',
         aspectRatio: '16 / 11',
-        background: bg,
-        border: `1px solid ${T.inkLine}`,
-        borderRadius: 10,
+        background: look.canvas,
+        border: look.border,
+        borderRadius: look.outerRadius,
         padding: 10,
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
         boxSizing: 'border-box',
         overflow: 'hidden',
+        color: look.text,
       }}
     >
       {/* Top bar: accent dot + a "title" line */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{ width: 18, height: 18, background: accent, borderRadius: 9 }} />
-        <div style={{ flex: 1, height: 6, background: 'rgba(120,120,120,0.25)', borderRadius: 3 }} />
+        <div style={{
+          width: 18,
+          height: 18,
+          background: accent,
+          borderRadius: theme.id === 'edge' ? 0 : 9,
+        }} />
+        <div style={{ flex: 1, height: 6, background: look.subtle, borderRadius: look.barRadius }} />
       </div>
-      {/* "Card surface" — inline background: #fff so Midnight's
-          substring override recolors it to a dark surface. */}
+      {/* Card surface */}
       <div
         style={{
-          background: '#ffffff',
-          borderRadius: 10,
+          background: look.surface,
+          borderRadius: look.innerRadius,
           padding: 7,
           display: 'flex',
           flexDirection: 'column',
           gap: 5,
           flex: 1,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-          color: '#222',
+          boxShadow: theme.id === 'midnight'
+            ? '0 1px 2px rgba(0,0,0,0.4)'
+            : theme.id === 'edge'
+              ? 'none'
+              : '0 1px 2px rgba(0,0,0,0.06)',
+          color: look.text,
+          border: theme.id === 'edge' ? '1px solid #1a1a1a' : 'none',
         }}
       >
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <div style={{ flex: 1, height: 8, background: 'rgba(120,120,120,0.18)', borderRadius: 4 }} />
-          {/* Decorative pill. Rendered as a chip-shaped div tree
-              matching the real app's draggable structure
-              (`<div data-rfd-drag-handle-draggable-id> > <div>`)
-              so Pillow's selector
-              `[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div`
-              fires here too — the inner div has the visible
-              background + border-radius and gets rounded to a full
-              pill. The parent ThemeCard is already a <button>, so
-              we deliberately avoid nesting another button. */}
-          <div data-rfd-drag-handle-draggable-id="settings-preview-button" style={{ display: 'inline-flex' }}>
-            <div
-              style={{
-                padding: '0 8px',
-                height: 16,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: accent,
-                color: '#fff',
-                fontSize: 9,
-                fontWeight: 700,
-                borderRadius: 8,
-                lineHeight: 1,
-                letterSpacing: '0.04em',
-              }}
-            >
-              GO
-            </div>
+          <div style={{ flex: 1, height: 8, background: look.subtle, borderRadius: look.barRadius }} />
+          {/* Pill / chip — chipRadius captures Edge (0), Pillow (9999), and the rest (8). */}
+          <div
+            style={{
+              padding: '0 8px',
+              height: 16,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: accent,
+              color: '#fff',
+              fontSize: 9,
+              fontWeight: 700,
+              borderRadius: look.chipRadius,
+              lineHeight: 1,
+              letterSpacing: '0.04em',
+            }}
+          >
+            GO
           </div>
         </div>
-        <div style={{ height: 8, background: 'rgba(120,120,120,0.13)', borderRadius: 4 }} />
-        <div style={{ height: 8, width: '70%', background: 'rgba(120,120,120,0.13)', borderRadius: 4 }} />
+        <div style={{ height: 8, background: look.muted, borderRadius: look.barRadius }} />
+        <div style={{ height: 8, width: '70%', background: look.muted, borderRadius: look.barRadius }} />
       </div>
     </div>
   );
