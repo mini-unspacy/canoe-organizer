@@ -1759,8 +1759,16 @@ export function TodayView({
                         paddingLeft: seatNumPad + seatNumColWidth + seatNumGap,
                         paddingRight: seatNumPad,
                         borderRadius: 7,
-                        background: active ? 'rgba(200,32,40,0.18)' : hasPaddler ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.03)',
-                        border: `1px ${active ? 'solid' : hasPaddler ? 'solid' : 'dashed'} ${active ? '#c82028' : hasPaddler ? 'transparent' : 'rgba(0,0,0,0.18)'}`,
+                        // Filled and empty seats share the SAME background +
+                        // border so a row reads consistently regardless of
+                        // whether a paddler is in it. The dashed
+                        // "drop-here" border on empty seats was the only
+                        // affordance distinguishing them; that signal now
+                        // comes entirely from the seat number visible in
+                        // the empty space + the louder red drop affordance
+                        // when a drag is actively over the seat.
+                        background: active ? 'rgba(200,32,40,0.18)' : 'rgba(0,0,0,0.025)',
+                        border: `1px solid ${active ? '#c82028' : 'transparent'}`,
                         // Louder drop affordance when a paddler is being
                         // dragged over this seat: outline + soft red halo
                         // so the target is unmissable even when the
