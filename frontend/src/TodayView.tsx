@@ -265,6 +265,17 @@ export function TodayView({
     return () => window.removeEventListener('resize', onClose);
   }, [openDesignator]);
   const [sortPillOpen, setSortPillOpen] = useState(false);
+  // Anchor rect for the Sort popover. Captured when the Sort pill is
+  // clicked so the menu can be rendered via createPortal at the document
+  // root — the action bar that contains the Sort pill has overflowX:'auto'
+  // (so the bar can horizontally scroll on narrow screens), which per the
+  // CSS spec promotes overflowY from 'visible' to 'auto' too. An
+  // absolutely-positioned popover inside that container therefore gets
+  // clipped to the bar's height (~32px), so the menu visually never
+  // appeared. Portalling out of the bar dodges the clip entirely.
+  const [sortPillAnchor, setSortPillAnchor] = useState<{
+    left: number; top: number; width: number;
+  } | null>(null);
   const [tempPriority, setTempPriority] = useState<CanoeSortItem[]>(canoePriority);
 
   // ─── CANOE-FULL CELEBRATION ───
@@ -309,6 +320,34 @@ export function TodayView({
     });
   }, [canoes, canoeAssignmentsByCanoe]);
   const sortPillRef = useRef<HTMLDivElement>(null);
+  // Close the Sort popover on viewport resize so its anchor math stays
+  // honest, and on outside click since the menu is portalled out and the
+  // pill itself is the only "inside" target.
+  useEffect(() => {
+    if (!sortPillOpen) return;
+    const onResize = () => { setSortPillOpen(false); setSortPillAnchor(null); };
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (sortPillRef.current?.contains(target)) return;
+      // Allow clicks inside the portalled menu (tagged via data-sort-menu).
+      let n: Node | null = target;
+      while (n) {
+        if (n instanceof HTMLElement && n.dataset.sortMenu === 'true') return;
+        n = n.parentNode;
+      }
+      setSortPillOpen(false);
+      setSortPillAnchor(null);
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('touchstart', onDown);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('touchstart', onDown);
+    };
+  }, [sortPillOpen]);
   // Fleet section view: '1' | '2' | '4'. All modes render every canoe in a
   // fixed-column grid; the page scrolls vertically when they overflow.
   const [canoeView, setCanoeView] = useState<CanoeView>(() => loadCanoeView());
@@ -1027,11 +1066,21 @@ export function TodayView({
             </svg>
             Clear
           </button>
-          <div ref={sortPillRef} style={{ position: 'relative' }}>
+          <div ref={sortPillRef}>
             <button
               type="button"
               className="btn-zoom"
-              onClick={() => { setTempPriority(canoePriority); setSortPillOpen(!sortPillOpen); }}
+              onClick={(e) => {
+                if (sortPillOpen) {
+                  setSortPillOpen(false);
+                  setSortPillAnchor(null);
+                  return;
+                }
+                const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                setTempPriority(canoePriority);
+                setSortPillAnchor({ left: r.left, top: r.bottom, width: r.width });
+                setSortPillOpen(true);
+              }}
               title="Change sort priority"
               style={{
                 height: 32, padding: '0 12px',
@@ -1054,59 +1103,90 @@ export function TodayView({
                 return label || 'Default';
               })()}
             </button>
-            {sortPillOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)', zIndex: 40, overflow: 'hidden', minWidth: '160px', padding: '8px' }}>
-                <DragDropContext onDragEnd={(result) => {
-                  if (!result.destination) return;
-                  const newPriority = Array.from(tempPriority);
-                  const [reorderedItem] = newPriority.splice(result.source.index, 1);
-                  newPriority.splice(result.destination.index, 0, reorderedItem);
-                  setTempPriority(newPriority);
-                }}>
-                <Droppable droppableId="canoe-priority" direction="vertical">
-                  {(provided) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {tempPriority.map((item, index) => (
-                        <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={{
-                                ...provided.draggableProps.style,
-                                touchAction: 'none',
-                                padding: '8px 12px',
-                                backgroundColor: snapshot.isDragging ? 'rgba(0,82,128,0.08)' : '#faf9f7',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                color: '#484848',
-                                cursor: 'grab',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                              }}
-                            >
-                              <span style={{ color: '#b0b0b0', fontSize: '11px' }}>{index + 1}.</span>
-                              {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
-                              <span style={{ marginLeft: 'auto', color: '#b0b0b0', fontSize: '11px' }}>⠿</span>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+            {sortPillOpen && sortPillAnchor && createPortal(
+              (() => {
+                const MIN_W = 180;
+                const PAD = 8;
+                const w = Math.max(MIN_W, sortPillAnchor.width);
+                let left = sortPillAnchor.left;
+                if (left + w + PAD > window.innerWidth) {
+                  left = Math.max(PAD, window.innerWidth - w - PAD);
+                }
+                return (
+                  <div
+                    data-sort-menu="true"
+                    style={{
+                      position: 'fixed',
+                      left,
+                      top: sortPillAnchor.top + 6,
+                      width: w,
+                      backgroundColor: '#ffffff',
+                      borderRadius: '10px',
+                      boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
+                      zIndex: 1000,
+                      overflow: 'hidden',
+                      padding: '8px',
+                    }}
+                  >
+                    <DragDropContext onDragEnd={(result) => {
+                      if (!result.destination) return;
+                      const newPriority = Array.from(tempPriority);
+                      const [reorderedItem] = newPriority.splice(result.source.index, 1);
+                      newPriority.splice(result.destination.index, 0, reorderedItem);
+                      setTempPriority(newPriority);
+                    }}>
+                      <Droppable droppableId="canoe-priority" direction="vertical">
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {tempPriority.map((item, index) => (
+                              <Draggable key={item.id} draggableId={`canoe-${item.id}`} index={index} shouldRespectForcePress={false}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      touchAction: 'none',
+                                      padding: '8px 12px',
+                                      backgroundColor: snapshot.isDragging ? 'rgba(0,82,128,0.08)' : '#faf9f7',
+                                      borderRadius: '8px',
+                                      fontSize: '13px',
+                                      fontWeight: 600,
+                                      color: '#484848',
+                                      cursor: 'grab',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                    }}
+                                  >
+                                    <span style={{ color: '#b0b0b0', fontSize: '11px' }}>{index + 1}.</span>
+                                    {{ ability: 'ability', gender: 'gender', type: 'racer?', seatPreference: 'seat' }[item.id]}
+                                    <span style={{ marginLeft: 'auto', color: '#b0b0b0', fontSize: '11px' }}>⠿</span>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                    <div
+                      onClick={() => {
+                        setCanoePriority(tempPriority);
+                        setSortPillOpen(false);
+                        setSortPillAnchor(null);
+                        handleReassignCanoes();
+                      }}
+                      style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: '#005280', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.15s' }}
+                    >
+                      apply
                     </div>
-                  )}
-                </Droppable>
-                </DragDropContext>
-                <div
-                  onClick={() => { setCanoePriority(tempPriority); setSortPillOpen(false); handleReassignCanoes(); }}
-                  style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: '#005280', color: '#ffffff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.15s' }}
-                >
-                  apply
-                </div>
-              </div>
+                  </div>
+                );
+              })(),
+              document.body
             )}
           </div>
           <div style={{ flex: 1 }} />
