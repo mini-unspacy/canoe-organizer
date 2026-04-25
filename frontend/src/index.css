@@ -211,10 +211,22 @@ button:focus:not(:focus-visible) {
    over the inline rule. CSS variable-based themes don't reach
    inline styles, which is why corner shape is forced this way. */
 
+/* The theme rules are scoped under `[data-theme="..."]` rather than
+   `:root[data-theme="..."]`. The unqualified attribute selector lets the
+   same rules apply in TWO contexts:
+     1. The whole app, when <html> carries the attribute (default usage).
+     2. A scoped subtree, e.g. the SettingsPage's per-theme preview cards,
+        which set `data-theme={id}` on a wrapper so the card *itself*
+        shows what the theme would actually do — sharp corners under
+        Edge, fully-pill buttons under Pillow, dark surfaces under
+        Midnight, etc.
+   Without the wider scope, the previews would all render identically
+   regardless of which theme they're advertising. */
+
 /* EDGE: industrial / brutalist — every rounded corner squared off. */
-:root[data-theme="edge"] *,
-:root[data-theme="edge"] *::before,
-:root[data-theme="edge"] *::after {
+[data-theme="edge"] *,
+[data-theme="edge"] *::before,
+[data-theme="edge"] *::after {
   border-radius: 0 !important;
 }
 
@@ -223,28 +235,138 @@ button:focus:not(:focus-visible) {
    radius on a tall canoe card would render as an oval. We target
    the elements whose width and height are similar enough that
    "full pill" reads as "soft button" rather than "warped shape". */
-:root[data-theme="pillow"] button,
-:root[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div,
-:root[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div > div,
-:root[data-theme="pillow"] .btn-zoom,
-:root[data-theme="pillow"] .btn-zoom-sm,
-:root[data-theme="pillow"] [data-sort-menu] {
+[data-theme="pillow"] button,
+[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div,
+[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div > div,
+[data-theme="pillow"] .btn-zoom,
+[data-theme="pillow"] .btn-zoom-sm,
+[data-theme="pillow"] [data-sort-menu] {
   border-radius: 9999px !important;
 }
 
-/* MIDNIGHT: dark canvas. Most surfaces inside the app paint
-   their own background (white panels, cream sidebars, etc.) via
-   inline styles, so this only theme-colors the body shell —
-   the in-app surfaces stay light. Presented as "experimental"
-   in the settings copy. */
-:root[data-theme="midnight"] body {
-  background-color: #1a1d23 !important;
-  color: #f4f4f4;
+/* MIDNIGHT: dark canvas. Almost every surface in this app paints its
+   own background via inline `style="background: #fff"` or similar, so
+   a body-only recolor is invisible behind those layers. We use
+   substring-attribute selectors to find common light backgrounds in
+   inline styles and recolor them.
+
+   IMPORTANT: when React assigns `el.style.backgroundColor = '#fff'`,
+   most browsers re-serialize the inline `style` attribute to
+   `background-color: rgb(255, 255, 255)` — the hex form is collapsed
+   to its rgb equivalent. CSS attribute selectors (`[style*="..."]`)
+   match the SERIALIZED attribute string, so we list both the rgb form
+   (which actually fires in Chrome/Firefox/Safari) and the hex form
+   (kept as a fallback for any case where the browser preserves the
+   raw input — e.g. via the shorthand `background:` property in some
+   engines). Named colors like `white` are NOT collapsed and match
+   directly. */
+[data-theme="midnight"] body {
+  background-color: #14171c !important;
+  color: #e8e8e8;
 }
-:root[data-theme="midnight"] {
-  --lokahi-bg: #1a1d23;
+[data-theme="midnight"] {
+  --lokahi-bg: #14171c;
   --lokahi-bg-warm: #1a1d23;
-  --lokahi-body: #f4f4f4;
+  --lokahi-body: #e8e8e8;
+  --lokahi-ink: #f4f4f4;
+}
+
+/* White / off-white surfaces → mid-dark surface. The rgb forms are
+   the ones that actually fire after browser serialization. */
+[data-theme="midnight"] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme="midnight"] [style*="background: rgb(255, 255, 255)"],
+[data-theme="midnight"] [style*="background-color: white"],
+[data-theme="midnight"] [style*="background: white"],
+[data-theme="midnight"] [style*="background-color: #fff"],
+[data-theme="midnight"] [style*="background-color:#fff"],
+[data-theme="midnight"] [style*="background: #fff"],
+[data-theme="midnight"] [style*="background:#fff"] {
+  background-color: #232730 !important;
+}
+
+/* Cream / sidebar surfaces (#faf9f7) → slightly darker than the body. */
+[data-theme="midnight"] [style*="rgb(250, 249, 247)"],
+[data-theme="midnight"] [style*="#faf9f7"] {
+  background-color: #1a1d23 !important;
+}
+
+/* Misc soft greys → a notch above the body so they're still readable. */
+[data-theme="midnight"] [style*="rgb(247, 247, 247)"],
+[data-theme="midnight"] [style*="rgb(245, 243, 239)"],
+[data-theme="midnight"] [style*="#f7f7f7"],
+[data-theme="midnight"] [style*="#f5f3ef"] {
+  background-color: #2a2e37 !important;
+}
+
+/* Dark text colors → light text. */
+[data-theme="midnight"] [style*="color: rgb(34, 34, 34)"],
+[data-theme="midnight"] [style*="color: rgb(26, 26, 26)"],
+[data-theme="midnight"] [style*="color: rgb(72, 72, 72)"],
+[data-theme="midnight"] [style*="color: rgb(17, 17, 17)"],
+[data-theme="midnight"] [style*="color: #222"],
+[data-theme="midnight"] [style*="color: #1a1a1a"],
+[data-theme="midnight"] [style*="color: #484848"],
+[data-theme="midnight"] [style*="color: #111"] {
+  color: #e8e8e8 !important;
+}
+
+/* Muted greys → lighter muted so they're still discernible against the dark surface. */
+[data-theme="midnight"] [style*="color: rgb(113, 113, 113)"],
+[data-theme="midnight"] [style*="color: rgb(107, 101, 88)"],
+[data-theme="midnight"] [style*="color: rgb(138, 130, 117)"],
+[data-theme="midnight"] [style*="color: #717171"],
+[data-theme="midnight"] [style*="color: #6b6558"],
+[data-theme="midnight"] [style*="color: #8a8275"] {
+  color: #aab0bd !important;
+}
+
+/* Theme isolation in nested preview cards.
+   The Midnight overrides above match any descendant of an element
+   carrying `data-theme="midnight"` — including the case where <html>
+   has the attribute and a deeper card has its OWN
+   `data-theme="lokahi"`. Without correction, opening Settings while
+   on Midnight would push midnight colors into every other theme's
+   preview tile, defeating the live-preview design.
+
+   Each rule below has the same specificity as the corresponding
+   midnight rule (0,2,0) and same `!important`, so source-order — these
+   coming AFTER the midnight overrides — makes them win wherever a
+   non-midnight `data-theme` is the closer ancestor. */
+[data-theme="lokahi"] [style*="rgb(255, 255, 255)"],
+[data-theme="edge"] [style*="rgb(255, 255, 255)"],
+[data-theme="pillow"] [style*="rgb(255, 255, 255)"],
+[data-theme="lokahi"] [style*="background-color: white"],
+[data-theme="edge"] [style*="background-color: white"],
+[data-theme="pillow"] [style*="background-color: white"],
+[data-theme="lokahi"] [style*="background: white"],
+[data-theme="edge"] [style*="background: white"],
+[data-theme="pillow"] [style*="background: white"] {
+  background-color: #ffffff !important;
+}
+
+[data-theme="lokahi"] [style*="rgb(250, 249, 247)"],
+[data-theme="edge"] [style*="rgb(250, 249, 247)"],
+[data-theme="pillow"] [style*="rgb(250, 249, 247)"] {
+  background-color: #faf9f7 !important;
+}
+
+[data-theme="lokahi"] [style*="rgb(247, 247, 247)"],
+[data-theme="edge"] [style*="rgb(247, 247, 247)"],
+[data-theme="pillow"] [style*="rgb(247, 247, 247)"] {
+  background-color: #f7f7f7 !important;
+}
+
+[data-theme="lokahi"] [style*="rgb(245, 243, 239)"],
+[data-theme="edge"] [style*="rgb(245, 243, 239)"],
+[data-theme="pillow"] [style*="rgb(245, 243, 239)"] {
+  background-color: #f5f3ef !important;
+}
+
+/* Same defeat for text colors — ensure non-midnight previews keep their dark text. */
+[data-theme="lokahi"] [style*="color: rgb(34, 34, 34)"],
+[data-theme="edge"] [style*="color: rgb(34, 34, 34)"],
+[data-theme="pillow"] [style*="color: rgb(34, 34, 34)"] {
+  color: #222222 !important;
 }
 
 @keyframes paddler-enter {

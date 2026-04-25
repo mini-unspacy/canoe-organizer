@@ -26,21 +26,34 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Tiny device-frame preview that mirrors the actual visual change a
-// theme applies. The radius/border/colors come from the theme's
-// `preview` block — purely a thumbnail, no interactive state.
+// Live preview: each card runs the theme's actual CSS by setting
+// `data-theme={id}` on its own wrapper. The theme rules in index.css
+// are scoped under `[data-theme="..."]` (no `:root` qualifier), so
+// when applied to a subtree the inside of the card gets the same
+// treatment the theme would give the whole app.
+//
+// Implementation details:
+//   • The inner mock uses inline `borderRadius: 10` and inline
+//     `background: '#fff'` etc. — the same patterns the real app
+//     uses — so the theme overrides (border-radius:0 for Edge, full-
+//     pill buttons for Pillow, recolored white surfaces for Midnight)
+//     visibly fire here too.
+//   • The outer canvas bg comes from `theme.preview.bg` — Midnight
+//     uses a dark canvas so its dark inner surfaces sit on something
+//     plausibly dark too.
+//   • The "Sample" pill is a real <button>, which Pillow's selector
+//     targets specifically.
 function ThemePreview({ theme }: { theme: Theme }) {
-  const { bg, accent, radius, border, text } = theme.preview;
-  // For "edge" the outer frame is square AND there's a thin black
-  // border to make the sharp aesthetic legible at thumbnail size.
+  const { bg, accent } = theme.preview;
   return (
     <div
+      data-theme={theme.id}
       style={{
         width: '100%',
-        aspectRatio: '16 / 10',
+        aspectRatio: '16 / 11',
         background: bg,
-        border: border ?? `1px solid ${T.inkLine}`,
-        borderRadius: Math.min(radius, 12),
+        border: `1px solid ${T.inkLine}`,
+        borderRadius: 10,
         padding: 10,
         display: 'flex',
         flexDirection: 'column',
@@ -49,19 +62,60 @@ function ThemePreview({ theme }: { theme: Theme }) {
         overflow: 'hidden',
       }}
     >
-      {/* Header bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        <div style={{ width: 18, height: 18, background: accent, borderRadius: Math.min(radius, 9) }} />
-        <div style={{ flex: 1, height: 8, background: text === '#f4f4f4' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)', borderRadius: Math.min(radius, 4) }} />
+      {/* Top bar: accent dot + a "title" line */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ width: 18, height: 18, background: accent, borderRadius: 9 }} />
+        <div style={{ flex: 1, height: 6, background: 'rgba(120,120,120,0.25)', borderRadius: 3 }} />
       </div>
-      {/* Two stacked rows of "chips" to communicate the corner shape */}
-      <div style={{ display: 'flex', gap: 4 }}>
-        <div style={{ flex: 2, height: 14, background: text === '#f4f4f4' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)', borderRadius: Math.min(radius, 7) }} />
-        <div style={{ flex: 1, height: 14, background: accent, opacity: 0.85, borderRadius: Math.min(radius, 7) }} />
-      </div>
-      <div style={{ display: 'flex', gap: 4 }}>
-        <div style={{ flex: 1, height: 14, background: text === '#f4f4f4' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)', borderRadius: Math.min(radius, 7) }} />
-        <div style={{ flex: 2, height: 14, background: text === '#f4f4f4' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)', borderRadius: Math.min(radius, 7) }} />
+      {/* "Card surface" — inline background: #fff so Midnight's
+          substring override recolors it to a dark surface. */}
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: 10,
+          padding: 7,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 5,
+          flex: 1,
+          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+          color: '#222',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <div style={{ flex: 1, height: 8, background: 'rgba(120,120,120,0.18)', borderRadius: 4 }} />
+          {/* Decorative pill. Rendered as a chip-shaped div tree
+              matching the real app's draggable structure
+              (`<div data-rfd-drag-handle-draggable-id> > <div>`)
+              so Pillow's selector
+              `[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div`
+              fires here too — the inner div has the visible
+              background + border-radius and gets rounded to a full
+              pill. The parent ThemeCard is already a <button>, so
+              we deliberately avoid nesting another button. */}
+          <div data-rfd-drag-handle-draggable-id="settings-preview-button" style={{ display: 'inline-flex' }}>
+            <div
+              style={{
+                padding: '0 8px',
+                height: 16,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: accent,
+                color: '#fff',
+                fontSize: 9,
+                fontWeight: 700,
+                borderRadius: 8,
+                lineHeight: 1,
+                letterSpacing: '0.04em',
+              }}
+            >
+              GO
+            </div>
+          </div>
+        </div>
+        <div style={{ height: 8, background: 'rgba(120,120,120,0.13)', borderRadius: 4 }} />
+        <div style={{ height: 8, width: '70%', background: 'rgba(120,120,120,0.13)', borderRadius: 4 }} />
       </div>
     </div>
   );

@@ -11,15 +11,14 @@ export type Theme = {
   id: ThemeId;
   name: string;
   blurb: string;
-  // A short visual descriptor used to render the swatch on the
-  // settings card — the actual look is defined in CSS, this is just
-  // a hint for the preview tile.
+  // Canvas + accent colors used by the SettingsPage preview tile. The
+  // actual visual differences (corner shape, surface recoloring, etc.)
+  // come from the CSS rules scoped under [data-theme="<id>"] — the
+  // preview tile sets that attribute on its own wrapper so the same
+  // rules paint the preview as well.
   preview: {
     bg: string;
     accent: string;
-    radius: number;
-    border?: string;
-    text?: string;
   };
 };
 
@@ -28,25 +27,25 @@ export const THEMES: Theme[] = [
     id: 'lokahi',
     name: 'Lokahi',
     blurb: 'The original — cream and Hawaiian red, soft corners.',
-    preview: { bg: '#faf9f7', accent: '#ed1c24', radius: 10, text: '#222222' },
+    preview: { bg: '#faf9f7', accent: '#ed1c24' },
   },
   {
     id: 'edge',
     name: 'Edge',
     blurb: 'Sharp, non-rounded corners. Industrial feel.',
-    preview: { bg: '#ffffff', accent: '#ed1c24', radius: 0, border: '1px solid #222', text: '#111111' },
+    preview: { bg: '#ffffff', accent: '#ed1c24' },
   },
   {
     id: 'pillow',
     name: 'Pillow',
     blurb: 'Extra-rounded buttons and chips. Maximum softness.',
-    preview: { bg: '#faf9f7', accent: '#ed1c24', radius: 9999, text: '#222222' },
+    preview: { bg: '#faf9f7', accent: '#ed1c24' },
   },
   {
     id: 'midnight',
     name: 'Midnight',
-    blurb: 'Dark canvas. Experimental — most app surfaces stay light.',
-    preview: { bg: '#1a1d23', accent: '#ff5a60', radius: 10, text: '#f4f4f4' },
+    blurb: 'Dark canvas. Recolors most surfaces to a deep slate.',
+    preview: { bg: '#14171c', accent: '#ff5a60' },
   },
 ];
 
