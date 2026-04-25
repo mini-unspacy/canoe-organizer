@@ -187,7 +187,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
   const [isReassigning, setIsReassigning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 768 : true);
-  const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews'>('today');
+  const [activePage, setActivePage] = useState<'today' | 'roster' | 'schedule' | 'attendance' | 'crews' | 'settings'>('today');
   const [scrollToEventId, setScrollToEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent | null>(null);
   const [showAllBoats, setShowAllBoats] = useState(false);

@@ -200,7 +200,52 @@ button:focus:not(:focus-visible) {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Dark mode removed — Lokahi uses a light theme only */
+/* ────────────────────────────────────────────────────────────
+   THEMES (data-theme on <html>). Default theme is "lokahi" and
+   inherits the unscoped rules above; only non-default themes
+   need a block here.
+
+   The app uses a lot of inline `borderRadius` values in JSX (set
+   by React style props), so theme overrides for corner shape
+   must use `!important` on a wildcard / scoped selector to win
+   over the inline rule. CSS variable-based themes don't reach
+   inline styles, which is why corner shape is forced this way. */
+
+/* EDGE: industrial / brutalist — every rounded corner squared off. */
+:root[data-theme="edge"] *,
+:root[data-theme="edge"] *::before,
+:root[data-theme="edge"] *::after {
+  border-radius: 0 !important;
+}
+
+/* PILLOW: max-rounded buttons, chips, badges, and icon pills.
+   We deliberately don't blanket-round every container — a 9999px
+   radius on a tall canoe card would render as an oval. We target
+   the elements whose width and height are similar enough that
+   "full pill" reads as "soft button" rather than "warped shape". */
+:root[data-theme="pillow"] button,
+:root[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div,
+:root[data-theme="pillow"] [data-rfd-drag-handle-draggable-id] > div > div,
+:root[data-theme="pillow"] .btn-zoom,
+:root[data-theme="pillow"] .btn-zoom-sm,
+:root[data-theme="pillow"] [data-sort-menu] {
+  border-radius: 9999px !important;
+}
+
+/* MIDNIGHT: dark canvas. Most surfaces inside the app paint
+   their own background (white panels, cream sidebars, etc.) via
+   inline styles, so this only theme-colors the body shell —
+   the in-app surfaces stay light. Presented as "experimental"
+   in the settings copy. */
+:root[data-theme="midnight"] body {
+  background-color: #1a1d23 !important;
+  color: #f4f4f4;
+}
+:root[data-theme="midnight"] {
+  --lokahi-bg: #1a1d23;
+  --lokahi-bg-warm: #1a1d23;
+  --lokahi-body: #f4f4f4;
+}
 
 @keyframes paddler-enter {
   0% {

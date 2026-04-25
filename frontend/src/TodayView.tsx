@@ -237,7 +237,7 @@ interface TodayViewProps {
    *  overlap them. */
   draggingOverCanoeId?: string | null;
   setScrollToEventId: (id: string | null) => void;
-  setActivePage: (page: 'today' | 'roster' | 'schedule' | 'attendance' | 'crews') => void;
+  setActivePage: (page: 'today' | 'roster' | 'schedule' | 'attendance' | 'crews' | 'settings') => void;
 }
 
 export function TodayView({
