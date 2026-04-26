@@ -695,11 +695,18 @@ button:focus:not(:focus-visible) {
 }
 /* Empty-seat / drop-target wash. Universal so every theme paints
    its empty seats and "+ Canoe" button with the theme's --bg-empty
-   tint — Lokahi keeps the original near-invisible black wash, the
-   other themes get a faint accent-tinted version, dark themes
-   invert to a faint white tint. The rgba(0,0,0,X) variants here
-   come from a few different inline styles that all serve the same
-   "subtle inset surface" role. */
+   tint.
+
+   IMPORTANT: Chrome quantizes rgba alpha to 8-bit on serialization,
+   so an inline `rgba(0, 0, 0, 0.025)` shows up in the DOM as
+   `rgba(0, 0, 0, 0.024)` (0.025 * 255 = 6.375 → rounds to 6 →
+   6/255 ≈ 0.024). The CSS attribute selector matches the SERIALIZED
+   string, so the matcher must hunt for `0.024` rather than the
+   `0.025` value the source wrote. We list both forms to be
+   defensive across browsers — Firefox and Safari may quantize
+   differently. */
+[style*="background-color: rgba(0, 0, 0, 0.024)"]:not(.theme-preview, .theme-preview *, .theme-locked, .theme-locked *),
+[style*="background: rgba(0, 0, 0, 0.024)"]:not(.theme-preview, .theme-preview *, .theme-locked, .theme-locked *),
 [style*="background-color: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *, .theme-locked, .theme-locked *),
 [style*="background: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *, .theme-locked, .theme-locked *),
 [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *, .theme-locked, .theme-locked *),
