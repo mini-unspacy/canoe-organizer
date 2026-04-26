@@ -17,10 +17,14 @@ import { EditPaddlerModal } from "./EditPaddlerModal";
 import { useCanoeAssignment } from "./useCanoeAssignment";
 import type { User } from "./types";
 
-/* ── Shared loading / splash component ── */
+/* ── Shared loading / splash component ──
+   Wrapped in `.theme-locked` so the global theme matchers in
+   index.css don't recolor the brand-red Lokahi mark — the splash
+   should always read as the canonical brand identity, regardless
+   of the active accent. */
 function LokahiSplash() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#ffffff', zIndex: 50 }}>
+    <div className="theme-locked" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#ffffff', zIndex: 50 }}>
       <div style={{ textAlign: 'center' }}>
         <span style={{ fontFamily: "'UnifrakturMaguntia', cursive", color: '#ed1c24', fontSize: '42px' }}>Lokahi</span>
         <div style={{ fontSize: '13px', color: '#717171', marginTop: '4px', letterSpacing: '0.02em' }}>Outrigger Canoe Club</div>
