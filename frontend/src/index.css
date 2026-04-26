@@ -201,21 +201,141 @@ button:focus:not(:focus-visible) {
 }
 
 /* ────────────────────────────────────────────────────────────
-   THEMES — two independent axes set on <html>:
-     • data-color="midnight"      — palette swap to dark slate
-     • data-sharpness="round"     — max-pill on buttons/chips
-     • data-sharpness="subtle"    — small uniform radius
-     • data-sharpness="sharp"     — square everything off
-   Defaults (color=lokahi, sharpness=soft) need no rules — they
-   inherit the unscoped CSS above.
+   THEMES — three attributes on <html>:
+     • data-mode="dark"           — slate surfaces + light text
+     • data-color="<id>"          — accent palette
+     • data-sharpness="<level>"   — corner-radius treatment
+   Defaults (mode=light, color=lokahi, sharpness=soft) need no
+   rules — they inherit the unscoped CSS above.
 
    The app uses a lot of inline `borderRadius` values in JSX (set
    by React style props), so sharpness overrides for corner shape
    must use `!important` on a wildcard / scoped selector to win
-   over the inline rule. Color overrides (Midnight) work via
-   substring-attribute matchers on inline `style` to recolor
-   surfaces and text that were painted with hardcoded light-theme
-   hex values. */
+   over the inline rule. Color/mode overrides work via substring-
+   attribute matchers on inline `style` to recolor surfaces and
+   text that were painted with hardcoded light-theme hex values. */
+
+/* ── ACCENT PALETTE ─────────────────────────────────────────────
+   Each color theme defines three accent shades plus an alpha tint:
+     --accent         — main brand color (T.red default = #c82028)
+     --accent-bright  — slightly lighter, used in displays + logo
+     --accent-strong  — slightly darker, used in active/pressed
+     --accent-tint    — 12% alpha of accent, used in active backgrounds
+   The substring matchers further down read these via var() so a
+   single set of rules works for every non-Lokahi accent. */
+:root {
+  --accent: #c82028;
+  --accent-bright: #ed1c24;
+  --accent-strong: #b91c1c;
+  --accent-tint: rgba(200, 32, 40, 0.12);
+}
+[data-color="ocean"] {
+  --accent: #0e7490;
+  --accent-bright: #0891b2;
+  --accent-strong: #0c5e74;
+  --accent-tint: rgba(14, 116, 144, 0.14);
+}
+[data-color="sunrise"] {
+  --accent: #c2410c;
+  --accent-bright: #ea580c;
+  --accent-strong: #9a3412;
+  --accent-tint: rgba(194, 65, 12, 0.14);
+}
+[data-color="forest"] {
+  --accent: #15803d;
+  --accent-bright: #16a34a;
+  --accent-strong: #166534;
+  --accent-tint: rgba(21, 128, 61, 0.14);
+}
+[data-color="midnight"] {
+  /* Dark themes invert the accent-bright/accent-strong relationship:
+     a button with white text on `--accent-bright` needs a dark-enough
+     accent to keep WCAG contrast. So `--accent-bright` matches the
+     main accent (used for the logo where contrast is generous), and
+     `--accent-strong` is darker (used in active states). */
+  --accent: #ff5a60;
+  --accent-bright: #ff5a60;
+  --accent-strong: #b91c1c;
+  --accent-tint: rgba(255, 90, 96, 0.18);
+}
+[data-color="abyss"] {
+  /* Same logic — `#22d3ee` is plenty bright on a slate canvas; making
+     `--accent-bright` lighter (e.g. #67e8f9) would make white button
+     text unreadable. Keep accent-bright == accent here. */
+  --accent: #22d3ee;
+  --accent-bright: #22d3ee;
+  --accent-strong: #0e7490;
+  --accent-tint: rgba(34, 211, 238, 0.20);
+}
+
+/* Substring matchers that recolor brand-red inline values to whatever
+   the current theme's accent variables resolve to. These fire on EVERY
+   theme — under Lokahi the variables resolve to the original red so
+   nothing visibly changes; under Ocean / Sunrise / etc the same matches
+   resolve to that theme's accent.
+
+   We keep the .theme-preview exclusion so the Settings preview tile
+   (which paints its own preview accent inline) isn't double-recolored.
+
+   Three shade buckets (#c82028, #ed1c24, #b91c1c) keep the visual
+   hierarchy intact across themes — the bright form stays brighter,
+   the strong form stays darker, etc. */
+
+/* Backgrounds — main accent (#c82028) */
+[style*="background: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--accent) !important;
+}
+/* Backgrounds — bright form (#ed1c24, e.g. logo + sign-in button) */
+[style*="background: #ed1c24"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #ed1c24"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--accent-bright) !important;
+}
+/* Backgrounds — strong form (#b91c1c, e.g. nav active pill chip bg) */
+[style*="background: #b91c1c"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #b91c1c"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--accent-strong) !important;
+}
+
+/* Text — main accent (#c82028) */
+[style*="color: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *) {
+  color: var(--accent) !important;
+}
+/* Text — bright form (#ed1c24, e.g. Lokahi logo) */
+[style*="color: #ed1c24"]:not(.theme-preview, .theme-preview *),
+[style*="color: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *) {
+  color: var(--accent-bright) !important;
+}
+/* Text — strong form (#b91c1c, e.g. nav active label) */
+[style*="color: #b91c1c"]:not(.theme-preview, .theme-preview *),
+[style*="color: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *) {
+  color: var(--accent-strong) !important;
+}
+
+/* Borders — match `border: 1px solid <red>`, `border-color: <red>`,
+   and the React-camelCase `borderColor: <red>` form. */
+[style*="border: 1px solid #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="border: 1px solid rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *),
+[style*="border-color: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="border-color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *),
+[style*="borderColor: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="borderColor: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *) {
+  border-color: var(--accent) !important;
+}
+
+/* Active-nav background tint — `rgba(185, 28, 28, 0.12)` is the
+   pressed-pill wash behind active bottom-nav items. */
+[style*="background-color: rgba(185, 28, 28, 0.12)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(185, 28, 28, 0.12)"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--accent-tint) !important;
+}
 
 /* ── SHARPNESS ─────────────────────────────────────────────────
    These rules force corner-radius regardless of palette so any
@@ -278,11 +398,11 @@ button:focus:not(:focus-visible) {
    `border: 1px solid rgb(...)`, etc., which is how the GO chip in the
    theme previews ended up painted white-on-white (the chip's
    `color: rgb(255, 255, 255)` substring was being caught). */
-[data-color="midnight"] body {
+[data-mode="dark"] body {
   background-color: #14171c !important;
   color: #e8e8e8;
 }
-[data-color="midnight"] {
+[data-mode="dark"] {
   --lokahi-bg: #14171c;
   --lokahi-bg-warm: #1a1d23;
   --lokahi-body: #e8e8e8;
@@ -291,60 +411,60 @@ button:focus:not(:focus-visible) {
 
 /* White / off-white surfaces → mid-dark surface. The rgb forms are
    the ones that actually fire after browser serialization. */
-[data-color="midnight"] [style*="background-color: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: white"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: white"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #fff"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color:#fff"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #fff"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background:#fff"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: white"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: white"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #fff"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color:#fff"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #fff"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background:#fff"]:not(.theme-preview, .theme-preview *) {
   background-color: #232730 !important;
 }
 
 /* Cream / sidebar surfaces (#faf9f7) → slightly darker than the body. */
-[data-color="midnight"] [style*="background-color: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #faf9f7"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #faf9f7"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #faf9f7"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #faf9f7"]:not(.theme-preview, .theme-preview *) {
   background-color: #1a1d23 !important;
 }
 
 /* Misc soft greys → a notch above the body so they're still readable. */
-[data-color="midnight"] [style*="background-color: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #f7f7f7"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #f7f7f7"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #f5f3ef"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #f5f3ef"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #f5f3ef"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #f5f3ef"]:not(.theme-preview, .theme-preview *) {
   background-color: #2a2e37 !important;
 }
 
 /* Dark text colors → light text. */
-[data-color="midnight"] [style*="color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #222"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #484848"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #111"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #222"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #484848"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #111"]:not(.theme-preview, .theme-preview *) {
   color: #e8e8e8 !important;
 }
 
 /* Muted greys → lighter muted so they're still discernible against the dark surface. */
-[data-color="midnight"] [style*="color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #717171"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #6b6558"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #717171"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #6b6558"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
   color: #aab0bd !important;
 }
 
@@ -361,42 +481,42 @@ button:focus:not(:focus-visible) {
    and OnboardingPage with a flat dark surface. The third gradient
    variant (tinted red, used on race rows in Schedule) stays a
    gradient but with a darker tail. */
-[data-color="midnight"] [style*="linear-gradient(rgb(250, 249, 247) 0%, rgb(255, 255, 255) 50%)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="linear-gradient(rgb(250, 246, 238) 0%, rgb(252, 250, 245) 55%, rgb(255, 255, 255) 100%)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="linear-gradient(rgb(250, 249, 247) 0%, rgb(255, 255, 255) 50%)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="linear-gradient(rgb(250, 246, 238) 0%, rgb(252, 250, 245) 55%, rgb(255, 255, 255) 100%)"]:not(.theme-preview, .theme-preview *) {
   background: #14171c !important;
 }
-[data-color="midnight"] [style*="linear-gradient(rgba(237, 28, 36, 0.06) 0%, rgb(245, 243, 239) 45%)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="linear-gradient(rgba(237, 28, 36, 0.06) 0%, rgb(245, 243, 239) 45%)"]:not(.theme-preview, .theme-preview *) {
   background: linear-gradient(rgba(237, 28, 36, 0.18) 0%, #232730 45%) !important;
 }
 
 /* Today's pool fade-edges: white-to-transparent gradients used to
    fade the staging strip's leading/trailing edges. Repaint to fade
    into the dark canvas instead. */
-[data-color="midnight"] [style*="linear-gradient(to bottom, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="linear-gradient(to bottom, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
   background: linear-gradient(to bottom, #14171c, rgba(20, 23, 28, 0)) !important;
 }
-[data-color="midnight"] [style*="linear-gradient(to top, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="linear-gradient(to top, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
   background: linear-gradient(to top, #14171c, rgba(20, 23, 28, 0)) !important;
 }
 
 /* Warm off-white solids (used on hero header surfaces). */
-[data-color="midnight"] [style*="background-color: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #faf6ee"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #faf6ee"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #fcfaf5"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #fcfaf5"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #fcfaf5"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #fcfaf5"]:not(.theme-preview, .theme-preview *) {
   background-color: #1a1d23 !important;
 }
 
 /* Light divider color (#e3e0da) used as both background and border.
    Background matchers first, then border matchers. */
-[data-color="midnight"] [style*="background-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: #e3e0da"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: #e3e0da"]:not(.theme-preview, .theme-preview *) {
   background-color: #2f343d !important;
 }
 
@@ -404,26 +524,26 @@ button:focus:not(:focus-visible) {
    subtle light-on-dark divider. We catch the two most common forms:
    the cream-grey divider (#e3e0da / rgb(227, 224, 218)) and the
    universal light-tinted blacks (rgba(0, 0, 0, 0.08) / 0.12). */
-[data-color="midnight"] [style*="border: 1px solid rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border: 1px solid #e3e0da"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="borderColor: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="borderColor: #e3e0da"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="border: 1px solid rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border: 1px solid #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="borderColor: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="borderColor: #e3e0da"]:not(.theme-preview, .theme-preview *) {
   border-color: rgba(255, 255, 255, 0.10) !important;
 }
-[data-color="midnight"] [style*="border: 1px solid rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border: 1px solid rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="border-color: rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="border: 1px solid rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border: 1px solid rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="border-color: rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *) {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
-[data-color="midnight"] [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
@@ -439,32 +559,32 @@ button:focus:not(:focus-visible) {
 /* Paddler chip text: wahine red (#a81a22), kane teal (#1f4e5e), and
    guest gold (#a07838). Dark on dark = unreadable. Lighten to a
    high-contrast pastel that still reads as the same gender color. */
-[data-color="midnight"] [style*="color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #a81a22"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #a81a22"]:not(.theme-preview, .theme-preview *) {
   color: #ff8b94 !important;
 }
-[data-color="midnight"] [style*="color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #1f4e5e"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #1f4e5e"]:not(.theme-preview, .theme-preview *) {
   color: #82d4e8 !important;
 }
-[data-color="midnight"] [style*="color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #a07838"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #a07838"]:not(.theme-preview, .theme-preview *) {
   color: #e6c182 !important;
 }
 
 /* Filled seat numbers (`#2a2a2a`, rgb(42,42,42)) — TodayView's seat
    row uses this as the strong serif numeral. Belongs in the
    light-text bucket but isn't in the existing dark-text rule. */
-[data-color="midnight"] [style*="color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="color: #2a2a2a"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="color: #2a2a2a"]:not(.theme-preview, .theme-preview *) {
   color: #e8e8e8 !important;
 }
 
 /* On Shore pill — the EMPTY state (`#a8a39a` taupe) reads as bright
    on dark. Repaint to a quiet dark-on-dark muted. The populated
    state stays red (it's the brand accent and an action affordance). */
-[data-color="midnight"] [style*="background: #a8a39a"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(168, 163, 154)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background: #a8a39a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(168, 163, 154)"]:not(.theme-preview, .theme-preview *) {
   background: #3a3f4a !important;
 }
 
@@ -472,25 +592,25 @@ button:focus:not(:focus-visible) {
    container default is CHARCOAL (#2a2a2a). Override here so inactive
    icons read against the dark surface; active icons stay white
    (their fill is hardcoded in the source). */
-[data-color="midnight"] [role="tablist"][aria-label="Canoe view"] {
+[data-mode="dark"] [role="tablist"][aria-label="Canoe view"] {
   color: #cdd2da !important;
 }
 
 /* On Shore panel main surface — warm-cream `#faf7f0` is the primary
    panel background. Belongs in the same bucket as the other warm
    surfaces (#faf6ee, #fcfaf5) but uses a different hex. */
-[data-color="midnight"] [style*="background: #faf7f0"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: #faf7f0"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *) {
   background: #1a1d23 !important;
 }
 
 /* On Shore drag-handle grip indicator — `rgba(0,0,0,0.22)` is the
    resting color of the small horizontal grip nubbin at the top of
    the panel. Light-on-dark version reads against the dark canvas. */
-[data-color="midnight"] [style*="background: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background-color: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *) {
   background: rgba(255, 255, 255, 0.28) !important;
 }
 
@@ -498,8 +618,8 @@ button:focus:not(:focus-visible) {
    that sits over everything via fixed positioning. The alpha + a
    `backdrop-filter: blur(...)` give it a translucent material look;
    in Midnight we want a translucent dark-slate version of the same. */
-[data-color="midnight"] [style*="background-color: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *),
-[data-color="midnight"] [style*="background: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="background-color: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *) {
   background-color: rgba(20, 23, 28, 0.92) !important;
 }
 

@@ -40,7 +40,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // live cascade — so it always matches whatever's selected without
 // needing to restate values.
 function ThemePreview({ color, sharpness }: { color: Color; sharpness: Sharpness }) {
-  const isDark = color.id === 'midnight';
+  const isDark = color.mode === 'dark';
   const innerSurface = isDark ? '#232730' : '#ffffff';
   const subtleBar = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.14)';
   const mutedBar = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)';
@@ -284,12 +284,21 @@ export function SettingsPage({
         <ThemePreview color={currentColor} sharpness={currentSharpness} />
       </div>
 
-      {/* Color swatches — small, just the palette. */}
+      {/* Color swatches — small, just the palette. Grouped by mode so
+          the user sees the four light variants together and the dark
+          variants together; visually mirrors the surface they paint. */}
       <SectionLabel>Color</SectionLabel>
-      <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
-        {COLORS.map(c => (
-          <ColorSwatch key={c.id} color={c} active={color === c.id} onSelect={setColor} />
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 28 }}>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          {COLORS.filter(c => c.mode === 'light').map(c => (
+            <ColorSwatch key={c.id} color={c} active={color === c.id} onSelect={setColor} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          {COLORS.filter(c => c.mode === 'dark').map(c => (
+            <ColorSwatch key={c.id} color={c} active={color === c.id} onSelect={setColor} />
+          ))}
+        </div>
       </div>
 
       {/* Sharpness slider — corner shape, independent of color. */}

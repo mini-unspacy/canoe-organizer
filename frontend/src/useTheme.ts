@@ -1,26 +1,41 @@
 import { useCallback, useEffect, useState } from "react";
 
 // Theme is two independent axes:
-//   • color     — the palette: cream/red ('lokahi') or dark slate ('midnight')
+//   • color     — the palette: identifies an accent + a mode
+//                 ('light' = cream surfaces, 'dark' = slate surfaces).
+//                 Each color carries both because they should always
+//                 be selected together; no UI ever picks a "light"
+//                 mode without also picking the accent that goes with
+//                 it (e.g. cream-and-red Lokahi or dark-and-cyan
+//                 Abyss).
 //   • sharpness — the corner-radius treatment: round / soft / subtle / sharp
-// Both are applied as separate attributes on <html> (`data-color` and
-// `data-sharpness`) and the matching CSS rules in index.css are scoped
-// under those attributes. Defaults (`lokahi` / `soft`) need no rules —
-// they fall through to the un-scoped CSS.
 //
-// Splitting these used to be one combined `data-theme="edge|pillow|…"`
-// attribute that conflated palette and shape, which made nonsense
-// combos like "round corners on dark slate" unreachable. The two-axis
-// model lets the user mix any palette with any sharpness.
-export type ColorId = 'lokahi' | 'midnight';
+// Both are applied as separate attributes on <html>. `data-color`
+// drives accent overrides, `data-mode` drives the (much heavier)
+// surface + text recoloring. Splitting mode out lets every dark
+// theme share one set of substring matchers for surfaces/text/etc;
+// otherwise we'd need to copy the whole Midnight CSS for every new
+// dark color we add. Defaults (`lokahi` / `light` / `soft`) need no
+// rules — they fall through to the un-scoped CSS.
+export type ColorId =
+  | 'lokahi'    // light · Hawaiian red    (default)
+  | 'ocean'     // light · deep cyan/teal
+  | 'sunrise'   // light · burnt orange
+  | 'forest'    // light · pine green
+  | 'midnight'  // dark  · pink-red
+  | 'abyss';    // dark  · electric cyan
+
 export type SharpnessId = 'round' | 'soft' | 'subtle' | 'sharp';
+export type ModeId = 'light' | 'dark';
 
 export type Color = {
   id: ColorId;
   name: string;
-  // Sample colors used by the Settings preview tile and the small
-  // selector swatches. The actual app surfaces are recolored by the
-  // CSS rules under [data-color="<id>"] (for non-default colors).
+  mode: ModeId;
+  // Used by the Settings preview tile and the small color swatches.
+  // The actual app surfaces are recolored by CSS rules under
+  // [data-mode="dark"] (shared) and [data-color="<id>"] (per-theme
+  // accent). These are just the canonical sample colors.
   surface: string;
   accent: string;
   text: string;
@@ -29,15 +44,23 @@ export type Color = {
 export type Sharpness = {
   id: SharpnessId;
   label: string;
-  // Sample border-radius (in px) used by the Settings preview tile to
-  // visualize the sharpness level. Real app radii come from the CSS
-  // rules under [data-sharpness="<id>"] — this is just for the picker.
+  // Sample border-radius (px) used by the Settings preview tile.
+  // Real app radii come from the [data-sharpness] CSS rules.
   sample: number;
 };
 
+// Canonical color list — picked for distinctive accents on cohesive
+// canvases. Light themes share Lokahi's cream surfaces; dark themes
+// share Midnight's slate surfaces. Accents are chosen at roughly the
+// same perceived saturation so no theme reads as more aggressive
+// than the others.
 export const COLORS: Color[] = [
-  { id: 'lokahi',   name: 'Lokahi',   surface: '#faf9f7', accent: '#ed1c24', text: '#1a1a1a' },
-  { id: 'midnight', name: 'Midnight', surface: '#1a1d23', accent: '#ff5a60', text: '#e8e8e8' },
+  { id: 'lokahi',   name: 'Lokahi',   mode: 'light', surface: '#faf9f7', accent: '#c82028', text: '#1a1a1a' },
+  { id: 'ocean',    name: 'Ocean',    mode: 'light', surface: '#faf9f7', accent: '#0e7490', text: '#1a1a1a' },
+  { id: 'sunrise',  name: 'Sunrise',  mode: 'light', surface: '#faf9f7', accent: '#c2410c', text: '#1a1a1a' },
+  { id: 'forest',   name: 'Forest',   mode: 'light', surface: '#faf9f7', accent: '#15803d', text: '#1a1a1a' },
+  { id: 'midnight', name: 'Midnight', mode: 'dark',  surface: '#1a1d23', accent: '#ff5a60', text: '#e8e8e8' },
+  { id: 'abyss',    name: 'Abyss',    mode: 'dark',  surface: '#1a1d23', accent: '#22d3ee', text: '#e8e8e8' },
 ];
 
 export const SHARPNESS_LEVELS: Sharpness[] = [
@@ -89,6 +112,11 @@ function readSharpness(): SharpnessId {
 function applyColor(id: ColorId) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-color', id);
+  // Keep `data-mode` in sync so the shared dark-mode CSS lights up
+  // on every dark color. Looked up via the COLORS table to keep
+  // mode and color tied at one place.
+  const mode = COLORS.find(c => c.id === id)?.mode ?? 'light';
+  document.documentElement.setAttribute('data-mode', mode);
 }
 function applySharpness(id: SharpnessId) {
   if (typeof document === 'undefined') return;
