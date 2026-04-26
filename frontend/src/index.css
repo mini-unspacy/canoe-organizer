@@ -268,6 +268,55 @@ button:focus:not(:focus-visible) {
   --accent-tint: rgba(34, 211, 238, 0.20);
 }
 
+/* ── SURFACE PALETTE ───────────────────────────────────────────
+   Canvas, card, warm and tile colors swap per theme via these
+   variables. Default values match the original Lokahi cream/white
+   palette. The substring matchers further down output `var()` so
+   one set of rules works for every theme + every mode.
+
+   Light themes get subtle accent-tinted canvases to give each
+   palette its own atmosphere (Ocean = blue cream, Sunrise = peach
+   cream, Forest = sage cream). Cards stay white for legibility.
+
+   Dark themes get a slate base (Midnight) or a navy base (Abyss).
+   Cards step up one level in lightness from the canvas. */
+:root {
+  --bg-card: #ffffff;
+  --bg-canvas: #faf9f7;
+  --bg-warm: #faf6ee;
+  --bg-tile: #f7f7f7;
+  --bg-tile-2: #f5f3ef;
+  --bg-divider: #e3e0da;
+}
+[data-color="ocean"] {
+  --bg-canvas: #f1f6fa;
+  --bg-warm: #e8eff4;
+}
+[data-color="sunrise"] {
+  --bg-canvas: #fdf6f0;
+  --bg-warm: #fbeedf;
+}
+[data-color="forest"] {
+  --bg-canvas: #f3f7f2;
+  --bg-warm: #ebf2ea;
+}
+[data-mode="dark"] {
+  --bg-card: #232730;
+  --bg-canvas: #14171c;
+  --bg-warm: #1a1d23;
+  --bg-tile: #2a2e37;
+  --bg-tile-2: #2a2e37;
+  --bg-divider: #2f343d;
+}
+[data-color="abyss"] {
+  --bg-card: #1a2a3a;
+  --bg-canvas: #0c1a26;
+  --bg-warm: #142331;
+  --bg-tile: #1f3245;
+  --bg-tile-2: #1f3245;
+  --bg-divider: #243a52;
+}
+
 /* Substring matchers that recolor brand-red inline values to whatever
    the current theme's accent variables resolve to. These fire on EVERY
    theme — under Lokahi the variables resolve to the original red so
@@ -303,19 +352,33 @@ button:focus:not(:focus-visible) {
   background-color: var(--accent-strong) !important;
 }
 
+/* Text matchers MUST anchor `color:` properly — `[style*="color: X"]`
+   also matches `background-color: X` and `border-color: X` (the
+   substring `color: X` is a suffix of those properties). That bug
+   painted the +Event button's white text the same color as its
+   accent background. Anchored variants: either `color:` is the
+   first declaration (start-of-string) or it follows a `; ` pair
+   (the spec-mandated property separator in CSSStyleDeclaration). */
+
 /* Text — main accent (#c82028) */
-[style*="color: #c82028"]:not(.theme-preview, .theme-preview *),
-[style*="color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *) {
+[style^="color: #c82028"]:not(.theme-preview, .theme-preview *),
+[style*="; color: #c82028"]:not(.theme-preview, .theme-preview *),
+[style^="color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *),
+[style*="; color: rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *) {
   color: var(--accent) !important;
 }
 /* Text — bright form (#ed1c24, e.g. Lokahi logo) */
-[style*="color: #ed1c24"]:not(.theme-preview, .theme-preview *),
-[style*="color: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *) {
+[style^="color: #ed1c24"]:not(.theme-preview, .theme-preview *),
+[style*="; color: #ed1c24"]:not(.theme-preview, .theme-preview *),
+[style^="color: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *),
+[style*="; color: rgb(237, 28, 36)"]:not(.theme-preview, .theme-preview *) {
   color: var(--accent-bright) !important;
 }
 /* Text — strong form (#b91c1c, e.g. nav active label) */
-[style*="color: #b91c1c"]:not(.theme-preview, .theme-preview *),
-[style*="color: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *) {
+[style^="color: #b91c1c"]:not(.theme-preview, .theme-preview *),
+[style*="; color: #b91c1c"]:not(.theme-preview, .theme-preview *),
+[style^="color: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *),
+[style*="; color: rgb(185, 28, 28)"]:not(.theme-preview, .theme-preview *) {
   color: var(--accent-strong) !important;
 }
 
@@ -409,62 +472,87 @@ button:focus:not(:focus-visible) {
   --lokahi-ink: #f4f4f4;
 }
 
-/* White / off-white surfaces → mid-dark surface. The rgb forms are
-   the ones that actually fire after browser serialization. */
-[data-mode="dark"] [style*="background-color: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: white"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: white"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #fff"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color:#fff"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #fff"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background:#fff"]:not(.theme-preview, .theme-preview *) {
-  background-color: #232730 !important;
+/* Surface matchers — UNIVERSAL (no [data-mode="dark"] prefix). Each
+   theme defines `--bg-card`, `--bg-canvas`, `--bg-tile` etc, and the
+   matchers resolve to those vars. Default Lokahi values match the
+   original light palette so the rule firing under Lokahi is a no-op;
+   under any other theme it swaps to the themed value. */
+
+/* White / off-white surfaces → --bg-card. */
+[style*="background-color: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(255, 255, 255)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: white"]:not(.theme-preview, .theme-preview *),
+[style*="background: white"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #fff"]:not(.theme-preview, .theme-preview *),
+[style*="background-color:#fff"]:not(.theme-preview, .theme-preview *),
+[style*="background: #fff"]:not(.theme-preview, .theme-preview *),
+[style*="background:#fff"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--bg-card) !important;
 }
 
-/* Cream / sidebar surfaces (#faf9f7) → slightly darker than the body. */
-[data-mode="dark"] [style*="background-color: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #faf9f7"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #faf9f7"]:not(.theme-preview, .theme-preview *) {
-  background-color: #1a1d23 !important;
+/* Cream / sidebar surfaces (#faf9f7) → --bg-canvas. */
+[style*="background-color: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(250, 249, 247)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #faf9f7"]:not(.theme-preview, .theme-preview *),
+[style*="background: #faf9f7"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--bg-canvas) !important;
 }
 
-/* Misc soft greys → a notch above the body so they're still readable. */
-[data-mode="dark"] [style*="background-color: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #f7f7f7"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #f7f7f7"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #f5f3ef"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #f5f3ef"]:not(.theme-preview, .theme-preview *) {
-  background-color: #2a2e37 !important;
+/* Misc soft greys (#f7f7f7, #f5f3ef) → --bg-tile. */
+[style*="background-color: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(247, 247, 247)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(245, 243, 239)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[style*="background: #f7f7f7"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #f5f3ef"]:not(.theme-preview, .theme-preview *),
+[style*="background: #f5f3ef"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--bg-tile) !important;
 }
 
-/* Dark text colors → light text. */
-[data-mode="dark"] [style*="color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #222"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #484848"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #111"]:not(.theme-preview, .theme-preview *) {
+/* Dark text colors → light text. Anchored against the false-positive
+   match described above (background-color: <X> ends with the
+   substring "color: <X>"). */
+[data-mode="dark"] [style^="color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(34, 34, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(72, 72, 72)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(17, 17, 17)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #222"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #222"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #484848"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #484848"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #111"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #111"]:not(.theme-preview, .theme-preview *) {
   color: #e8e8e8 !important;
 }
 
-/* Muted greys → lighter muted so they're still discernible against the dark surface. */
-[data-mode="dark"] [style*="color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #717171"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #6b6558"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
+/* Muted greys → lighter muted. Same anchoring. */
+[data-mode="dark"] [style^="color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(113, 113, 113)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(107, 101, 88)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #717171"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #717171"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #6b6558"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #6b6558"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #8a8275"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #8a8275"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #8a8a8a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
   color: #aab0bd !important;
 }
 
@@ -499,16 +587,18 @@ button:focus:not(:focus-visible) {
   background: linear-gradient(to top, #14171c, rgba(20, 23, 28, 0)) !important;
 }
 
-/* Warm off-white solids (used on hero header surfaces). */
-[data-mode="dark"] [style*="background-color: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #faf6ee"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #faf6ee"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #fcfaf5"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: #fcfaf5"]:not(.theme-preview, .theme-preview *) {
-  background-color: #1a1d23 !important;
+/* Warm off-white solids (used on hero header surfaces) → --bg-warm.
+   Now universal — light themes get tinted warm canvas, dark themes
+   get slate-warm. */
+[style*="background-color: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[style*="background: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #fcfaf5"]:not(.theme-preview, .theme-preview *),
+[style*="background: #fcfaf5"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--bg-warm) !important;
 }
 
 /* Light divider color (#e3e0da) used as both background and border.
@@ -557,26 +647,32 @@ button:focus:not(:focus-visible) {
    re-themed via the rule at the bottom. */
 
 /* Paddler chip text: wahine red (#a81a22), kane teal (#1f4e5e), and
-   guest gold (#a07838). Dark on dark = unreadable. Lighten to a
-   high-contrast pastel that still reads as the same gender color. */
-[data-mode="dark"] [style*="color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #a81a22"]:not(.theme-preview, .theme-preview *) {
+   guest gold (#a07838). Anchored to avoid background-color suffix
+   matching (see big comment up top). */
+[data-mode="dark"] [style^="color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #a81a22"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #a81a22"]:not(.theme-preview, .theme-preview *) {
   color: #ff8b94 !important;
 }
-[data-mode="dark"] [style*="color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #1f4e5e"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style^="color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #1f4e5e"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #1f4e5e"]:not(.theme-preview, .theme-preview *) {
   color: #82d4e8 !important;
 }
-[data-mode="dark"] [style*="color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #a07838"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style^="color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #a07838"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #a07838"]:not(.theme-preview, .theme-preview *) {
   color: #e6c182 !important;
 }
 
-/* Filled seat numbers (`#2a2a2a`, rgb(42,42,42)) — TodayView's seat
-   row uses this as the strong serif numeral. Belongs in the
-   light-text bucket but isn't in the existing dark-text rule. */
-[data-mode="dark"] [style*="color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="color: #2a2a2a"]:not(.theme-preview, .theme-preview *) {
+/* Filled seat numbers (`#2a2a2a`, rgb(42,42,42)). */
+[data-mode="dark"] [style^="color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #2a2a2a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #2a2a2a"]:not(.theme-preview, .theme-preview *) {
   color: #e8e8e8 !important;
 }
 
@@ -597,13 +693,13 @@ button:focus:not(:focus-visible) {
 }
 
 /* On Shore panel main surface — warm-cream `#faf7f0` is the primary
-   panel background. Belongs in the same bucket as the other warm
-   surfaces (#faf6ee, #fcfaf5) but uses a different hex. */
-[data-mode="dark"] [style*="background: #faf7f0"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: #faf7f0"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *) {
-  background: #1a1d23 !important;
+   panel background. Now universal so light themes pick up their
+   tinted canvas (Ocean blue-cream, Sunrise peach, etc) here too. */
+[style*="background: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *) {
+  background: var(--bg-warm) !important;
 }
 
 /* On Shore drag-handle grip indicator — `rgba(0,0,0,0.22)` is the
