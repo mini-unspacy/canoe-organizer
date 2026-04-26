@@ -238,7 +238,17 @@ function ThemeCard({
   );
 }
 
-export function SettingsPage() {
+export function SettingsPage({
+  email,
+  onLogout,
+}: {
+  // Both optional so the page is callable with no props (the desktop
+  // sidebar used to host the email + logout, but now they live here —
+  // and we want this page to keep working in any future entry point
+  // that doesn't have a logged-in user).
+  email?: string;
+  onLogout?: () => void;
+}) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -283,6 +293,59 @@ export function SettingsPage() {
       <p style={{ fontSize: 11, color: T.muted, marginTop: 4, lineHeight: 1.5 }}>
         Theme choice is remembered on this device only. More preferences coming soon.
       </p>
+
+      {/* Account block — sign-in identity + logout. The desktop sidebar
+          used to be the only home for these; with the sidebar gone they
+          live here at every viewport width. */}
+      {(email || onLogout) && (
+        <div style={{ marginTop: 36 }}>
+          <SectionLabel>Account</SectionLabel>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: `1px solid ${T.inkLine}`,
+              background: T.bone,
+            }}
+          >
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 11, color: T.muted, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 4 }}>
+                Signed in as
+              </div>
+              <div style={{ fontSize: 14, color: T.charcoal, wordBreak: 'break-all' }}>
+                {email || '—'}
+              </div>
+            </div>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                style={{
+                  flexShrink: 0,
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: `1px solid ${T.inkLine}`,
+                  background: T.bone,
+                  color: T.red,
+                  fontFamily: FONT_BODY,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 120ms ease, border-color 120ms ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#faf3f3'; e.currentTarget.style.borderColor = T.red; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = T.bone; e.currentTarget.style.borderColor = T.inkLine; }}
+              >
+                Log out
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

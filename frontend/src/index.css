@@ -485,6 +485,15 @@ button:focus:not(:focus-visible) {
   background: rgba(255, 255, 255, 0.28) !important;
 }
 
+/* Bottom tab bar — frosted alpha-white backdrop (`rgba(255,255,255,0.96)`)
+   that sits over everything via fixed positioning. The alpha + a
+   `backdrop-filter: blur(...)` give it a translucent material look;
+   in Midnight we want a translucent dark-slate version of the same. */
+[data-theme="midnight"] [style*="background-color: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgba(255, 255, 255, 0.96)"]:not(.theme-preview, .theme-preview *) {
+  background-color: rgba(20, 23, 28, 0.92) !important;
+}
+
 @keyframes paddler-enter {
   0% {
     transform: scale(0.3);

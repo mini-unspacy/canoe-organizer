@@ -176,104 +176,13 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
             </div>
           ) : (
             <div style={{ display: 'flex', height: '100%', gap: '0', width: '100%', overflow: 'hidden' }}>
-              {/* LEFT SIDEBAR - NAVIGATION (hidden on narrow; bottom tab bar is rendered instead) */}
-              {!isNarrow && (
-              <div
-                className="scrollbar-hidden"
-                style={{
-                  width: ctx.leftSidebarOpen ? 120 : 36,
-                  height: '100%',
-                  flexShrink: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflowY: ctx.leftSidebarOpen ? 'auto' : 'hidden',
-                  overflowX: 'hidden',
-                  backgroundColor: '#faf9f7',
-                  borderRight: '1px solid rgba(0,0,0,.08)',
-                }}
-              >
-                {/* Logo + collapse toggle — sticky header */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#faf9f7', padding: ctx.leftSidebarOpen ? '12px 10px 0' : '12px 6px 0', flexShrink: 0 }}>
-                  <div onClick={() => ctx.setLeftSidebarOpen(!ctx.leftSidebarOpen)} style={{ textAlign: ctx.leftSidebarOpen ? 'left' : 'center', cursor: 'pointer', paddingBottom: '8px', borderBottom: '1px solid rgba(0,0,0,.08)', marginBottom: '4px' }}>
-                    <span style={{
-                      fontFamily: "'UnifrakturMaguntia', cursive",
-                      color: '#ed1c24',
-                      fontSize: ctx.leftSidebarOpen ? '22px' : '20px',
-                      lineHeight: 1,
-                    }}>
-                      {ctx.leftSidebarOpen ? 'Lokahi' : 'L'}
-                    </span>
-                  </div>
-                </div>
-                {/* Nav items */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: ctx.leftSidebarOpen ? '4px 8px' : '4px 4px', flex: 1 }}>
-                    {([
-                      { page: 'today' as const, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="16" y1="2" x2="16" y2="6" /><circle cx="12" cy="15" r="2.5" /><path d="M10 17l-1.5 4 1.5-1 1.5 1L10 17" /><path d="M14 17l-1.5 4 1.5-1 1.5 1L14 17" /></svg>, label: 'event' },
-                      { page: 'schedule' as const, icon: '☰', label: 'schedule' },
-                      { page: 'roster' as const, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" /></svg>, label: 'roster' },
-                      { page: 'attendance' as const, icon: '✓', label: 'attendance' },
-                      { page: 'crews' as const, icon: '⛵', label: 'crews' },
-                      { page: 'settings' as const, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>, label: 'settings' },
-                    ]).map(({ page, icon, label }) => (
-                      <span
-                        key={page}
-                        onClick={() => {
-                          // Re-tap Schedule while already on Schedule:
-                          // bump a nonce that SchedulePage watches and
-                          // scrolls today's row to the viewport center.
-                          if (page === 'schedule' && ctx.activePage === 'schedule') {
-                            setScrollToTodayNonce((n) => n + 1);
-                            return;
-                          }
-                          ctx.setActivePage(page);
-                          if (page === 'today') ctx.setSelectedEvent(ctx.todayEvent || null);
-                        }}
-                        title={label}
-                        className="cursor-pointer transition-colors"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: ctx.leftSidebarOpen ? '10px 12px' : '10px 0',
-                          borderRadius: '10px',
-                          color: ctx.activePage === page ? '#005280' : '#484848',
-                          backgroundColor: ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent',
-                          fontWeight: ctx.activePage === page ? 600 : 400,
-                          userSelect: 'none',
-                          justifyContent: ctx.leftSidebarOpen ? 'flex-start' : 'center',
-                        }}
-                        onMouseEnter={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = 'rgba(0, 82, 128, 0.06)'; }}
-                        onMouseLeave={(e) => { if (ctx.activePage !== page) e.currentTarget.style.backgroundColor = ctx.activePage === page ? 'rgba(0, 82, 128, 0.08)' : 'transparent'; }}
-                      >
-                        <span style={{ fontSize: '18px', lineHeight: 1, width: '22px', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-                        {ctx.leftSidebarOpen && <span style={{ fontSize: '15px', fontWeight: 'inherit', textTransform: 'capitalize' }}>{label}</span>}
-                      </span>
-                    ))}
-                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,.08)' }}>
-                      {ctx.leftSidebarOpen && (
-                        <>
-                          <div style={{ fontSize: '10px', color: '#717171', padding: '0 8px 4px', wordBreak: 'break-all' }}>
-                            {currentUser.email}
-                          </div>
-                          <span
-                            onClick={onLogout}
-                            className="cursor-pointer transition-colors"
-                            style={{ fontSize: '13px', color: '#717171', padding: '4px 8px', display: 'block' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = '#005280'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = '#717171'; }}
-                          >
-                            log out
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-              </div>
-              )}
+              {/* The desktop left-nav sidebar was removed in favor of the
+                  bottom tab bar at every viewport width. Logout / account
+                  management now lives in the Settings page. */}
 
               {/* MIDDLE COLUMN */}
               <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
-              <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%', boxSizing: 'border-box', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'env(safe-area-inset-bottom)' }}>
+              <div ref={scrollRef} className="scrollbar-hidden" onClick={() => ctx.showGoingList && ctx.setShowGoingList(false)} style={{ width: '100%', maxWidth: '100%', overflowY: 'auto', overflowX: 'hidden', height: '100%', boxSizing: 'border-box', touchAction: ctx.isDragging ? 'none' : 'auto', paddingBottom: isNarrow ? (ctx.isAdmin && ctx.activePage === 'today' && ctx.selectedEvent ? 'calc(68px + 44px + env(safe-area-inset-bottom))' : 'calc(68px + env(safe-area-inset-bottom))') : 'calc(68px + env(safe-area-inset-bottom))' }}>
                 {ctx.activePage === 'today' && (
                   <TodayView
                     selectedEvent={ctx.selectedEvent}
@@ -335,7 +244,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
                 )}
 
                 {ctx.activePage === 'settings' && (
-                  <SettingsPage />
+                  <SettingsPage email={currentUser.email} onLogout={onLogout} />
                 )}
 
                 {ctx.activePage === 'roster' && ctx.paddlers && (
@@ -403,10 +312,11 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
           />
         )}
 
-        {/* BOTTOM TAB BAR — mobile-only, matches the mock. Auto-hides on
-            scroll-down, returns on scroll-up. The drawer reads the real
-            measured height so it sits flush without a visible gap. */}
-        {!ctx.dataLoading && !ctx.hasNoData && isNarrow && (
+        {/* BOTTOM TAB BAR — primary navigation at every viewport width.
+            Auto-hides on scroll-down, returns on scroll-up. The On Shore
+            drawer reads the real measured height so it sits flush without
+            a visible gap. */}
+        {!ctx.dataLoading && !ctx.hasNoData && (
           <nav
             ref={navRef}
             style={{
