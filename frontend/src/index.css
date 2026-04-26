@@ -293,31 +293,33 @@ button:focus:not(:focus-visible) {
   --bg-empty: rgba(0, 0, 0, 0.05);
 }
 
-/* Light-theme canvases / cards / empty-seat washes are tuned for
-   visible LAYER CONTRAST: the canvas is the most saturated
-   accent-tinted shade, the canoe card is lighter (so cards lift
-   out of the page), and the empty-seat wash uses ~12% accent so
-   placeholders clearly read as drop targets. The tints are
-   intentionally amplified compared to the original "barely there"
-   values so each theme has its own atmosphere AND each layer in
-   the canoe area is clearly distinct from the next. */
+/* Light themes — three layers tuned for visible WITHIN-THEME
+   contrast in the canoe area:
+     • canvas — the saturated accent-tinted shade (theme identity)
+     • card   — pure white, so canoe cards lift strongly off the
+                tinted canvas. Keeping this neutral across light
+                themes is intentional: a tinted card on a tinted
+                canvas would blur the layers together.
+     • empty  — accent at ~16% on the white card, so empty seat
+                slots read as inset drop targets AND still carry
+                the theme color. */
 [data-color="ocean"] {
   --bg-canvas: #dceaf2;
   --bg-warm: #cfe1ec;
-  --bg-card: #eef6fa;
-  --bg-empty: rgba(14, 116, 144, 0.13);
+  --bg-card: #ffffff;
+  --bg-empty: rgba(14, 116, 144, 0.16);
 }
 [data-color="sunrise"] {
   --bg-canvas: #fbe6cf;
   --bg-warm: #f8d8b3;
-  --bg-card: #fff2e0;
-  --bg-empty: rgba(194, 65, 12, 0.13);
+  --bg-card: #ffffff;
+  --bg-empty: rgba(194, 65, 12, 0.16);
 }
 [data-color="forest"] {
   --bg-canvas: #dfecdd;
   --bg-warm: #d2e2cf;
-  --bg-card: #eff6ed;
-  --bg-empty: rgba(21, 128, 61, 0.12);
+  --bg-card: #ffffff;
+  --bg-empty: rgba(21, 128, 61, 0.15);
 }
 
 /* Dark themes — same logical hierarchy: canvas darkest, card a
