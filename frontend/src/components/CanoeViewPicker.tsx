@@ -12,7 +12,12 @@ const CHARCOAL = '#2a2a2a';
 const INK_LINE = 'rgba(0,0,0,0.12)';
 
 function ViewIcon({ value, active }: { value: CanoeView; active: boolean }) {
-  const c = active ? '#ffffff' : CHARCOAL;
+  // Inactive icon picks up its color from the closest parent's `color`,
+  // which the picker container sets to CHARCOAL by default. This indirection
+  // exists so themes (e.g. Midnight) can re-color inactive icons via a
+  // CSS override on the container — SVG fill="..." literals can't be
+  // touched from CSS, but `currentColor` follows the cascade.
+  const c = active ? '#ffffff' : 'currentColor';
   if (value === '1') {
     return (
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -56,6 +61,9 @@ export const CanoeViewPicker: React.FC<{
         background: '#ffffff',
         border: `1px solid ${INK_LINE}`,
         borderRadius: 7,
+        // Drives the inactive ViewIcon's `currentColor`. Themes override
+        // this on `[role="tablist"][aria-label="Canoe view"]`.
+        color: CHARCOAL,
       }}
     >
       {CANOE_VIEW_VALUES.map(v => {

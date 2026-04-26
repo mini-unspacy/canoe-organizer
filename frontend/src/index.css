@@ -418,6 +418,55 @@ button:focus:not(:focus-visible) {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
+/* ── Midnight: Today-page specific spots ──────────────────────────
+   The audit walk-through surfaced four hot spots: paddler chip text
+   (gendered red/blue/gold dark hex), filled seat numbers, the empty
+   On-Shore pill's taupe, and the CanoeViewPicker's inactive icons.
+   The first three live inside inline `style` props and are catchable
+   here. The picker's inactive SVG fill is driven by the CSS
+   variable on its container (see CanoeViewPicker.tsx) and is
+   re-themed via the rule at the bottom. */
+
+/* Paddler chip text: wahine red (#a81a22), kane teal (#1f4e5e), and
+   guest gold (#a07838). Dark on dark = unreadable. Lighten to a
+   high-contrast pastel that still reads as the same gender color. */
+[data-theme="midnight"] [style*="color: rgb(168, 26, 34)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #a81a22"]:not(.theme-preview, .theme-preview *) {
+  color: #ff8b94 !important;
+}
+[data-theme="midnight"] [style*="color: rgb(31, 78, 94)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #1f4e5e"]:not(.theme-preview, .theme-preview *) {
+  color: #82d4e8 !important;
+}
+[data-theme="midnight"] [style*="color: rgb(160, 120, 56)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #a07838"]:not(.theme-preview, .theme-preview *) {
+  color: #e6c182 !important;
+}
+
+/* Filled seat numbers (`#2a2a2a`, rgb(42,42,42)) — TodayView's seat
+   row uses this as the strong serif numeral. Belongs in the
+   light-text bucket but isn't in the existing dark-text rule. */
+[data-theme="midnight"] [style*="color: rgb(42, 42, 42)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #2a2a2a"]:not(.theme-preview, .theme-preview *) {
+  color: #e8e8e8 !important;
+}
+
+/* On Shore pill — the EMPTY state (`#a8a39a` taupe) reads as bright
+   on dark. Repaint to a quiet dark-on-dark muted. The populated
+   state stays red (it's the brand accent and an action affordance). */
+[data-theme="midnight"] [style*="background: #a8a39a"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(168, 163, 154)"]:not(.theme-preview, .theme-preview *) {
+  background: #3a3f4a !important;
+}
+
+/* CanoeViewPicker — inactive icons inherit `currentColor`. The
+   container default is CHARCOAL (#2a2a2a). Override here so inactive
+   icons read against the dark surface; active icons stay white
+   (their fill is hardcoded in the source). */
+[data-theme="midnight"] [role="tablist"][aria-label="Canoe view"] {
+  color: #cdd2da !important;
+}
+
 @keyframes paddler-enter {
   0% {
     transform: scale(0.3);
