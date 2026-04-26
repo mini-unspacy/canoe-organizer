@@ -467,6 +467,24 @@ button:focus:not(:focus-visible) {
   color: #cdd2da !important;
 }
 
+/* On Shore panel main surface — warm-cream `#faf7f0` is the primary
+   panel background. Belongs in the same bucket as the other warm
+   surfaces (#faf6ee, #fcfaf5) but uses a different hex. */
+[data-theme="midnight"] [style*="background: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #faf7f0"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgb(250, 247, 240)"]:not(.theme-preview, .theme-preview *) {
+  background: #1a1d23 !important;
+}
+
+/* On Shore drag-handle grip indicator — `rgba(0,0,0,0.22)` is the
+   resting color of the small horizontal grip nubbin at the top of
+   the panel. Light-on-dark version reads against the dark canvas. */
+[data-theme="midnight"] [style*="background: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgba(0, 0, 0, 0.22)"]:not(.theme-preview, .theme-preview *) {
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
 @keyframes paddler-enter {
   0% {
     transform: scale(0.3);
