@@ -287,18 +287,30 @@ button:focus:not(:focus-visible) {
   --bg-tile: #f7f7f7;
   --bg-tile-2: #f5f3ef;
   --bg-divider: #e3e0da;
+  /* Empty-seat / "add canoe" surface: a subtle wash applied to
+     unfilled drop targets. Default is a near-invisible black tint
+     so Lokahi keeps its current look; non-default themes override
+     this with a faint accent tint so the canoe area visibly carries
+     the theme's hue. */
+  --bg-empty: rgba(0, 0, 0, 0.025);
 }
 [data-color="ocean"] {
   --bg-canvas: #f1f6fa;
   --bg-warm: #e8eff4;
+  --bg-card: #f8fcfd;
+  --bg-empty: rgba(14, 116, 144, 0.06);
 }
 [data-color="sunrise"] {
   --bg-canvas: #fdf6f0;
   --bg-warm: #fbeedf;
+  --bg-card: #fffaf5;
+  --bg-empty: rgba(194, 65, 12, 0.06);
 }
 [data-color="forest"] {
   --bg-canvas: #f3f7f2;
   --bg-warm: #ebf2ea;
+  --bg-card: #f8fbf7;
+  --bg-empty: rgba(21, 128, 61, 0.06);
 }
 [data-mode="dark"] {
   --bg-card: #232730;
@@ -307,6 +319,7 @@ button:focus:not(:focus-visible) {
   --bg-tile: #2a2e37;
   --bg-tile-2: #2a2e37;
   --bg-divider: #2f343d;
+  --bg-empty: rgba(255, 255, 255, 0.05);
 }
 [data-color="abyss"] {
   --bg-card: #1a2a3a;
@@ -315,6 +328,7 @@ button:focus:not(:focus-visible) {
   --bg-tile: #1f3245;
   --bg-tile-2: #1f3245;
   --bg-divider: #243a52;
+  --bg-empty: rgba(34, 211, 238, 0.10);
 }
 
 /* Substring matchers that recolor brand-red inline values to whatever
@@ -666,15 +680,22 @@ button:focus:not(:focus-visible) {
 [data-mode="dark"] [style*="border-color: rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *) {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
-[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+/* Empty-seat / drop-target wash. Universal so every theme paints
+   its empty seats and "+ Canoe" button with the theme's --bg-empty
+   tint — Lokahi keeps the original near-invisible black wash, the
+   other themes get a faint accent-tinted version, dark themes
+   invert to a faint white tint. The rgba(0,0,0,X) variants here
+   come from a few different inline styles that all serve the same
+   "subtle inset surface" role. */
+[style*="background-color: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
+  background-color: var(--bg-empty) !important;
 }
 
 /* Numbered # badge background — TodayView paints this `#1a1a1a`
