@@ -393,12 +393,46 @@ button:focus:not(:focus-visible) {
   border-color: var(--accent) !important;
 }
 
-/* Active-nav background tint — `rgba(185, 28, 28, 0.12)` is the
-   pressed-pill wash behind active bottom-nav items. */
+/* Accent-tinted backgrounds — every brand-red rgba tint resolves to
+   --accent-tint regardless of opacity. Catches the active-nav pill
+   wash, active seat row tint, seat halo, lock-button hover wash,
+   and the schedule race-row tint. We don't try to preserve the
+   per-rule opacity; --accent-tint is one alpha that reads as
+   "subtle accent wash" against any canvas. */
 [style*="background-color: rgba(185, 28, 28, 0.12)"]:not(.theme-preview, .theme-preview *),
-[style*="background: rgba(185, 28, 28, 0.12)"]:not(.theme-preview, .theme-preview *) {
+[style*="background: rgba(185, 28, 28, 0.12)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(185, 28, 28, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(185, 28, 28, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(200, 32, 40, 0.18)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(200, 32, 40, 0.18)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(200, 32, 40, 0.16)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(200, 32, 40, 0.16)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(200, 32, 40, 0.08)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(200, 32, 40, 0.08)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(200, 32, 40, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(200, 32, 40, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(200, 32, 40, 0.2)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(200, 32, 40, 0.2)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(237, 28, 36, 0.1)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(237, 28, 36, 0.1)"]:not(.theme-preview, .theme-preview *),
+[style*="background-color: rgba(237, 28, 36, 0.06)"]:not(.theme-preview, .theme-preview *),
+[style*="background: rgba(237, 28, 36, 0.06)"]:not(.theme-preview, .theme-preview *) {
   background-color: var(--accent-tint) !important;
 }
+
+/* Active-state outlines / borders that use rgba accent reds — match
+   the seat-active border, the canoe full-crew green-replacement
+   outline, etc. Output: solid --accent. */
+[style*="outline: 2px solid rgb(200, 32, 40)"]:not(.theme-preview, .theme-preview *),
+[style*="outline: 2px solid #c82028"]:not(.theme-preview, .theme-preview *) {
+  outline-color: var(--accent) !important;
+}
+
+/* Box shadows that use accent reds (e.g. the seat-active red halo
+   shadow). These can't be cleanly retargeted to var() because the
+   shadow string is more complex than a single color, so we leave
+   them as-is for now. The --accent-tint substring rules above
+   handle most of the visual accent-tinting work. */
 
 /* ── SHARPNESS ─────────────────────────────────────────────────
    These rules force corner-radius regardless of palette so any
@@ -552,7 +586,11 @@ button:focus:not(:focus-visible) {
 [data-mode="dark"] [style^="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style*="; color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style^="color: #8a8a8a"]:not(.theme-preview, .theme-preview *),
-[data-mode="dark"] [style*="; color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
+[data-mode="dark"] [style*="; color: #8a8a8a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: rgb(154, 154, 154)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: rgb(154, 154, 154)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style^="color: #9a9a9a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="; color: #9a9a9a"]:not(.theme-preview, .theme-preview *) {
   color: #aab0bd !important;
 }
 
@@ -628,6 +666,8 @@ button:focus:not(:focus-visible) {
 [data-mode="dark"] [style*="border-color: rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *) {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
+[data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.025)"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
@@ -635,6 +675,17 @@ button:focus:not(:focus-visible) {
 [data-mode="dark"] [style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
 [data-mode="dark"] [style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
   background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Numbered # badge background — TodayView paints this `#1a1a1a`
+   (near-black) for assigned canoe positions. On a dark canvas the
+   black-on-dark is invisible. Lift to a quiet light tint that still
+   reads as "filled" against the theme's surface. */
+[data-mode="dark"] [style*="background: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: #1a1a1a"]:not(.theme-preview, .theme-preview *),
+[data-mode="dark"] [style*="background-color: rgb(26, 26, 26)"]:not(.theme-preview, .theme-preview *) {
+  background-color: rgba(255, 255, 255, 0.14) !important;
 }
 
 /* ── Midnight: Today-page specific spots ──────────────────────────
