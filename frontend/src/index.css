@@ -231,17 +231,14 @@ button:focus:not(:focus-visible) {
   border-radius: 0 !important;
 }
 
-/* SUBTLE: gentle uniform 4px on rounded surfaces — softer than
-   sharp but tighter than the default Lokahi feel. We target the
-   same set of elements as Round (buttons / chips / pills) so
-   subtle / soft / round all act on the same surfaces and the
-   slider feels like it's smoothly interpolating. */
-[data-sharpness="subtle"] button:not(.theme-preview, .theme-preview *),
-[data-sharpness="subtle"] [data-rfd-drag-handle-draggable-id]:not(.theme-preview, .theme-preview *) > div,
-[data-sharpness="subtle"] [data-rfd-drag-handle-draggable-id]:not(.theme-preview, .theme-preview *) > div > div,
-[data-sharpness="subtle"] .btn-zoom:not(.theme-preview, .theme-preview *),
-[data-sharpness="subtle"] .btn-zoom-sm:not(.theme-preview, .theme-preview *),
-[data-sharpness="subtle"] [data-sort-menu]:not(.theme-preview, .theme-preview *) {
+/* SUBTLE: gentle uniform 4px on every rounded surface. Mirrors the
+   wildcard scope of Sharp so the slider feels like a real
+   interpolation between the four stops — moving from Soft to
+   Subtle visibly tightens cards, chips, and buttons all at once
+   instead of only nudging a handful of element types. */
+[data-sharpness="subtle"] *:not(.theme-preview, .theme-preview *),
+[data-sharpness="subtle"] *:not(.theme-preview, .theme-preview *)::before,
+[data-sharpness="subtle"] *:not(.theme-preview, .theme-preview *)::after {
   border-radius: 4px !important;
 }
 
