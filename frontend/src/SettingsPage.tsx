@@ -1,9 +1,17 @@
-// Settings page. Currently houses the theme picker; designed to be a
-// landing place for future preference toggles (notifications, default
-// canoe priority, etc.). Styled to match the Roster + Schedule pages
-// — cream surface, red accents, the same SectionLabel pattern.
+// Settings page. Two independent theme axes: color (Lokahi / Midnight)
+// and sharpness (Round / Soft / Subtle / Sharp). A single live preview
+// at the top reflects the current combination; the swatches and slider
+// below are the picker controls.
 
-import { useTheme, THEMES, type ThemeId, type Theme } from "./useTheme";
+import {
+  useTheme,
+  COLORS,
+  SHARPNESS_LEVELS,
+  type ColorId,
+  type SharpnessId,
+  type Color,
+  type Sharpness,
+} from "./useTheme";
 
 const T = {
   bone: "#ffffff",
@@ -26,152 +34,79 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Hardcoded per-theme preview. Each card paints itself based on its
-// theme.id so the preview is what the theme would look like — NOT
-// what the currently-active theme looks like. We deliberately do NOT
-// rely on the live `data-theme` CSS rules here, because those rules
-// cascade from <html> downward and an attribute selector on a deeper
-// wrapper has the same specificity as the html-level one — so under
-// e.g. a globally-active "Edge" theme, every preview card would also
-// get edge corners no matter what data-theme it tried to advertise.
-//
-// The mapping below mirrors what each theme's index.css block does
-// to the real app:
-//   • lokahi   → soft 10px rounding, light cream canvas, white inner
-//   • edge     → 0px rounding everywhere
-//   • pillow   → max-pill on the chip/button, normal corners on cards
-//   • midnight → dark canvas, dark inner card, light text
-function previewLook(id: Theme['id']) {
-  switch (id) {
-    case 'edge':
-      return {
-        outerRadius: 0,
-        innerRadius: 0,
-        chipRadius: 0,
-        barRadius: 0,
-        canvas: '#ffffff',
-        surface: '#ffffff',
-        border: '1px solid #1a1a1a',
-        text: '#111111',
-        muted: 'rgba(0,0,0,0.10)',
-        subtle: 'rgba(0,0,0,0.18)',
-      };
-    case 'pillow':
-      return {
-        outerRadius: 10,
-        innerRadius: 10,
-        chipRadius: 9999,
-        barRadius: 9999,
-        canvas: '#faf9f7',
-        surface: '#ffffff',
-        border: `1px solid ${T.inkLine}`,
-        text: '#222222',
-        muted: 'rgba(0,0,0,0.07)',
-        subtle: 'rgba(0,0,0,0.14)',
-      };
-    case 'midnight':
-      return {
-        outerRadius: 10,
-        innerRadius: 10,
-        chipRadius: 8,
-        barRadius: 4,
-        canvas: '#14171c',
-        surface: '#232730',
-        border: '1px solid rgba(255,255,255,0.10)',
-        text: '#e8e8e8',
-        muted: 'rgba(255,255,255,0.10)',
-        subtle: 'rgba(255,255,255,0.20)',
-      };
-    case 'lokahi':
-    default:
-      return {
-        outerRadius: 10,
-        innerRadius: 10,
-        chipRadius: 8,
-        barRadius: 4,
-        canvas: '#faf9f7',
-        surface: '#ffffff',
-        border: `1px solid ${T.inkLine}`,
-        text: '#222222',
-        muted: 'rgba(0,0,0,0.07)',
-        subtle: 'rgba(0,0,0,0.14)',
-      };
-  }
-}
-
-function ThemePreview({ theme }: { theme: Theme }) {
-  const { accent } = theme.preview;
-  const look = previewLook(theme.id);
+// Single live preview tile. Reflects the current color × sharpness
+// combination by reading both off useTheme. Unlike the old per-card
+// previews this one isn't isolated from the live cascade — it IS the
+// live cascade — so it always matches whatever's selected without
+// needing to restate values.
+function ThemePreview({ color, sharpness }: { color: Color; sharpness: Sharpness }) {
+  const isDark = color.id === 'midnight';
+  const innerSurface = isDark ? '#232730' : '#ffffff';
+  const subtleBar = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.14)';
+  const mutedBar = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)';
+  const border = isDark ? '1px solid rgba(255,255,255,0.10)' : `1px solid ${T.inkLine}`;
+  // Outer wrapper uses the chosen radius too so "round" reads as a
+  // pill-shaped tile and "sharp" reads as a slab. Capped at 18px for
+  // the outer chrome so 9999 doesn't make the whole tile a sausage.
+  const outerR = Math.min(sharpness.sample, 18);
+  const innerR = Math.min(sharpness.sample, 14);
+  const chipR = sharpness.sample;
+  const barR = Math.min(sharpness.sample, 6);
   return (
     <div
-      // The `theme-preview` class is the escape hatch the global
-      // [data-theme=...] rules in index.css use to know NOT to cascade
-      // into this subtree. The preview is fully painted by the inline
-      // styles below (driven by previewLook), so we must keep the
-      // active theme's overrides out — otherwise e.g. Edge globally
-      // active would zero out our intentional rounded corners, and
-      // Midnight's substring matchers would repaint our hardcoded
-      // backgrounds.
-      className="theme-preview"
       style={{
         width: '100%',
-        aspectRatio: '16 / 11',
-        background: look.canvas,
-        border: look.border,
-        borderRadius: look.outerRadius,
-        padding: 10,
+        aspectRatio: '16 / 8',
+        background: color.surface,
+        border,
+        borderRadius: outerR,
+        padding: 14,
         display: 'flex',
         flexDirection: 'column',
-        gap: 6,
+        gap: 10,
         boxSizing: 'border-box',
         overflow: 'hidden',
-        color: look.text,
+        color: color.text,
       }}
     >
       {/* Top bar: accent dot + a "title" line */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{
-          width: 18,
-          height: 18,
-          background: accent,
-          borderRadius: theme.id === 'edge' ? 0 : 9,
+          width: 22,
+          height: 22,
+          background: color.accent,
+          borderRadius: chipR,
+          flexShrink: 0,
         }} />
-        <div style={{ flex: 1, height: 6, background: look.subtle, borderRadius: look.barRadius }} />
+        <div style={{ flex: 1, height: 8, background: subtleBar, borderRadius: barR }} />
       </div>
       {/* Card surface */}
       <div
         style={{
-          background: look.surface,
-          borderRadius: look.innerRadius,
-          padding: 7,
+          background: innerSurface,
+          borderRadius: innerR,
+          padding: 10,
           display: 'flex',
           flexDirection: 'column',
-          gap: 5,
+          gap: 7,
           flex: 1,
-          boxShadow: theme.id === 'midnight'
-            ? '0 1px 2px rgba(0,0,0,0.4)'
-            : theme.id === 'edge'
-              ? 'none'
-              : '0 1px 2px rgba(0,0,0,0.06)',
-          color: look.text,
-          border: theme.id === 'edge' ? '1px solid #1a1a1a' : 'none',
+          boxShadow: isDark ? '0 1px 2px rgba(0,0,0,0.4)' : '0 1px 2px rgba(0,0,0,0.06)',
         }}
       >
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <div style={{ flex: 1, height: 8, background: look.subtle, borderRadius: look.barRadius }} />
-          {/* Pill / chip — chipRadius captures Edge (0), Pillow (9999), and the rest (8). */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div style={{ flex: 1, height: 10, background: subtleBar, borderRadius: barR }} />
           <div
             style={{
-              padding: '0 8px',
-              height: 16,
+              padding: '0 12px',
+              height: 22,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: accent,
+              background: color.accent,
               color: '#fff',
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: 700,
-              borderRadius: look.chipRadius,
+              borderRadius: chipR,
               lineHeight: 1,
               letterSpacing: '0.04em',
             }}
@@ -179,62 +114,132 @@ function ThemePreview({ theme }: { theme: Theme }) {
             GO
           </div>
         </div>
-        <div style={{ height: 8, background: look.muted, borderRadius: look.barRadius }} />
-        <div style={{ height: 8, width: '70%', background: look.muted, borderRadius: look.barRadius }} />
+        <div style={{ height: 10, background: mutedBar, borderRadius: barR }} />
+        <div style={{ height: 10, width: '70%', background: mutedBar, borderRadius: barR }} />
       </div>
     </div>
   );
 }
 
-function ThemeCard({
-  theme,
+// Small color swatch — circle showing the color's surface + accent.
+// Selected state gets a red ring matching the selected-card affordance.
+function ColorSwatch({
+  color,
   active,
   onSelect,
 }: {
-  theme: Theme;
+  color: Color;
   active: boolean;
-  onSelect: (id: ThemeId) => void;
+  onSelect: (id: ColorId) => void;
 }) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(theme.id)}
+      onClick={() => onSelect(color.id)}
+      title={color.name}
+      aria-label={`Color: ${color.name}`}
+      aria-pressed={active}
       className="btn-zoom"
       style={{
-        position: 'relative',
-        textAlign: 'left',
-        padding: 12,
-        borderRadius: 14,
-        border: active ? `2px solid ${T.red}` : `1px solid ${T.inkLine}`,
-        // Inset compensates for the +1px from the active border so cards don't
-        // visibly shift size when toggling between active/inactive.
-        margin: active ? 0 : 1,
-        background: T.bone,
-        cursor: 'pointer',
-        display: 'flex',
+        display: 'inline-flex',
         flexDirection: 'column',
-        gap: 10,
-        boxShadow: active
-          ? '0 6px 18px rgba(200,32,40,0.15), 0 0 0 4px rgba(200,32,40,0.08)'
-          : '0 1px 2px rgba(0,0,0,0.05)',
-        transition: 'box-shadow 180ms ease, border-color 180ms ease',
+        alignItems: 'center',
+        gap: 6,
+        padding: 4,
+        border: 'none',
+        background: 'transparent',
+        cursor: 'pointer',
+        fontFamily: FONT_BODY,
       }}
     >
-      <ThemePreview theme={theme} />
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: T.charcoal, lineHeight: 1 }}>
-          {theme.name}
-        </span>
-        {active && (
-          <span style={{ fontFamily: FONT_BODY, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.red }}>
-            Active
-          </span>
-        )}
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          background: color.surface,
+          border: active ? `2px solid ${T.red}` : `1px solid ${T.inkLine}`,
+          boxShadow: active
+            ? '0 0 0 4px rgba(200,32,40,0.12)'
+            : '0 1px 2px rgba(0,0,0,0.05)',
+          position: 'relative',
+          transition: 'box-shadow 180ms ease, border-color 180ms ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Inner accent dot — gives the swatch a clear identity beyond
+            just "light circle" / "dark circle" by showing the brand
+            accent color too. */}
+        <div style={{ width: 14, height: 14, borderRadius: '50%', background: color.accent }} />
       </div>
-      <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: T.muted, lineHeight: 1.4 }}>
-        {theme.blurb}
+      <span style={{ fontSize: 11, fontWeight: active ? 700 : 500, color: active ? T.red : T.muted, letterSpacing: '0.04em' }}>
+        {color.name}
       </span>
     </button>
+  );
+}
+
+// Sharpness slider — a 4-stop range input with tick marks below. We
+// use a real <input type="range"> so keyboard nav and accessibility
+// come for free; the visual styling is a thin track + a red thumb to
+// echo the selected-card chrome from the color swatches.
+function SharpnessSlider({
+  value,
+  onChange,
+}: {
+  value: SharpnessId;
+  onChange: (id: SharpnessId) => void;
+}) {
+  const idx = SHARPNESS_LEVELS.findIndex(s => s.id === value);
+  const max = SHARPNESS_LEVELS.length - 1;
+  return (
+    <div style={{ width: '100%', maxWidth: 360 }}>
+      <input
+        type="range"
+        min={0}
+        max={max}
+        step={1}
+        value={idx === -1 ? 0 : idx}
+        onChange={(e) => {
+          const next = SHARPNESS_LEVELS[Number(e.target.value)];
+          if (next) onChange(next.id);
+        }}
+        aria-label="Corner sharpness"
+        style={{
+          width: '100%',
+          accentColor: T.red,
+          margin: 0,
+        }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+        {SHARPNESS_LEVELS.map((s, i) => {
+          const active = i === idx;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => onChange(s.id)}
+              style={{
+                fontFamily: FONT_BODY,
+                fontSize: 10,
+                fontWeight: active ? 700 : 500,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: active ? T.red : T.muted,
+                background: 'transparent',
+                border: 'none',
+                padding: '2px 0',
+                cursor: 'pointer',
+              }}
+            >
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -249,7 +254,9 @@ export function SettingsPage({
   email?: string;
   onLogout?: () => void;
 }) {
-  const { theme, setTheme } = useTheme();
+  const { color, sharpness, setColor, setSharpness } = useTheme();
+  const currentColor = COLORS.find(c => c.id === color) ?? COLORS[0];
+  const currentSharpness = SHARPNESS_LEVELS.find(s => s.id === sharpness) ?? SHARPNESS_LEVELS[1];
 
   return (
     <div
@@ -271,27 +278,28 @@ export function SettingsPage({
         </p>
       </div>
 
-      <SectionLabel>Theme</SectionLabel>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
-        {THEMES.map((t) => (
-          <ThemeCard
-            key={t.id}
-            theme={t}
-            active={theme === t.id}
-            onSelect={setTheme}
-          />
+      {/* Live preview — reflects the current color × sharpness combo. */}
+      <SectionLabel>Preview</SectionLabel>
+      <div style={{ marginBottom: 28 }}>
+        <ThemePreview color={currentColor} sharpness={currentSharpness} />
+      </div>
+
+      {/* Color swatches — small, just the palette. */}
+      <SectionLabel>Color</SectionLabel>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+        {COLORS.map(c => (
+          <ColorSwatch key={c.id} color={c} active={color === c.id} onSelect={setColor} />
         ))}
       </div>
 
+      {/* Sharpness slider — corner shape, independent of color. */}
+      <SectionLabel>Corner sharpness</SectionLabel>
+      <div style={{ marginBottom: 28 }}>
+        <SharpnessSlider value={sharpness} onChange={setSharpness} />
+      </div>
+
       <p style={{ fontSize: 11, color: T.muted, marginTop: 4, lineHeight: 1.5 }}>
-        Theme choice is remembered on this device only. More preferences coming soon.
+        Theme choice is remembered on this device only.
       </p>
 
       {/* Account block — sign-in identity + logout. The desktop sidebar
