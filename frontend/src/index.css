@@ -331,8 +331,91 @@ button:focus:not(:focus-visible) {
 [data-theme="midnight"] [style*="color: rgb(138, 130, 117)"]:not(.theme-preview, .theme-preview *),
 [data-theme="midnight"] [style*="color: #717171"]:not(.theme-preview, .theme-preview *),
 [data-theme="midnight"] [style*="color: #6b6558"]:not(.theme-preview, .theme-preview *),
-[data-theme="midnight"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *) {
+[data-theme="midnight"] [style*="color: #8a8275"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(176, 176, 176)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: rgb(138, 138, 138)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #b0b0b0"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="color: #8a8a8a"]:not(.theme-preview, .theme-preview *) {
   color: #aab0bd !important;
+}
+
+/* ── Midnight, additional patterns ─────────────────────────────────
+   The inline-style audit (Apr 2026) surfaced a handful of patterns
+   the substring matchers above don't catch: linear gradients,
+   warm-cream tones used in hero headers, and the #e3e0da divider
+   color used both as a background AND as a border. Each rule below
+   targets the SERIALIZED form Chrome/Firefox produce, since attribute
+   selectors match the serialized string, not the source. */
+
+/* Hero / page-top gradients. We replace the two cream-to-white
+   gradients used at the top of TodayView, SchedulePage, LoginPage,
+   and OnboardingPage with a flat dark surface. The third gradient
+   variant (tinted red, used on race rows in Schedule) stays a
+   gradient but with a darker tail. */
+[data-theme="midnight"] [style*="linear-gradient(rgb(250, 249, 247) 0%, rgb(255, 255, 255) 50%)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="linear-gradient(rgb(250, 246, 238) 0%, rgb(252, 250, 245) 55%, rgb(255, 255, 255) 100%)"]:not(.theme-preview, .theme-preview *) {
+  background: #14171c !important;
+}
+[data-theme="midnight"] [style*="linear-gradient(rgba(237, 28, 36, 0.06) 0%, rgb(245, 243, 239) 45%)"]:not(.theme-preview, .theme-preview *) {
+  background: linear-gradient(rgba(237, 28, 36, 0.18) 0%, #232730 45%) !important;
+}
+
+/* Today's pool fade-edges: white-to-transparent gradients used to
+   fade the staging strip's leading/trailing edges. Repaint to fade
+   into the dark canvas instead. */
+[data-theme="midnight"] [style*="linear-gradient(to bottom, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
+  background: linear-gradient(to bottom, #14171c, rgba(20, 23, 28, 0)) !important;
+}
+[data-theme="midnight"] [style*="linear-gradient(to top, rgb(255, 255, 255), rgba(255, 255, 255, 0))"]:not(.theme-preview, .theme-preview *) {
+  background: linear-gradient(to top, #14171c, rgba(20, 23, 28, 0)) !important;
+}
+
+/* Warm off-white solids (used on hero header surfaces). */
+[data-theme="midnight"] [style*="background-color: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(250, 246, 238)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #faf6ee"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(252, 250, 245)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #fcfaf5"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #fcfaf5"]:not(.theme-preview, .theme-preview *) {
+  background-color: #1a1d23 !important;
+}
+
+/* Light divider color (#e3e0da) used as both background and border.
+   Background matchers first, then border matchers. */
+[data-theme="midnight"] [style*="background-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: #e3e0da"]:not(.theme-preview, .theme-preview *) {
+  background-color: #2f343d !important;
+}
+
+/* Border colors that read as light on a light canvas — invert to a
+   subtle light-on-dark divider. We catch the two most common forms:
+   the cream-grey divider (#e3e0da / rgb(227, 224, 218)) and the
+   universal light-tinted blacks (rgba(0, 0, 0, 0.08) / 0.12). */
+[data-theme="midnight"] [style*="border: 1px solid rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border: 1px solid #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border-color: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border-color: #e3e0da"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="borderColor: rgb(227, 224, 218)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="borderColor: #e3e0da"]:not(.theme-preview, .theme-preview *) {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+[data-theme="midnight"] [style*="border: 1px solid rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border: 1px solid rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="border-color: rgba(0, 0, 0, 0.12)"]:not(.theme-preview, .theme-preview *) {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="midnight"] [style*="background-color: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgba(0, 0, 0, 0.04)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgba(0, 0, 0, 0.06)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background-color: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *),
+[data-theme="midnight"] [style*="background: rgba(0, 0, 0, 0.08)"]:not(.theme-preview, .theme-preview *) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 @keyframes paddler-enter {
