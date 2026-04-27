@@ -293,35 +293,38 @@ button:focus:not(:focus-visible) {
   --bg-empty: rgba(0, 0, 0, 0.05);
 }
 
-/* Light themes — designed two-color palettes rather than all-one-hue
-   shades. Each theme has a CANVAS in the primary accent family and
-   a CARD in a contrasting temperature (warm card on cool canvas,
-   cool card on warm canvas). The temperature contrast gives the
-   page visual tension the way good design palettes do — sea + sand,
-   sunset + snow, forest + parchment — instead of the previous
-   monochromatic wash.
+/* Light themes — saturated colored canvas + crisp WHITE canoe cards
+   so canoes pop hard off the page. Earlier iterations kept canvas
+   and card in similar lightness which read as one tone; here the
+   contrast is luminance-driven so the canoe is unmistakably a
+   different surface than the page beneath it. Empty-seat washes
+   sit at ~18% accent on the white card so the seat slots also
+   have clear theme identity AND clear contrast against the card.
 
-     Ocean    cool blue canvas    + warm shell-cream card
-     Sunrise  warm peach canvas   + cool linen-cream card
-     Forest   cool sage canvas    + warm parchment card
-     Lokahi   warm cream canvas   + neutral white card (classic) */
+   The canvas saturation is intentionally bold — these are vivid
+   colored pages, not pastel washes.
+
+     Ocean    bold cyan canvas    + white card + cyan seat slots
+     Sunrise  bold peach canvas   + white card + orange seat slots
+     Forest   bold sage canvas    + white card + green seat slots
+     Lokahi   warm cream canvas   + white card + subtle slots */
 [data-color="ocean"] {
-  --bg-canvas: #c2dae6;
-  --bg-warm: #b1cad9;
-  --bg-card: #fcf7ec;
-  --bg-empty: rgba(14, 116, 144, 0.16);
+  --bg-canvas: #9fc6db;
+  --bg-warm: #88b8d0;
+  --bg-card: #ffffff;
+  --bg-empty: rgba(14, 116, 144, 0.18);
 }
 [data-color="sunrise"] {
-  --bg-canvas: #f4caa3;
-  --bg-warm: #f0b884;
-  --bg-card: #f0f5f9;
-  --bg-empty: rgba(194, 65, 12, 0.16);
+  --bg-canvas: #f4b276;
+  --bg-warm: #efa056;
+  --bg-card: #ffffff;
+  --bg-empty: rgba(194, 65, 12, 0.20);
 }
 [data-color="forest"] {
-  --bg-canvas: #c2d8c5;
-  --bg-warm: #aec9b1;
-  --bg-card: #fbf6e6;
-  --bg-empty: rgba(21, 128, 61, 0.15);
+  --bg-canvas: #a8caaa;
+  --bg-warm: #92bc94;
+  --bg-card: #ffffff;
+  --bg-empty: rgba(21, 128, 61, 0.18);
 }
 
 /* Dark themes — same logical hierarchy: canvas darkest, card a
