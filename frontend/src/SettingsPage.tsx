@@ -139,7 +139,11 @@ function ColorSwatch({
       title={color.name}
       aria-label={`Color: ${color.name}`}
       aria-pressed={active}
-      className="btn-zoom"
+      // `theme-locked` keeps the global [data-color] / [data-mode]
+      // matchers from recoloring this swatch's inline surface +
+      // accent — without it, every swatch would render in the LIVE
+      // theme's color instead of its own.
+      className="btn-zoom theme-locked"
       style={{
         display: 'inline-flex',
         flexDirection: 'column',

@@ -49,18 +49,18 @@ export type Sharpness = {
   sample: number;
 };
 
-// Canonical color list — picked for distinctive accents on cohesive
-// canvases. Light themes share Lokahi's cream surfaces; dark themes
-// share Midnight's slate surfaces. Accents are chosen at roughly the
-// same perceived saturation so no theme reads as more aggressive
-// than the others.
+// Canonical color list. The `surface` field here is the canvas
+// color the theme paints on the page — keep it in sync with the
+// matching --bg-canvas value in index.css. Sample colors used by
+// the SettingsPage swatches and preview tile so the picker shows
+// each theme's own surface, not the live theme's.
 export const COLORS: Color[] = [
   { id: 'lokahi',   name: 'Lokahi',   mode: 'light', surface: '#faf9f7', accent: '#c82028', text: '#1a1a1a' },
-  { id: 'ocean',    name: 'Ocean',    mode: 'light', surface: '#faf9f7', accent: '#0e7490', text: '#1a1a1a' },
-  { id: 'sunrise',  name: 'Sunrise',  mode: 'light', surface: '#faf9f7', accent: '#c2410c', text: '#1a1a1a' },
-  { id: 'forest',   name: 'Forest',   mode: 'light', surface: '#faf9f7', accent: '#15803d', text: '#1a1a1a' },
-  { id: 'midnight', name: 'Midnight', mode: 'dark',  surface: '#1a1d23', accent: '#ff5a60', text: '#e8e8e8' },
-  { id: 'abyss',    name: 'Abyss',    mode: 'dark',  surface: '#1a1d23', accent: '#22d3ee', text: '#e8e8e8' },
+  { id: 'ocean',    name: 'Ocean',    mode: 'light', surface: '#d4e6ee', accent: '#0e7490', text: '#1a1a1a' },
+  { id: 'sunrise',  name: 'Sunrise',  mode: 'light', surface: '#f4dbc4', accent: '#c2410c', text: '#1a1a1a' },
+  { id: 'forest',   name: 'Forest',   mode: 'light', surface: '#d4e6d8', accent: '#15803d', text: '#1a1a1a' },
+  { id: 'midnight', name: 'Midnight', mode: 'dark',  surface: '#14171c', accent: '#ff5a60', text: '#e8e8e8' },
+  { id: 'abyss',    name: 'Abyss',    mode: 'dark',  surface: '#081320', accent: '#22d3ee', text: '#e8e8e8' },
 ];
 
 export const SHARPNESS_LEVELS: Sharpness[] = [
