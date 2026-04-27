@@ -164,7 +164,7 @@ function AppMain({ currentUser, onLogout }: { currentUser: User; onLogout: () =>
       onDragEnd={onDragEndWithRestore}
       sensors={sensors}
     >
-      <div style={{ height: '100%', overflow: 'hidden', backgroundColor: '#ffffff', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div style={{ height: '100%', overflow: 'hidden', backgroundColor: 'var(--bg-canvas)', touchAction: ctx.isDragging ? 'none' : 'auto', paddingTop: 'env(safe-area-inset-top)' }}>
         <main style={{ height: '100%', overflow: 'hidden', boxSizing: 'border-box', padding: isNarrow ? '0 12px' : '0 2px', maxWidth: '1152px', margin: '0 auto', width: '100%' }}>
           {ctx.dataLoading && !ctx.isDragging ? (
             <LokahiSplash />
