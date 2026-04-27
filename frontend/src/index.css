@@ -293,33 +293,34 @@ button:focus:not(:focus-visible) {
   --bg-empty: rgba(0, 0, 0, 0.05);
 }
 
-/* Light themes — three layers tuned for visible WITHIN-THEME
-   contrast in the canoe area. Both canvas AND card carry the
-   accent tint, but the card sits at roughly half the saturation
-   so it lifts visibly off the canvas while still reading as part
-   of the same color family. The empty-seat wash uses the accent
-   at ~16% on top of the tinted card so placeholders read as
-   inset drop targets.
+/* Light themes — designed two-color palettes rather than all-one-hue
+   shades. Each theme has a CANVAS in the primary accent family and
+   a CARD in a contrasting temperature (warm card on cool canvas,
+   cool card on warm canvas). The temperature contrast gives the
+   page visual tension the way good design palettes do — sea + sand,
+   sunset + snow, forest + parchment — instead of the previous
+   monochromatic wash.
 
-   Color values are computed as the accent over white at fixed
-   alphas (canvas ≈ 18%, card ≈ 8%) — this keeps the saturation
-   ramp consistent across themes. */
+     Ocean    cool blue canvas    + warm shell-cream card
+     Sunrise  warm peach canvas   + cool linen-cream card
+     Forest   cool sage canvas    + warm parchment card
+     Lokahi   warm cream canvas   + neutral white card (classic) */
 [data-color="ocean"] {
-  --bg-canvas: #d4e6ee;
-  --bg-warm: #c5dbe5;
-  --bg-card: #ecf4f7;
+  --bg-canvas: #c2dae6;
+  --bg-warm: #b1cad9;
+  --bg-card: #fcf7ec;
   --bg-empty: rgba(14, 116, 144, 0.16);
 }
 [data-color="sunrise"] {
-  --bg-canvas: #f4dbc4;
-  --bg-warm: #efc8a4;
-  --bg-card: #faecdb;
+  --bg-canvas: #f4caa3;
+  --bg-warm: #f0b884;
+  --bg-card: #f0f5f9;
   --bg-empty: rgba(194, 65, 12, 0.16);
 }
 [data-color="forest"] {
-  --bg-canvas: #d4e6d8;
-  --bg-warm: #c1d9c7;
-  --bg-card: #ecf4ee;
+  --bg-canvas: #c2d8c5;
+  --bg-warm: #aec9b1;
+  --bg-card: #fbf6e6;
   --bg-empty: rgba(21, 128, 61, 0.15);
 }
 
