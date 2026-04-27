@@ -309,21 +309,25 @@ button:focus:not(:focus-visible) {
      Lokahi   warm cream canvas      + white card            + Hawaiian red accent */
 [data-color="ocean"] {
   --bg-canvas: #d6e6ef;
-  --bg-warm: #c5dae6;
   --bg-card: #fdf6e8;
   --bg-empty: rgba(14, 116, 144, 0.18);
+  /* On Shore uses --bg-warm. Picked to be visibly distinct from
+     BOTH the canvas (the page) and the card (the canoes) — a
+     deeper steel-blue here, so the On Shore drawer reads as a
+     fourth surface in the theme palette. */
+  --bg-warm: #a3bccb;
 }
 [data-color="sunrise"] {
   --bg-canvas: #f7dcc0;
-  --bg-warm: #f3cba2;
   --bg-card: #f0f3f7;
   --bg-empty: rgba(194, 65, 12, 0.20);
+  --bg-warm: #d9b182;
 }
 [data-color="forest"] {
   --bg-canvas: #d6e6d8;
-  --bg-warm: #c4d8c6;
   --bg-card: #fcf6e8;
   --bg-empty: rgba(21, 128, 61, 0.18);
+  --bg-warm: #a8c5ab;
 }
 
 /* Dark themes — same logical hierarchy: canvas darkest, card a
