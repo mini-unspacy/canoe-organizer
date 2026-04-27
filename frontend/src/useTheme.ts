@@ -56,9 +56,9 @@ export type Sharpness = {
 // each theme's own surface, not the live theme's.
 export const COLORS: Color[] = [
   { id: 'lokahi',   name: 'Lokahi',   mode: 'light', surface: '#faf9f7', accent: '#c82028', text: '#1a1a1a' },
-  { id: 'ocean',    name: 'Ocean',    mode: 'light', surface: '#9fc6db', accent: '#0e7490', text: '#1a1a1a' },
-  { id: 'sunrise',  name: 'Sunrise',  mode: 'light', surface: '#f4b276', accent: '#c2410c', text: '#1a1a1a' },
-  { id: 'forest',   name: 'Forest',   mode: 'light', surface: '#a8caaa', accent: '#15803d', text: '#1a1a1a' },
+  { id: 'ocean',    name: 'Ocean',    mode: 'light', surface: '#d6e6ef', accent: '#0e7490', text: '#1a1a1a' },
+  { id: 'sunrise',  name: 'Sunrise',  mode: 'light', surface: '#f7dcc0', accent: '#c2410c', text: '#1a1a1a' },
+  { id: 'forest',   name: 'Forest',   mode: 'light', surface: '#d6e6d8', accent: '#15803d', text: '#1a1a1a' },
   { id: 'midnight', name: 'Midnight', mode: 'dark',  surface: '#14171c', accent: '#ff5a60', text: '#e8e8e8' },
   { id: 'abyss',    name: 'Abyss',    mode: 'dark',  surface: '#081320', accent: '#22d3ee', text: '#e8e8e8' },
 ];

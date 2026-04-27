@@ -293,37 +293,36 @@ button:focus:not(:focus-visible) {
   --bg-empty: rgba(0, 0, 0, 0.05);
 }
 
-/* Light themes — saturated colored canvas + crisp WHITE canoe cards
-   so canoes pop hard off the page. Earlier iterations kept canvas
-   and card in similar lightness which read as one tone; here the
-   contrast is luminance-driven so the canoe is unmistakably a
-   different surface than the page beneath it. Empty-seat washes
-   sit at ~18% accent on the white card so the seat slots also
-   have clear theme identity AND clear contrast against the card.
+/* Light themes — three-color palettes. Canvas saturation is
+   dialed back from the previous bold version so the page reads as
+   "softly tinted" rather than "vivid poster". Card is a CONTRASTING
+   TEMPERATURE cream (warm card on cool canvas, cool card on warm
+   canvas) — that's the second color. The third color is the
+   saturated accent itself, which shows up on buttons and as the
+   empty-seat wash inside the canoe.
 
-   The canvas saturation is intentionally bold — these are vivid
-   colored pages, not pastel washes.
+   Three visible colors per theme inside the canoe area:
 
-     Ocean    bold cyan canvas    + white card + cyan seat slots
-     Sunrise  bold peach canvas   + white card + orange seat slots
-     Forest   bold sage canvas    + white card + green seat slots
-     Lokahi   warm cream canvas   + white card + subtle slots */
+     Ocean    soft blue canvas       + warm shell-cream card + teal accent
+     Sunrise  soft peach canvas      + cool linen card       + deep orange accent
+     Forest   soft sage canvas       + warm parchment card   + green accent
+     Lokahi   warm cream canvas      + white card            + Hawaiian red accent */
 [data-color="ocean"] {
-  --bg-canvas: #9fc6db;
-  --bg-warm: #88b8d0;
-  --bg-card: #ffffff;
+  --bg-canvas: #d6e6ef;
+  --bg-warm: #c5dae6;
+  --bg-card: #fdf6e8;
   --bg-empty: rgba(14, 116, 144, 0.18);
 }
 [data-color="sunrise"] {
-  --bg-canvas: #f4b276;
-  --bg-warm: #efa056;
-  --bg-card: #ffffff;
+  --bg-canvas: #f7dcc0;
+  --bg-warm: #f3cba2;
+  --bg-card: #f0f3f7;
   --bg-empty: rgba(194, 65, 12, 0.20);
 }
 [data-color="forest"] {
-  --bg-canvas: #a8caaa;
-  --bg-warm: #92bc94;
-  --bg-card: #ffffff;
+  --bg-canvas: #d6e6d8;
+  --bg-warm: #c4d8c6;
+  --bg-card: #fcf6e8;
   --bg-empty: rgba(21, 128, 61, 0.18);
 }
 
