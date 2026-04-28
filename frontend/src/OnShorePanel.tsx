@@ -14,15 +14,20 @@ import type { PaddlerRowDims } from "./PaddlerChip";
 // slider and a sort menu. Replaces the right-hand staging sidebar on
 // narrow viewports; the sidebar continues to handle desktop.
 
-type OnShoreSort = "default" | "name" | "ability" | "gender" | "type";
+type OnShoreSort = "name" | "ability" | "gender" | "type";
 
 const sortLabels: Record<OnShoreSort, string> = {
-  default: "Default",
   name: "Name",
   ability: "Ability",
   gender: "Gender",
   type: "Type",
 };
+
+// Whitelist for migrating legacy localStorage values. Old installs may
+// have "default" persisted; treat anything not in the current set as
+// "name" so the picker doesn't render an empty label or fall through.
+const isOnShoreSort = (v: string | null): v is OnShoreSort =>
+  v === "name" || v === "ability" || v === "gender" || v === "type";
 
 interface OnShorePanelProps {
   unassignedPaddlers: Paddler[];
@@ -41,7 +46,6 @@ interface OnShorePanelProps {
 }
 
 function sortPaddlers(paddlers: Paddler[], sort: OnShoreSort): Paddler[] {
-  if (sort === "default") return paddlers;
   const copy = [...paddlers];
   if (sort === "name") {
     copy.sort((a, b) => (a.firstName || "").localeCompare(b.firstName || ""));
@@ -158,9 +162,9 @@ export function OnShorePanel({
     return Number.isNaN(raw) ? 2 : Math.max(0, Math.min(maxIdx, raw));
   });
   const [sort, setSort] = useState<OnShoreSort>(() => {
-    if (typeof window === "undefined") return "default";
+    if (typeof window === "undefined") return "name";
     const raw = window.localStorage.getItem("lokahi.onShoreSort");
-    return (raw as OnShoreSort) || "default";
+    return isOnShoreSort(raw) ? raw : "name";
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -498,15 +502,30 @@ export function OnShorePanel({
               {menuOpen && (
                 <div
                   style={{
+                    // Open UPWARD into the canoe area instead of
+                    // downward into the (sometimes very short) drawer
+                    // body. When the drawer is at the SMALL preset
+                    // (~110-140px) the 4-item menu would otherwise
+                    // extend past the drawer's bottom edge and end up
+                    // behind the bottom tab bar (zIndex 40 > drawer
+                    // 30), making the lower options unreachable.
+                    // Opening upward puts the menu over the canoe
+                    // fleet — plenty of room, and it's still inside
+                    // the drawer's stacking context so it draws above
+                    // the canoe fleet's normal-flow content.
                     position: "absolute",
                     right: 0,
-                    top: 30,
-                    zIndex: 40,
+                    bottom: "100%",
+                    marginBottom: 6,
+                    zIndex: 41,
                     background: "#fff",
                     border: "1px solid rgba(0,0,0,.12)",
                     borderRadius: 10,
                     padding: 6,
-                    boxShadow: "0 10px 24px rgba(0,0,0,0.15)",
+                    // Drop-shadow oriented the other way (downward
+                    // shadow under an upward-opening menu) reads as
+                    // "this menu sits above the button".
+                    boxShadow: "0 -10px 24px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.08)",
                     minWidth: 140,
                   }}
                 >
