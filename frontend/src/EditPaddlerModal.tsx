@@ -59,21 +59,35 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
   return (
     <div
       style={{
+        // Cap the modal at the viewport height (minus a little headroom
+        // for status/safe-area + the offset from the top), with the
+        // white card inside doing its own internal scroll. Without this
+        // cap, adding sections (e.g., the badges grid) pushes the action
+        // bar below the fold on smaller phones — the Save button
+        // disappears off the bottom of the screen.
         position: 'fixed', top: '80px', right: '20px', zIndex: 9999,
         backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '16px', padding: '8px',
+        maxHeight: 'calc(100vh - 100px)',
+        display: 'flex',
       }}
       onClick={onClose}
     >
       <div
         style={{
-          backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px',
+          backgroundColor: '#ffffff', borderRadius: '16px',
           minWidth: '380px', maxWidth: '420px',
           boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.12)',
+          // Flex column so the form area can grow to fill the card and
+          // scroll on overflow while the header + action bar stay
+          // pinned at the top and bottom of the card respectively.
+          display: 'flex', flexDirection: 'column',
+          maxHeight: '100%',
+          overflow: 'hidden',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        {/* Header — pinned at the top of the card. */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 12px', flexShrink: 0 }}>
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#222222', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
             edit paddler
           </h2>
@@ -92,7 +106,10 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Scrollable form area — fills the space between the header
+            and the pinned action bar so long forms (now that badges
+            are in the mix) don't push Save off-screen. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 24px 16px', overflowY: 'auto', flex: 1 }}>
           {/* Name fields */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
@@ -286,8 +303,9 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
           </div>
         </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+        {/* Actions — pinned at the bottom of the card so Save/Cancel
+            are always reachable regardless of form length. */}
+        <div style={{ display: 'flex', gap: '12px', padding: '12px 24px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', flexShrink: 0, backgroundColor: '#ffffff' }}>
           <button
             onClick={onClose}
             style={{
