@@ -278,6 +278,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
     type: 'casual',
     ability: 3,
     seatPreference: '000000',
+    badges: [],
   });
 
   const {
@@ -517,6 +518,7 @@ export function useCanoeAssignment(currentUser: { email: string; role: string; p
           type: draggedPaddler.type,
           ability: draggedPaddler.ability,
           seatPreference: draggedPaddler.seatPreference || '000000',
+          badges: draggedPaddler.badges || [],
         });
         setIsEditModalOpen(true);
       }

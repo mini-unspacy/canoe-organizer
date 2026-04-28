@@ -34,7 +34,12 @@ export default defineSchema({
     preferredSeats: v.optional(v.array(v.number())),
     ability: v.number(),
     assignedCanoe: v.optional(v.string()),
-    assignedSeat: v.optional(v.number())
+    assignedSeat: v.optional(v.number()),
+    // Optional list of badge ids (see frontend/src/badges.ts). Stored as
+    // strings so the catalog can grow without schema migrations. Missing
+    // means "no badges" — back-compat with paddlers created before this
+    // field existed.
+    badges: v.optional(v.array(v.string()))
   })
     .index("by_paddler_id", ["id"])
     .index("by_assignedCanoe", ["assignedCanoe"]),

@@ -7,6 +7,7 @@
 import { useMemo, useState } from "react";
 import type { Paddler } from "./types";
 import { EditPaddlerModal, type EditForm } from "./EditPaddlerModal";
+import { resolveBadges } from "./badges";
 
 interface RosterViewProps {
   paddlers: Paddler[];
@@ -106,6 +107,7 @@ export function RosterView({
     type: "casual",
     ability: 3,
     seatPreference: "000000",
+    badges: [],
   });
   const [adminOpenId, setAdminOpenId] = useState<string | null>(null);
 
@@ -155,6 +157,7 @@ export function RosterView({
       type: p.type,
       ability: p.ability || 3,
       seatPreference: p.seatPreference || "000000",
+      badges: p.badges || [],
     });
     setEditingId(p.id);
   };
@@ -169,6 +172,7 @@ export function RosterView({
       type: editForm.type,
       ability: editForm.ability,
       seatPreference: editForm.seatPreference,
+      badges: editForm.badges,
     });
     setEditingId(null);
   };
@@ -335,6 +339,19 @@ export function RosterView({
                 {/* Name + meta */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, color: T.charcoal, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    {/* Badges before the name — same prefix idea as the
+                        chip, just sized for the larger roster row. */}
+                    {p.badges && p.badges.length > 0 && (() => {
+                      const defs = resolveBadges(p.badges);
+                      if (defs.length === 0) return null;
+                      return (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 1, fontSize: 14, lineHeight: 1 }}>
+                          {defs.map(b => (
+                            <span key={b.id} title={b.hint} aria-label={b.label}>{b.glyph}</span>
+                          ))}
+                        </span>
+                      );
+                    })()}
                     <span>{first} {lastInitial ? `${lastInitial}.` : ""}</span>
                     {isClubAdmin && (
                       <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: T.guest, background: "rgba(160,120,56,0.15)", padding: "2px 5px", borderRadius: 3 }}>

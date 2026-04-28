@@ -675,6 +675,7 @@ export function OnShorePanel({
                             <PaddlerChip
                               label={paddlerLabel}
                               color={paddlerColor}
+                              badges={paddler.badges}
                               // While morphed into a seat card, render
                               // the chip at the destination seat's chip
                               // size — SEAT_CHIP_DIMS_COMPACT for 4-up,

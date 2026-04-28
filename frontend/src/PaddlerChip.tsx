@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { resolveBadges } from "./badges";
 
 // Shared visual dims for the paddler chip. Exposed so both the On Shore
 // pool (with a zoom slider) and the canoe seat rows can select a matching
@@ -56,7 +57,11 @@ export const PaddlerChip: React.FC<{
   // drag clone" (over-staging case): in that case the chip DOES render
   // the white pill on purpose.
   parentDragging?: boolean;
-}> = ({ label, color, dims, flat, isDragging, title, interactive = true, parentDragging = false }) => {
+  // Badge ids stored on the paddler. Resolved against the BADGES catalog
+  // and rendered as small glyphs before the label. Unknown ids are
+  // silently dropped so retired badges don't break old paddlers.
+  badges?: string[];
+}> = ({ label, color, dims, flat, isDragging, title, interactive = true, parentDragging = false, badges }) => {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
@@ -157,6 +162,31 @@ export const PaddlerChip: React.FC<{
         gap: dims.gap + 3,
       }}
     >
+      {/* Badge prefix — small glyphs sized just under the label so they
+          ride at the same baseline. Wrapped in a flex row with a tight
+          gap so multiple badges stay compact and don't push the name
+          off the chip. flexShrink: 0 keeps badges visible when the chip
+          truncates the name in a narrow seat row. */}
+      {badges && badges.length > 0 && (() => {
+        const defs = resolveBadges(badges);
+        if (defs.length === 0) return null;
+        // Badges sit a hair smaller than the label so glyph+text feels
+        // balanced; emoji metrics tend to render slightly larger than
+        // their nominal font size.
+        const badgeSize = Math.max(10, Math.round(dims.fs * 0.85));
+        return (
+          <span
+            aria-hidden={false}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 1, flexShrink: 0, lineHeight: 1 }}
+          >
+            {defs.map(b => (
+              <span key={b.id} title={b.hint} style={{ fontSize: badgeSize, lineHeight: 1 }}>
+                {b.glyph}
+              </span>
+            ))}
+          </span>
+        );
+      })()}
       <span
         style={{
           fontSize: dims.fs,

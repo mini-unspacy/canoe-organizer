@@ -202,13 +202,14 @@ export const updatePaddler = mutation({
     type: v.optional(v.union(v.literal("racer"), v.literal("casual"), v.literal("very-casual"))),
     ability: v.optional(v.number()),
     seatPreference: v.optional(v.string()),
+    badges: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const paddlerDoc = await ctx.db.query("paddlers").withIndex("by_paddler_id", (q) => q.eq("id", args.paddlerId)).unique();
     if (!paddlerDoc) {
       throw new Error("Paddler not found");
     }
-    
+
     const updates: Record<string, unknown> = {};
     if (args.firstName !== undefined) updates.firstName = args.firstName;
     if (args.lastName !== undefined) {
@@ -219,7 +220,8 @@ export const updatePaddler = mutation({
     if (args.type !== undefined) updates.type = args.type;
     if (args.ability !== undefined) updates.ability = args.ability;
     if (args.seatPreference !== undefined) updates.seatPreference = args.seatPreference;
-    
+    if (args.badges !== undefined) updates.badges = args.badges;
+
     await ctx.db.patch(paddlerDoc._id, updates);
     return { success: true, message: `Updated paddler ${args.firstName || paddlerDoc.firstName}` };
   },

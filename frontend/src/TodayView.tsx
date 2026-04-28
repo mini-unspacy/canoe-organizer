@@ -6,6 +6,7 @@ import type { Paddler, Canoe, CanoeSortItem } from "./types";
 import { CANOE_DESIGNATIONS, CANOE_NAME_BY_DESIGNATION } from "./utils";
 import { pickFreshCanoeName } from "./canoeNames";
 import { PaddlerChip, SEAT_CHIP_DIMS, SEAT_CHIP_DIMS_COMPACT } from "./PaddlerChip";
+import { resolveBadges } from "./badges";
 import type { AnimationPhase, AnimationStyle, AnimationStagger } from "./useAnimationTrigger";
 
 // Keyframes for each (style × phase) combination. `enter` keyframes go
@@ -857,6 +858,15 @@ export function TodayView({
                           }}
                         >
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                          {p.badges && p.badges.length > 0 && (() => {
+                            const defs = resolveBadges(p.badges);
+                            if (defs.length === 0) return null;
+                            return (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 1, fontSize: 12, lineHeight: 1, flexShrink: 0 }}>
+                                {defs.map(b => (<span key={b.id} title={b.hint}>{b.glyph}</span>))}
+                              </span>
+                            );
+                          })()}
                           <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.firstName} {p.lastName || p.lastInitial}
                           </span>
@@ -2022,6 +2032,7 @@ export function TodayView({
                                           <PaddlerChip
                                             label={paddlerLabel}
                                             color={paddlerColor}
+                                            badges={assignedPaddler.badges}
                                             dims={canoeView === '4' ? SEAT_CHIP_DIMS_COMPACT : SEAT_CHIP_DIMS}
                                             flat
                                             // Only light up the chip's own

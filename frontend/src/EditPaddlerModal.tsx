@@ -1,3 +1,5 @@
+import { BADGES } from "./badges";
+
 export interface EditForm {
   firstName: string;
   lastName: string;
@@ -5,6 +7,7 @@ export interface EditForm {
   type: 'racer' | 'casual' | 'very-casual';
   ability: number;
   seatPreference: string;
+  badges: string[];
 }
 
 interface EditPaddlerModalProps {
@@ -237,6 +240,49 @@ export function EditPaddlerModal({ editForm, setEditForm, onSave, onClose }: Edi
             <p style={{ fontSize: '12px', color: '#b0b0b0', marginTop: '4px' }}>
               Selected: {editForm.seatPreference.split('').map(Number).filter(n => n > 0).join(' > ') || 'None'}
             </p>
+          </div>
+
+          {/* Badges. Toggleable icon buttons; multi-select. The chosen
+              ids are stored on the paddler and rendered as a prefix in
+              every PaddlerChip. */}
+          <div>
+            <label style={labelStyle}>badges <span style={{ color: '#b0b0b0', fontWeight: 400 }}>(tap to toggle)</span></label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {BADGES.map(b => {
+                const isOn = editForm.badges.includes(b.id);
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    title={b.hint}
+                    onClick={() => setEditForm(prev => ({
+                      ...prev,
+                      badges: isOn ? prev.badges.filter(x => x !== b.id) : [...prev.badges, b.id],
+                    }))}
+                    style={{
+                      width: 40, height: 40, borderRadius: 8,
+                      border: `2px solid ${isOn ? '#005280' : 'rgba(0,0,0,.12)'}`,
+                      backgroundColor: isOn ? 'rgba(0,82,128,0.10)' : '#ffffff',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, lineHeight: 1,
+                      // Slight grayscale when off so the active set
+                      // visually pops without changing layout.
+                      filter: isOn ? 'none' : 'grayscale(0.4)',
+                      opacity: isOn ? 1 : 0.7,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <span aria-label={b.label}>{b.glyph}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {editForm.badges.length > 0 && (
+              <p style={{ fontSize: '12px', color: '#b0b0b0', marginTop: '6px' }}>
+                Selected: {editForm.badges.length} badge{editForm.badges.length === 1 ? '' : 's'}
+              </p>
+            )}
           </div>
         </div>
 
