@@ -315,7 +315,7 @@ export function SchedulePage({ onSelectEvent, isAdmin = true, scrollPosRef, scro
   }, [allMonths, activeMonth]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100% - 40px)', gap: '0', visibility: pendingJump ? 'hidden' : 'visible' }}>
+    <div style={{ display: 'flex', height: '100%', gap: '0', visibility: pendingJump ? 'hidden' : 'visible' }}>
       {/* Event list */}
       <div
         ref={scheduleScrollRef}
